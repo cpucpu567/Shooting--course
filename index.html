@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Стрельба на результат | Курс для новичков</title>
+    <style>
+        :root {
+            --bg-primary: #1a1814;
+            --bg-secondary: #1f1d18;
+            --bg-card: #23201b;
+            --text-primary: #d4cdc0;
+            --text-accent: #c4a962;
+            --border-color: #3a362d;
+            --border-accent: #8a7b5a;
+            --btn-bg: #4a4230;
+            --btn-hover-bg: #5e5440;
+            --btn-hover-border: #a8945a;
+            --card-shadow: 0 2px 20px rgba(0,0,0,0.4);
+            --transition-fast: 0.2s;
+            --transition-smooth: 0.3s;
+            --danger: #c44;
+            --success: #5a8a5a;
+            --warning: #c4943a;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+
+        body {
+            font-family:'Segoe UI', Roboto, system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height:1.6;
+            min-height:100vh;
+            position:relative;
+            overflow-x:hidden;
+        }
+
+        body::before {
+            content:'';
+            position:fixed;
+            top:0;left:0;width:100%;height:100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(180,160,120,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 60%, rgba(160,140,100,0.03) 0%, transparent 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.003) 2px, rgba(255,255,255,0.003) 4px);
+            pointer-events:none;
+            z-index:0;
+        }
+
+        body::after {
+            content:'';
+            position:fixed;
+            bottom:20px;right:20px;
+            width:60px;height:60px;
+            border-right:1px solid rgba(180,160,120,0.08);
+            border-bottom:1px solid rgba(180,160,120,0.08);
+            pointer-events:none;
+            z-index:0;
+        }
+
+        .container {
+            max-width:1000px;
+            margin:0 auto;
+            padding:0 20px;
+            position:relative;
+            z-index:1;
+        }
+
+        /* ===== ШАПКА ===== */
+        .hero {
+            background:linear-gradient(160deg, #1a1814 0%, #252118 40%, #1f1c16 100%);
+            padding:70px 0 55px;
+            text-align:center;
+            border-bottom:3px solid var(--border-accent);
+            position:relative;
+            box-shadow:0 4px 40px rgba(0,0,0,0.5);
+        }
+
+        .hero::before {
+            content:'';
+            position:absolute;
+            top:0;left:0;width:100%;height:100%;
+            background:
+                repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(180,160,120,0.02) 40px, rgba(180,160,120,0.02) 41px),
+                radial-gradient(circle at 50% 80%, rgba(200,170,100,0.06) 0%, transparent 60%);
+            pointer-events:none;
+        }
+
+        .hero::after {
+            content:'';
+            position:absolute;
+            bottom:0;left:0;width:100%;height:4px;
+            background:repeating-linear-gradient(90deg,
+                var(--border-accent) 0px, var(--border-accent) 15px,
+                transparent 15px, transparent 20px,
+                var(--border-accent) 20px, var(--border-accent) 25px,
+                transparent 25px, transparent 40px);
+        }
+
+        .hero h1 {
+            font-size:3rem;
+            font-weight:900;
+            letter-spacing:4px;
+            text-transform:uppercase;
+            margin-bottom:10px;
+            color:var(--text-primary);
+            text-shadow:0 2px 20px rgba(0,0,0,0.8);
+            position:relative;
+            display:inline-block;
+        }
+
+        .hero h1::before {
+            content:'🎯';
+            position:absolute;
+            left:-50px;
+            top:-10px;
+            font-size:1.5rem;
+            opacity:0.6;
+        }
+
+        .hero h1 span {
+            color:var(--text-accent);
+            border-bottom:2px solid var(--border-accent);
+            padding-bottom:2px;
+        }
+
+        .hero .sub {
+            font-size:1.15rem;
+            max-width:600px;
+            margin:0 auto 20px;
+            opacity:0.8;
+            color:var(--text-accent);
+            position:relative;
+        }
+
+        .btn {
+            display:inline-block;
+            background:var(--btn-bg);
+            color:var(--text-primary);
+            padding:16px 48px;
+            font-size:1.1rem;
+            font-weight:700;
+            text-transform:uppercase;
+            border-radius:2px;
+            text-decoration:none;
+            transition:var(--transition-smooth);
+            border:2px solid var(--border-accent);
+            cursor:pointer;
+            letter-spacing:2px;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .btn::after {
+            content:'';
+            position:absolute;
+            top:-50%;left:-50%;
+            width:200%;height:200%;
+            background:linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+            transition:0.6s;
+        }
+
+        .btn:hover::after {
+            transform:translateX(100%);
+        }
+
+        .btn:hover {
+            background:var(--btn-hover-bg);
+            border-color:var(--btn-hover-border);
+            transform:translateY(-2px);
+            box-shadow:0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        /* ===== СЕКЦИИ ===== */
+        section {
+            padding:50px 0;
+            border-bottom:1px solid var(--border-color);
+            position:relative;
+        }
+
+        section:nth-child(even) {
+            background:rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            font-size:2rem;
+            margin-bottom:30px;
+            text-align:center;
+            text-transform:uppercase;
+            letter-spacing:3px;
+            color:var(--text-primary);
+            position:relative;
+            display:inline-block;
+            width:100%;
+        }
+
+        h2::after {
+            content:'';
+            display:block;
+            width:60px;
+            height:3px;
+            background:var(--border-accent);
+            margin:10px auto 0;
+        }
+
+        h2 span { color:var(--text-accent); }
+
+        /* ===== СЕТКИ ===== */
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+        .why-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; margin-top:10px; }
+
+        .card, .why-item {
+            background:var(--bg-card);
+            padding:24px;
+            border-radius:2px;
+            border:1px solid var(--border-color);
+            transition:var(--transition-smooth);
+            box-shadow:var(--card-shadow);
+        }
+
+        .card { border-left:4px solid var(--border-accent); }
+        .card:hover, .why-item:hover {
+            border-color:var(--border-accent);
+            box-shadow:0 8px 30px rgba(0,0,0,0.5);
+        }
+
+        .card h3, .why-item h4 {
+            color:var(--text-accent);
+            margin-bottom:14px;
+            text-transform:uppercase;
+            letter-spacing:1px;
+        }
+
+        .card ul { list-style:none; padding:0; }
+        .card ul li {
+            padding:5px 0 5px 28px;
+            background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%238a7b5a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>') left center no-repeat;
+        }
+
+        .why-item { text-align:center; }
+        .why-item .emoji { font-size:2.4rem; display:block; margin-bottom:8px; }
+
+        /* ===== КАРУСЕЛЬ ===== */
+        .gallery-wrapper {
+            position:relative;
+            max-width:800px;
+            margin:10px auto 0;
+            border-radius:2px;
+            overflow:hidden;
+            border:2px solid var(--border-color);
+            box-shadow:0 0 40px rgba(0,0,0,0.5);
+            background:#1a1814;
+        }
+        .gallery-main { width:100%; height:420px; display:flex; align-items:center; justify-content:center; background:#0a0a08; }
+        .gallery-main img, .gallery-main video { width:100%; height:100%; object-fit:contain; }
+        .gallery-arrow {
+            position:absolute;
+            top:50%;transform:translateY(-50%);
+            background:rgba(0,0,0,0.7);
+            color:var(--text-accent);
+            border:1px solid var(--border-color);
+            font-size:1.6rem;
+            padding:10px 14px;
+            cursor:pointer;
+            z-index:2;
+            transition:var(--transition-fast);
+        }
+        .gallery-arrow:hover { background:rgba(0,0,0,0.95); border-color:var(--text-accent); }
+        .gallery-prev { left:10px; }
+        .gallery-next { right:10px; }
+        .gallery-dots { display:flex; justify-content:center; gap:6px; padding:10px; background:#0a0a08; }
+        .gallery-dot { width:8px; height:8px; border-radius:50%; background:var(--border-color); cursor:pointer; }
+        .gallery-dot.active { background:var(--text-accent); }
+
+        /* ===== ИНСТРУКТОР ===== */
+        .instructor {
+            display:flex;
+            flex-wrap:wrap;
+            gap:30px;
+            align-items:center;
+            background:var(--bg-card);
+            padding:30px;
+            border-radius:2px;
+            border:1px solid var(--border-color);
+            box-shadow:var(--card-shadow);
+        }
+        .instructor-avatar {
+            width:150px;height:150px;
+            border-radius:50%;
+            background:#2a2520;
+            flex-shrink:0;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:3.5rem;
+            border:3px solid var(--border-accent);
+            box-shadow:0 0 30px rgba(0,0,0,0.5);
+        }
+        .instructor-text h3 { font-size:1.4rem; text-transform:uppercase; letter-spacing:2px; }
+        .instructor-text .legend { color:var(--text-accent); opacity:0.8; font-size:0.85rem; letter-spacing:1px; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:8px; }
+        .instructor-text .path-item { padding:3px 0; opacity:0.85; font-size:0.9rem; }
+        .instructor-text .path-item strong { color:var(--text-accent); }
+        .instructor-text .quote {
+            margin-top:14px;
+            font-style:italic;
+            color:var(--text-accent);
+            border-left:3px solid var(--border-accent);
+            padding-left:14px;
+            opacity:0.9;
+        }
+
+        /* ===== ДЕТАЛИ ===== */
+        .details-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px,1fr)); gap:16px; text-align:center; }
+        .detail-item {
+            background:var(--bg-card);
+            padding:18px;
+            border-radius:2px;
+            border:1px solid var(--border-color);
+            box-shadow:var(--card-shadow);
+        }
+        .detail-item strong { display:block; font-size:1rem; color:var(--text-accent); }
+
+        /* ===== ОТЗЫВЫ ===== */
+        .reviews-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:900px; margin:0 auto; }
+        .review-card {
+            background:var(--bg-card);
+            border:1px solid var(--border-color);
+            border-radius:2px;
+            padding:20px;
+            transition:var(--transition-smooth);
+        }
+        .review-card:hover { border-color:var(--border-accent); box-shadow:0 0 20px rgba(0,0,0,0.3); }
+        .review-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+        .review-avatar { font-size:1.6rem; background:#1a1814; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid var(--border-color); }
+        .review-name { font-weight:600; color:var(--text-accent); font-size:0.9rem; }
+        .review-source { font-size:0.7rem; opacity:0.5; }
+        .review-stars { color:#c4943a; font-size:0.85rem; letter-spacing:1px; margin-bottom:6px; }
+        .review-text { font-style:italic; opacity:0.85; line-height:1.5; }
+
+        /* ===== ТАРИФЫ ===== */
+        .tariff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1000px; margin:20px auto 0; }
+        .tariff-card {
+            background:var(--bg-card);
+            padding:22px 14px;
+            border-radius:2px;
+            border:2px solid var(--border-color);
+            text-align:center;
+            transition:var(--transition-smooth);
+            cursor:pointer;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+        }
+        .tariff-card:hover { border-color:var(--border-accent); transform:translateY(-4px); box-shadow:0 10px 30px rgba(0,0,0,0.4); }
+        .tariff-card.selected { border-color:var(--text-accent)!important; box-shadow:0 0 30px rgba(196,169,98,0.2)!important; }
+        .tariff-card .price { font-size:1.9rem; font-weight:700; color:var(--text-accent); margin:8px 0; }
+        .tariff-card .label { font-size:1rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-accent); font-weight:700; }
+        .tariff-card .sub { opacity:0.6; font-size:0.85rem; }
+        .tariff-card .badge { display:inline-block; background:var(--border-color); color:var(--text-accent); padding:2px 8px; font-size:0.7rem; border-radius:2px; margin-top:4px; }
+        .tariff-card .badge.recommended-badge {
+            background:var(--text-accent);
+            color:#1a1814;
+            font-weight:700;
+            position:absolute;
+            top:-10px;
+            left:50%;
+            transform:translateX(-50%);
+            white-space:nowrap;
+        }
+        .tariff-card ul { list-style:none; padding:0; margin:12px 0; opacity:0.85; font-size:0.85rem; flex-grow:1; }
+        .tariff-card ul li { padding:2px 0; }
+        .price-breakdown { background:#0a0a08; border-radius:2px; padding:10px; margin-top:10px; font-size:0.75rem; opacity:0.7; text-align:left; }
+        .price-breakdown .row { display:flex; justify-content:space-between; padding:2px 0; }
+        .price-breakdown .total-row { border-top:1px solid var(--border-color); margin-top:4px; padding-top:4px; font-weight:700; color:var(--text-accent); }
+        .tariff-card .btn-small {
+            display:inline-block;
+            margin-top:auto;
+            background:var(--btn-bg);
+            color:var(--text-primary);
+            padding:8px 18px;
+            text-transform:uppercase;
+            border-radius:2px;
+            text-decoration:none;
+            border:1px solid var(--border-accent);
+            font-size:0.8rem;
+            font-weight:600;
+            cursor:pointer;
+        }
+
+        /* ===== ЛОЯЛЬНОСТЬ ===== */
+        .loyalty-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; max-width:700px; margin:0 auto; }
+        .loyalty-card {
+            background:var(--bg-card);
+            border:1px solid var(--border-color);
+            border-radius:2px;
+            padding:20px;
+            text-align:center;
+            transition:var(--transition-smooth);
+        }
+        .loyalty-card:hover { border-color:var(--border-accent); }
+        .loyalty-icon { font-size:2.5rem; display:block; margin-bottom:8px; }
+        .loyalty-card h4 { color:var(--text-accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+        .loyalty-card .highlight { color:var(--text-accent); font-weight:700; font-size:1.1rem; }
+
+        /* ===== ФОРМА ===== */
+        #form-section { scroll-margin-top:40px; }
+        #order-form {
+            background:var(--bg-card);
+            border-radius:2px;
+            padding:35px 28px;
+            margin-top:10px;
+            border:1px solid var(--border-color);
+            box-shadow:var(--card-shadow);
+        }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+        .form-group { margin-bottom:18px; }
+        .form-group label { display:block; margin-bottom:5px; font-weight:500; color:var(--text-accent); text-transform:uppercase; font-size:0.8rem; letter-spacing:1px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width:100%;
+            padding:12px 16px;
+            border-radius:2px;
+            border:1px solid var(--border-color);
+            background:#0a0a08;
+            color:var(--text-primary);
+            font-size:0.95rem;
+            transition:var(--transition-fast);
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline:2px solid var(--border-accent);
+            border-color:transparent;
+        }
+        .checkbox-group { display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; opacity:0.8; }
+        .checkbox-group input { width:18px!important; height:18px; margin-top:3px; accent-color:var(--border-accent); flex-shrink:0; }
+        .btn-block { display:block; width:100%; text-align:center; margin-top:8px; }
+        .form-feedback { display:none; padding:12px; border-radius:2px; margin-top:14px; text-align:center; font-weight:600; }
+        .form-feedback.success { display:block; background:#1a2a1a; color:#8fbc8f; border:1px solid #2d4a2d; }
+        .form-feedback.error { display:block; background:#2a1a1a; color:#bc8f8f; border:1px solid #4a2d2d; }
+
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+        .modal-overlay {
+            display:none;
+            position:fixed;
+            top:0;left:0;width:100%;height:100%;
+            background:rgba(0,0,0,0.9);
+            z-index:999;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
+        }
+        .modal-overlay.active { display:flex; }
+        .modal {
+            background:var(--bg-card);
+            border:2px solid var(--text-accent);
+            border-radius:4px;
+            padding:28px;
+            text-align:center;
+            max-width:500px;
+            width:100%;
+            max-height:90vh;
+            overflow-y:auto;
+            box-shadow:0 0 60px rgba(0,0,0,0.8);
+        }
+
+        /* ===== АДМИНКА ===== */
+        .admin-tab {
+            background:var(--border-color);
+            color:var(--text-primary);
+            border:none;
+            padding:7px 12px;
+            cursor:pointer;
+            border-radius:2px;
+            font-size:0.8rem;
+        }
+        .admin-tab.active { background:var(--text-accent); color:#1a1814; font-weight:600; }
+        .admin-tab-content { margin-bottom:10px; }
+
+        #star-rating span { font-size:1.8rem; color:#3a362d; cursor:pointer; }
+        #star-rating span.active { color:#c4943a; }
+
+        footer { padding:25px 0; text-align:center; opacity:0.4; font-size:0.8rem; border-top:1px solid var(--border-color); }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width:900px) {
+            .tariff-grid { grid-template-columns:1fr; max-width:400px; }
+            .loyalty-grid { grid-template-columns:1fr; }
+            .reviews-grid { grid-template-columns:1fr; }
+            .form-row { grid-template-columns:1fr; }
+            .hero h1::before { display:none; }
+        }
+        @media (max-width:700px) {
+            .hero h1 { font-size:2rem; }
+            .grid-2 { grid-template-columns:1fr; }
+            .why-grid { grid-template-columns:1fr; }
+            .instructor { flex-direction:column; text-align:center; }
+            .gallery-main { height:250px; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="container">
+        <h1 id="hero-title">Постигни <span>новое</span></h1>
+        <p class="sub">Стрельба на результат — это не про оружие. Это про <strong>контроль над собой</strong>, тишину в голове и чистый выстрел.</p>
+        <p style="opacity:0.5; margin-bottom:24px; color:var(--text-accent);">Интенсив для новичков. 8 часов. Без страха и спешки.</p>
+        <a href="#form-section" class="btn">Выбрать тариф</a>
+    </div>
+</header>
+
+<main>
+    <!-- ========== ПОЧЕМУ НОВИЧКАМ ========== -->
+    <section>
+        <div class="container">
+            <h2>Почему стоит <span>начать</span></h2>
+            <div class="why-grid">
+                <div class="why-item"><span class="emoji">🧠</span><h4>Новый опыт</h4><p style="opacity:0.7;">Ты никогда не держал оружие? Это твой шанс.</p></div>
+                <div class="why-item"><span class="emoji">🎯</span><h4>Результат сразу</h4><p style="opacity:0.7;">Каждый выстрел — обратная связь. Прогресс за первый час.</p></div>
+                <div class="why-item"><span class="emoji">🧘</span><h4>Снятие стресса</h4><p style="opacity:0.7;">Концентрация и покой. Медитация с железом.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ПРОГРАММА ========== -->
+    <section>
+        <div class="container">
+            <h2>Что вас ждёт <span>на курсе</span></h2>
+            <div class="grid-2">
+                <article class="card">
+                    <h3>📖 Теория — фундамент</h3>
+                    <ul>
+                        <li>Как устроен АК / Сайга (без занудства)</li>
+                        <li>Безопасность — главный навык</li>
+                        <li>Приведение к нормальному бою (ПНБ)</li>
+                        <li>Баллистика простыми словами</li>
+                    </ul>
+                </article>
+                <article class="card">
+                    <h3>🔫 Практика</h3>
+                    <ul>
+                        <li>Первое знакомство: холостой выстрел</li>
+                        <li>Стрельба с упора и с руки</li>
+                        <li>Работа над дыханием и спуском</li>
+                        <li>Разбор каждой мишени — почему так</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== КАРУСЕЛЬ ФОТО И ВИДЕО ========== -->
+    <section>
+        <div class="container">
+            <h2>Как проходят <span>занятия</span></h2>
+            <div class="gallery-wrapper">
+                <div class="gallery-main" id="gallery-main"><div class="gallery-placeholder"><span style="font-size:4rem;opacity:0.2;">📸</span></div></div>
+                <button class="gallery-arrow gallery-prev" onclick="changeSlide(-1)">❮</button>
+                <button class="gallery-arrow gallery-next" onclick="changeSlide(1)">❯</button>
+                <div class="gallery-dots" id="gallery-dots"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ИНСТРУКТОР ========== -->
+    <section>
+        <div class="container">
+            <h2>Кто будет <span>с вами</span></h2>
+            <div class="instructor">
+                <div class="instructor-avatar">👨‍🏫</div>
+                <div class="instructor-text">
+                    <h3>Даниил</h3>
+                    <p class="legend">Путь длиной в 15 лет — от дисциплины к искусству выстрела</p>
+                    <p class="path-item"><strong>За плечами</strong> — полтора десятилетия там, где внимание к деталям было единственным способом вернуться домой.</p>
+                    <p class="path-item"><strong>Спорт</strong> — соревновательный опыт, где каждая секунда и миллиметр имеют значение.</p>
+                    <p class="path-item"><strong>Знание</strong> — от фундамента до ощущения металла как продолжения руки. Не один десяток стрелков ушли с результатом.</p>
+                    <blockquote class="quote">«Без крика. Без спешки. Только вы, мишень и момент между вдохом и спуском».</blockquote>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ДЕТАЛИ КУРСА ========== -->
+    <section>
+        <div class="container">
+            <h2>Детали <span>курса</span></h2>
+            <div class="details-grid">
+                <div class="detail-item"><strong>Группа 1</strong> 10:00–18:00 (Базовый/Продвинутый)</div>
+                <div class="detail-item"><strong>Группа 2</strong> 10–14 / 14–18 (Практика)</div>
+                <div class="detail-item"><strong>Место</strong> «Лосиный Лог», Пермь</div>
+                <div class="detail-item"><strong>Оружие</strong> АК (Сайга) 5,45/7,62</div>
+                <div class="detail-item"><strong>Группа</strong> от 5 до 10 человек</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ТАРИФЫ ========== -->
+    <section>
+        <div class="container">
+            <h2>Выберите <span>тариф</span></h2>
+            <div class="tariff-grid">
+                <div class="tariff-card" data-tariff="practice" onclick="selectTariff('practice')">
+                    <div class="label">Только практика</div><div class="sub">30 выстрелов · 10–14 или 14–18</div><div class="price">7 000 ₽</div>
+                    <span class="badge" style="background:#3a1a1a;color:#c88;">после курса</span>
+                    <ul><li>✅ 30 выстрелов</li><li>✅ Оружие + стрельбище</li><li>✅ Инструктор</li><li>❌ Без теории</li></ul>
+                    <div class="price-breakdown"><div class="row"><span>Патроны+аренда</span><span>5 000 ₽</span></div><div class="row"><span>Инструктор</span><span>2 000 ₽</span></div><div class="row total-row"><span>Итого</span><span>7 000 ₽</span></div></div>
+                    <span class="btn-small">Выбрать</span>
+                </div>
+                <div class="tariff-card" data-tariff="basic" onclick="selectTariff('basic')">
+                    <div class="label">Базовый</div><div class="sub">30 выстрелов · 10:00–18:00</div><div class="price">8 500 ₽</div>
+                    <span class="badge">с теорией</span>
+                    <ul><li>✅ 30 выстрелов</li><li>✅ Теория (2ч)</li><li>✅ Оружие + стрельбище</li><li>✅ Разбор выстрелов</li></ul>
+                    <div class="price-breakdown"><div class="row"><span>Патроны+аренда</span><span>5 000 ₽</span></div><div class="row"><span>Инструктор</span><span>3 500 ₽</span></div><div class="row total-row"><span>Итого</span><span>8 500 ₽</span></div></div>
+                    <span class="btn-small">Выбрать</span>
+                </div>
+                <div class="tariff-card recommended" data-tariff="pro" onclick="selectTariff('pro')">
+                    <span class="badge recommended-badge">РЕКОМЕНДУЮ</span>
+                    <div class="label">Продвинутый</div><div class="sub">60 выстрелов · 10:00–18:00</div><div class="price">13 500 ₽</div>
+                    <span class="badge">максимум</span>
+                    <ul><li>✅ 60 выстрелов</li><li>✅ Теория (2ч)</li><li>✅ Оружие + стрельбище</li><li>✅ Видео-разбор</li><li>✅ Финальный зачёт</li></ul>
+                    <div class="price-breakdown"><div class="row"><span>Патроны+аренда</span><span>10 000 ₽</span></div><div class="row"><span>Инструктор</span><span>3 500 ₽</span></div><div class="row total-row"><span>Итого</span><span>13 500 ₽</span></div></div>
+                    <span class="btn-small">Выбрать</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ОТЗЫВЫ ========== -->
+    <section>
+        <div class="container">
+            <h2>Что говорят <span>участники</span></h2>
+            <div class="reviews-grid" id="reviews-container"></div>
+            <div style="text-align:center;margin-top:28px;"><button class="btn" onclick="openReviewForm()">✍️ Оставить отзыв</button></div>
+        </div>
+    </section>
+
+    <!-- ========== СИСТЕМА ЛОЯЛЬНОСТИ ========== -->
+    <section>
+        <div class="container">
+            <h2>Система <span>лояльности</span></h2>
+            <div class="loyalty-grid">
+                <div class="loyalty-card"><span class="loyalty-icon">👥</span><h4>Приведи друга</h4><p>Скидка <span class="highlight">500 ₽</span> на следующее занятие.</p></div>
+                <div class="loyalty-card"><span class="loyalty-icon">⭐</span><h4>Постоянство</h4><p>4 занятия — скидка <span class="highlight">500 ₽</span> на 5-е.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== ФОРМА ЗАПИСИ ========== -->
+    <section id="form-section">
+        <div class="container">
+            <h2>Записаться <span>на курс</span></h2>
+            <form id="order-form" novalidate>
+                <input type="hidden" name="tariff" id="tariff-input" value="pro">
+                <input type="hidden" name="group" id="group-input" value="1">
+                <div class="form-row">
+                    <div class="form-group"><label for="surname">Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
+                    <div class="form-group"><label for="name">Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
+                </div>
+                <div class="form-group"><label for="phone">Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
+                <div class="form-group"><label for="referral">Телефон друга (если привели)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
+                <div class="form-group"><label for="date">Дата курса *</label><select id="date" required></select><p id="date-hint" style="font-size:0.7rem;opacity:0.5;margin-top:4px;"></p></div>
+                <div class="form-group" id="subgroup-row" style="display:none;"><label for="time-slot">Время практики</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                <div class="form-group"><label for="comment">Комментарий</label><input type="text" id="comment" placeholder="Особые пожелания..."></div>
+                <div class="form-group checkbox-group"><input type="checkbox" id="agree" required><label for="agree">Согласен с правилами курса</label></div>
+                <div class="form-group checkbox-group"><input type="checkbox" id="newsletter" checked><label for="newsletter">Согласен на рассылку (WhatsApp, VK, Telegram) — информация о новых датах и акциях</label></div>
+                <button type="submit" class="btn btn-block">Отправить заявку</button>
+                <div class="form-feedback" id="form-feedback"></div>
+            </form>
+        </div>
+    </section>
+</main>
+
+<footer><div class="container"><p>© 2026 Стрельба на результат. Пермь.</p></div></footer>
+
+<!-- Модалка успеха -->
+<div class="modal-overlay" id="success-modal"><div class="modal"><span class="checkmark">✅</span><h3>Заявка принята!</h3><p id="modal-message"></p><button class="btn" onclick="closeModal()">Понял, жду</button></div></div>
+
+<!-- Модалка отзыва -->
+<div class="modal-overlay" id="review-modal"><div class="modal"><span style="font-size:2rem;">✍️</span><h3>Поделитесь</h3><form id="review-form" novalidate style="text-align:left;">
+    <div class="form-group"><label>Имя *</label><input type="text" id="review-name-field" required maxlength="30"></div>
+    <div class="form-group"><label>Оценка</label><div id="star-rating" style="display:flex;gap:4px;"><span data-star="1" onclick="setRating(1)">☆</span><span data-star="2" onclick="setRating(2)">☆</span><span data-star="3" onclick="setRating(3)">☆</span><span data-star="4" onclick="setRating(4)">☆</span><span data-star="5" onclick="setRating(5)">☆</span></div><input type="hidden" id="review-rating" value="5"></div>
+    <div class="form-group"><label>Отзыв *</label><textarea id="review-text-field" required minlength="15" maxlength="500" rows="3" style="resize:vertical;font-family:inherit;"></textarea><p style="font-size:0.7rem;opacity:0.4;text-align:right;"><span id="char-count">0</span>/500</p></div>
+    <div class="form-feedback" id="review-feedback"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;"><button type="submit" class="btn" style="flex:1;">Отправить</button><button type="button" class="btn" onclick="closeReviewForm()" style="flex:1;background:#3d3932;border-color:#3d3932;">Отмена</button></div>
+</form></div></div>
+
+<!-- Админка -->
+<div class="modal-overlay" id="admin-modal"><div class="modal" style="max-width:650px;text-align:left;">
+    <span style="font-size:2rem;">🔧</span><h3>Админ-панель</h3>
+    <div style="display:flex;gap:4px;margin:14px 0;flex-wrap:wrap;">
+        <button class="admin-tab active" onclick="switchAdminTab('dates')">📅 Даты</button>
+        <button class="admin-tab" onclick="switchAdminTab('clients')">👥 Клиенты</button>
+        <button class="admin-tab" onclick="switchAdminTab('gallery')">🖼️ Галерея</button>
+        <button class="admin-tab" onclick="switchAdminTab('mailing')">📨 Рассылка</button>
+    </div>
+    <div id="admin-tab-dates" class="admin-tab-content">
+        <div style="background:#0a0a08;padding:10px;border-radius:2px;margin-bottom:10px;">
+            <h4 style="color:var(--text-accent);margin-bottom:6px;">➕ Добавить дату</h4>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <input type="date" id="new-date-value" style="flex:1;min-width:110px;padding:8px;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;">
+                <select id="new-date-group" style="flex:1;min-width:110px;padding:8px;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;"><option value="1">Группа 1</option><option value="2">Группа 2</option></select>
+                <select id="new-date-slot" style="flex:1;min-width:110px;padding:8px;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;"><option value="full">10–18</option><option value="10-14">10–14</option><option value="14-18">14–18</option></select>
+                <button onclick="addNewDate()" style="padding:8px 14px;background:var(--btn-bg);color:var(--text-primary);border:1px solid var(--border-accent);border-radius:2px;cursor:pointer;">Добавить</button>
+            </div>
+        </div>
+        <div id="admin-dates-list"></div>
+    </div>
+    <div id="admin-tab-clients" class="admin-tab-content" style="display:none;">
+        <input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClientsList(this.value)" style="width:100%;padding:10px;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;margin-bottom:10px;">
+        <div id="admin-clients-list"></div>
+    </div>
+    <div id="admin-tab-gallery" class="admin-tab-content" style="display:none;">
+        <div style="background:#0a0a08;padding:10px;border-radius:2px;margin-bottom:10px;"><h4 style="color:var(--text-accent);margin-bottom:6px;">📤 Загрузить</h4><input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;color:var(--text-primary);"><p style="font-size:0.7rem;opacity:0.5;">Макс. 20 файлов</p></div>
+        <div id="admin-gallery-list"></div>
+    </div>
+    <div id="admin-tab-mailing" class="admin-tab-content" style="display:none;">
+        <div style="background:#0a0a08;padding:10px;border-radius:2px;margin-bottom:10px;">
+            <h4 style="color:var(--text-accent);margin-bottom:6px;">📨 Рассылка</h4>
+            <p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправка ссылок на мессенджеры всем согласившимся.</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                <button onclick="sendMailing('whatsapp')" style="padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:2px;cursor:pointer;font-weight:600;">WhatsApp</button>
+                <button onclick="sendMailing('vk')" style="padding:8px 14px;background:#0077FF;color:#fff;border:none;border-radius:2px;cursor:pointer;font-weight:600;">VK</button>
+                <button onclick="sendMailing('telegram')" style="padding:8px 14px;background:#2AABEE;color:#fff;border:none;border-radius:2px;cursor:pointer;font-weight:600;">Telegram</button>
+            </div>
+            <textarea id="mailing-message" rows="3" placeholder="Текст сообщения..." style="width:100%;padding:8px;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;font-family:inherit;font-size:0.85rem;">Новый набор на курс «Стрельба на результат»! Дата: уточняется. Подробности на сайте.</textarea>
+        </div>
+        <div id="mailing-result" style="font-size:0.8rem;opacity:0.7;"></div>
+    </div>
+    <button class="btn" onclick="closeAdminPanel()" style="width:100%;margin-top:10px;">Закрыть</button>
+</div></div>
+
+<script>
+const tariffConfig = {
+    practice: { group:'2', startTime:'10:00', endTime:'18:00', label:'Только практика', subGroup:true },
+    basic: { group:'1', startTime:'10:00', endTime:'18:00', label:'Базовый' },
+    pro: { group:'1', startTime:'10:00', endTime:'18:00', label:'Продвинутый' },
+};
+const tariffPrices = { practice:7000, basic:8500, pro:13500 };
+const MIN=5, MAX=10, ADMIN_PASS='777';
+
+let allDates = [
+    { value:'2026-07-12', label:'12 июля (Сб)', group:'1', timeSlot:'full' },
+    { value:'2026-07-26', label:'26 июля (Сб)', group:'2', timeSlot:'10-14' },
+    { value:'2026-07-26', label:'26 июля (Сб)', group:'2', timeSlot:'14-18' },
+    { value:'2026-08-09', label:'9 августа (Сб)', group:'1', timeSlot:'full' },
+    { value:'2026-08-23', label:'23 августа (Сб)', group:'2', timeSlot:'10-14' },
+    { value:'2026-08-23', label:'23 августа (Сб)', group:'2', timeSlot:'14-18' },
+];
+
+function getClients() { try { return JSON.parse(localStorage.getItem('shooting_clients')||'{}'); } catch(e) { return {}; } }
+function saveClients(c) { localStorage.setItem('shooting_clients', JSON.stringify(c)); }
+function getRegistrations() { try { return JSON.parse(localStorage.getItem('shooting_registrations')||'[]'); } catch(e) { return []; } }
+function saveRegistrations(r) { localStorage.setItem('shooting_registrations', JSON.stringify(r)); }
+function normalizePhone(p) { return p.replace(/[\s\-\(\)\+]/g,'').replace(/^8/,'7').replace(/^7/,'+7'); }
+function getRegsCount(dv, ts) { return getRegistrations().filter(r => r.date===dv && r.timeSlot===ts).length; }
+function isDateAvailable(dv, ts) { return getRegsCount(dv,ts) < (allDates.find(d=>d.value===dv&&(d.timeSlot||'full')===ts)?.maxPersons||MAX); }
+
+// Отзывы
+const defaultReviews = [
+    { name:'Егор', text:'Даниил! Спасибо за занятия, как всегда душевно всё)) после долгого перерыва было вдвойне приятно поработать)', rating:5, date:'2025-03-10' },
+    { name:'Настя', text:'Спасибо большое за занятие! Лера довольна, как слон, набила синяков — значит всё правильно 😁. Основы заложил прочно!', rating:5, date:'2025-03-08' },
+    { name:'Наталья', text:'Очень рада что попала на курс! Занятия интересные и плодотворные. Терпения вам, Даниил!', rating:5, date:'2025-03-05' },
+    { name:'Софья', text:'Первое занятие — руки болели три дня. Последнее — эмоции до лёгкой тахикардии. Цель стала ближе. Спасибо!', rating:5, date:'2025-03-12' }
+];
+function loadReviews() { try { const s=localStorage.getItem('shooting_reviews'); if(s) return JSON.parse(s); } catch(e) {} return [...defaultReviews]; }
+function saveReviews(r) { localStorage.setItem('shooting_reviews', JSON.stringify(r)); }
+function renderReviews() {
+    const c=document.getElementById('reviews-container'); if(!c) return;
+    c.innerHTML = loadReviews().map(r => {
+        const stars='★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
+        return `<div class="review-card"><div class="review-header"><span class="review-avatar">💬</span><div><div class="review-name">${esc(r.name)}</div><div class="review-source">Отзыв участника</div></div></div><div class="review-stars">${stars}</div><blockquote class="review-text">${esc(r.text)}</blockquote></div>`;
+    }).join('');
+}
+function esc(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+// Звёзды
+let curRating=5;
+function setRating(v) { curRating=v; document.getElementById('review-rating').value=v; updateStars(v); }
+function updateStars(v) { document.querySelectorAll('#star-rating span').forEach(s=>{ const sv=parseInt(s.dataset.star); s.textContent=sv<=v?'★':'☆'; s.classList.toggle('active',sv<=v); }); }
+function openReviewForm() { document.getElementById('review-modal').classList.add('active'); document.body.style.overflow='hidden'; updateStars(curRating); }
+function closeReviewForm() { document.getElementById('review-modal').classList.remove('active'); document.body.style.overflow=''; document.getElementById('review-form').reset(); document.getElementById('review-feedback').className='form-feedback'; document.getElementById('review-feedback').textContent=''; document.getElementById('char-count').textContent='0'; setRating(5); }
+document.getElementById('review-form').addEventListener('submit', function(e) {
+    e.preventDefault(); const fb=document.getElementById('review-feedback'); fb.className='form-feedback'; fb.textContent='';
+    const name=document.getElementById('review-name-field').value.trim(), text=document.getElementById('review-text-field').value.trim();
+    if(!name||name.length<2) { fb.className='form-feedback error'; fb.textContent='❌ Имя'; return; }
+    if(!text||text.length<15) { fb.className='form-feedback error'; fb.textContent='❌ Минимум 15 символов'; return; }
+    const revs=loadReviews(); revs.unshift({name,text,rating:curRating,date:new Date().toISOString().split('T')[0]}); saveReviews(revs); renderReviews();
+    fb.className='form-feedback success'; fb.textContent='✅ Спасибо!'; setTimeout(closeReviewForm,2000);
+});
+document.getElementById('review-text-field').addEventListener('input', function() { document.getElementById('char-count').textContent=this.value.length; });
+
+// Тарифы
+function selectTariff(type) {
+    document.getElementById('tariff-input').value=type;
+    document.getElementById('group-input').value=tariffConfig[type].group;
+    document.querySelectorAll('.tariff-card').forEach(c=>{ const s=c.dataset.tariff===type; c.classList.toggle('selected',s); c.setAttribute('aria-checked',s); });
+    updateDateSelect(type);
+    const sg=document.getElementById('subgroup-row'); sg.style.display=type==='practice'?'block':'none';
+    if(type!=='practice') document.getElementById('time-slot').value='full';
+    const ref=document.getElementById('referral').closest('.form-group');
+    if(type==='practice') { ref.style.opacity='0.4'; ref.style.pointerEvents='none'; document.getElementById('referral').value=''; }
+    else { ref.style.opacity='1'; ref.style.pointerEvents='auto'; }
+    document.getElementById('form-section').scrollIntoView({behavior:'smooth'});
+}
+function updateDateSelect(type) {
+    const sel=document.getElementById('date'), hint=document.getElementById('date-hint'), group=tariffConfig[type].group;
+    const dates=allDates.filter(d=>d.group===group);
+    sel.innerHTML='<option value="">Выберите дату...</option>';
+    dates.forEach(d=>{ const ts=d.timeSlot||'full', cnt=getRegsCount(d.value,ts), mx=d.maxPersons||MAX, av=cnt<mx; const o=document.createElement('option'); o.value=d.value+'|'+ts; o.textContent=`${d.label} ${ts!=='full'?'('+(ts==='10-14'?'10–14':'14–18')+')':'(10–18)'} — ${cnt}/${mx}${av?'':' (НЕТ МЕСТ)'}`; o.disabled=!av; sel.appendChild(o); });
+    hint.textContent=`Группа от ${MIN} до ${MAX} человек.`;
+}
+
+// Лояльность
+function checkLoyalty(phone,refPhone) {
+    const clients=getClients(), np=normalizePhone(phone); let discount=0, reasons=[];
+    if(refPhone&&refPhone.trim()&&clients[normalizePhone(refPhone)]) { discount+=500; reasons.push('Приведи друга'); }
+    if(clients[np]&&(clients[np].visits||0)+1>=5&&((clients[np].visits||0)+1)%5===0) { discount+=500; reasons.push('5-е занятие'); }
+    return {discount,reasons};
+}
+function canChoosePracticeOnly(phone) { const c=getClients()[normalizePhone(phone)]; return c&&c.visits>=1; }
+
+// Отправка формы
+document.getElementById('order-form').addEventListener('submit', function(e) {
+    e.preventDefault(); const fb=document.getElementById('form-feedback'); fb.className='form-feedback'; fb.textContent='';
+    const surname=document.getElementById('surname').value.trim(), name=document.getElementById('name').value.trim(), phone=document.getElementById('phone').value.trim(), referral=document.getElementById('referral').value.trim(), dateRaw=document.getElementById('date').value, agree=document.getElementById('agree').checked, newsletter=document.getElementById('newsletter').checked, tariff=document.getElementById('tariff-input').value;
+    const errors=[];
+    if(!surname) errors.push('Фамилия'); if(!name) errors.push('Имя'); if(!phone) errors.push('Телефон'); if(!dateRaw) errors.push('Дата'); if(!agree) errors.push('Согласие');
+    if(tariff==='practice'&&!canChoosePracticeOnly(phone)) errors.push('Тариф «Только практика» — только после Базового или Продвинутого.');
+    if(errors.length) { fb.className='form-feedback error'; fb.textContent='❌ '+errors.join(', '); fb.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    const [dateValue,timeSlot]=dateRaw.split('|');
+    if(!isDateAvailable(dateValue,timeSlot)) { fb.className='form-feedback error'; fb.textContent='❌ Мест нет.'; return; }
+    const {discount,reasons}=checkLoyalty(phone,referral), finalPrice=tariffPrices[tariff]-discount;
+    const regs=getRegistrations(); regs.push({surname,name,phone:normalizePhone(phone),tariff:tariffConfig[tariff].label,date:dateValue,timeSlot,price:finalPrice,discount,newsletter,timestamp:new Date().toISOString()}); saveRegistrations(regs);
+    const clients=getClients(), np=normalizePhone(phone);
+    if(!clients[np]) clients[np]={name,surname,visits:0,totalDiscounts:0,newsletter};
+    clients[np].visits+=1; clients[np].totalDiscounts+=discount; clients[np].newsletter=newsletter; clients[np].name=name; clients[np].surname=surname; saveClients(clients);
+    const cnt=getRegsCount(dateValue,timeSlot), dateObj=allDates.find(d=>d.value===dateValue&&(d.timeSlot||'full')===timeSlot), min=dateObj?.minPersons||MIN, mx=dateObj?.maxPersons||MAX;
+    let msg=`✅ Запись на ${dateValue}. Тариф: ${tariffConfig[tariff].label}. Группа: ${cnt}/${mx}.`;
+    msg+=cnt>=min?`\n\n✅ Группа набрана.`:`\n\n⚠️ Ждём набор ${min} чел. (сейчас ${cnt}).`;
+    if(discount>0) msg+=`\n\n🎉 Скидка: ${discount} ₽ (${reasons.join(', ')}). Итого: ${finalPrice} ₽.`;
+    document.getElementById('modal-message').textContent=msg; showModal(); this.reset(); selectTariff('pro'); updateDateSelect('pro');
+});
+function showModal() { document.getElementById('success-modal').classList.add('active'); document.body.style.overflow='hidden'; }
+function closeModal() { document.getElementById('success-modal').classList.remove('active'); document.body.style.overflow=''; }
+
+// Галерея
+let galleryFiles=[], currentSlide=0;
+function loadGallery() { try { const s=localStorage.getItem('shooting_gallery'); if(s) galleryFiles=JSON.parse(s); } catch(e) {} }
+function saveGallery() { localStorage.setItem('shooting_gallery',JSON.stringify(galleryFiles)); }
+function uploadGalleryFiles(input) {
+    Array.from(input.files).forEach(file=>{ if(galleryFiles.length>=20) return; const r=new FileReader(); r.onload=function(e){ galleryFiles.push({type:file.type.startsWith('video')?'video':'image',data:e.target.result,name:file.name}); saveGallery(); renderGalleryList(); renderMainGallery(); }; r.readAsDataURL(file); }); input.value='';
+}
+function deleteGalleryFile(i) { if(confirm('Удалить?')) { galleryFiles.splice(i,1); saveGallery(); renderGalleryList(); renderMainGallery(); if(currentSlide>=galleryFiles.length) currentSlide=Math.max(0,galleryFiles.length-1); } }
+function renderGalleryList() { const c=document.getElementById('admin-gallery-list'); if(!c) return; c.innerHTML=galleryFiles.length?galleryFiles.map((f,i)=>`<div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid var(--border-color);font-size:0.75rem;"><span>${f.type==='video'?'🎬':'🖼️'} ${f.name||'Файл'}</span><button onclick="deleteGalleryFile(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;">✕</button></div>`).join(''):'<p style="opacity:0.4;text-align:center;padding:20px;">Нет файлов</p>'; }
+function renderMainGallery() {
+    const m=document.getElementById('gallery-main'), d=document.getElementById('gallery-dots'); if(!m||!d) return;
+    if(!galleryFiles.length) { m.innerHTML='<div class="gallery-placeholder"><span style="font-size:4rem;opacity:0.2;">📸</span></div>'; d.innerHTML=''; return; }
+    const f=galleryFiles[currentSlide]; m.innerHTML=f.type==='video'?`<video src="${f.data}" controls playsinline style="width:100%;height:100%;object-fit:contain;"></video>`:`<img src="${f.data}" style="width:100%;height:100%;object-fit:contain;">`;
+    d.innerHTML=galleryFiles.map((_,i)=>`<div class="gallery-dot ${i===currentSlide?'active':''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');
+}
+function changeSlide(dir) { if(!galleryFiles.length) return; currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length; renderMainGallery(); }
+
+// Админка
+function loadAdminDates() { try { const s=localStorage.getItem('shooting_dates'); if(s) allDates=JSON.parse(s); } catch(e) { saveAdminDates(); } }
+function saveAdminDates() { localStorage.setItem('shooting_dates',JSON.stringify(allDates)); }
+function updateGlobalDates() { allDates=JSON.parse(localStorage.getItem('shooting_dates')||'[]'); }
+
+function openAdminPanel() {
+    const pw=prompt('🔐 Код доступа:'); if(pw!==ADMIN_PASS) { if(pw!==null) alert('❌ Неверно'); return; }
+    updateGlobalDates(); renderAdminPanel(); document.getElementById('admin-modal').classList.add('active'); document.body.style.overflow='hidden';
+}
+function closeAdminPanel() { document.getElementById('admin-modal').classList.remove('active'); document.body.style.overflow=''; updateGlobalDates(); updateDateSelect(document.getElementById('tariff-input').value); }
+
+function switchAdminTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&tab==='dates')||(i===1&&tab==='clients')||(i===2&&tab==='gallery')||(i===3&&tab==='mailing')));
+    document.querySelectorAll('.admin-tab-content').forEach(c=>c.style.display='none');
+    document.getElementById('admin-tab-'+tab).style.display='block';
+    if(tab==='clients') renderClientsList();
+    if(tab==='gallery') renderGalleryList();
+    if(tab==='dates') renderAdminPanel();
+}
+
+function renderAdminPanel() {
+    const regs=getRegistrations(), c=document.getElementById('admin-dates-list');
+    let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;">
+        <div style="background:#0a0a08;padding:8px;text-align:center;"><div style="font-size:1.3rem;color:var(--text-accent);">${regs.length}</div><div style="font-size:0.65rem;opacity:0.5;">записей</div></div>
+        <div style="background:#0a0a08;padding:8px;text-align:center;"><div style="font-size:1.3rem;color:var(--text-accent);">${Object.keys(getClients()).length}</div><div style="font-size:0.65rem;opacity:0.5;">клиентов</div></div>
+        <div style="background:#0a0a08;padding:8px;text-align:center;"><div style="font-size:1.3rem;color:var(--text-accent);">${allDates.length}</div><div style="font-size:0.65rem;opacity:0.5;">дат</div></div>
+    </div><h4 style="color:var(--text-accent);margin-bottom:6px;">📅 Даты (${MIN}–${MAX} чел.)</h4>`;
+    [...allDates].sort((a,b)=>a.value.localeCompare(b.value)).forEach(d=>{
+        const gl=d.group==='1'?'Базовый/Продв':'Практика', tl=d.timeSlot==='10-14'?'10–14':d.timeSlot==='14-18'?'14–18':'10–18';
+        const dr=regs.filter(r=>r.date===d.value&&r.timeSlot===(d.timeSlot||'full')), cnt=dr.length, mx=d.maxPersons||MAX, min=d.minPersons||MIN, pct=Math.round(cnt/mx*100);
+        let bc='#3a362d'; if(cnt>0&&cnt<min) bc='var(--warning)'; else if(cnt>=min&&cnt<mx) bc='var(--success)'; else if(cnt>=mx) bc='var(--danger)';
+        h+=`<div style="background:#0a0a08;padding:8px;border-radius:2px;margin-bottom:6px;border-left:3px solid ${bc};">
+            <div style="display:flex;justify-content:space-between;"><strong style="color:var(--text-accent);font-size:0.85rem;">${d.label} ${tl}</strong><span style="font-size:0.65rem;opacity:0.5;">${gl}</span></div>
+            <div style="margin:4px 0;background:#1a1814;height:4px;border-radius:2px;"><div style="width:${pct}%;background:${bc};height:4px;border-radius:2px;"></div></div>
+            <div style="font-size:0.7rem;opacity:0.6;">👥 ${cnt}/${mx} ${cnt<min?'⚠️ мин. '+min:cnt>=mx?'❌ полная':'✅'}</div>
+        </div>`;
+    }); c.innerHTML=h;
+}
+
+function renderClientsList(query='') {
+    const c=document.getElementById('admin-clients-list'); if(!c) return;
+    const clients=getClients(), regs=getRegistrations(); let entries=Object.entries(clients);
+    if(query) { const q=query.toLowerCase(); entries=entries.filter(([p,d])=>p.includes(q)||(d.name||'').toLowerCase().includes(q)||(d.surname||'').toLowerCase().includes(q)); }
+    if(!entries.length) { c.innerHTML='<p style="opacity:0.4;text-align:center;">Ничего не найдено</p>'; return; }
+    c.innerHTML=entries.map(([p,d])=>{
+        const cr=regs.filter(r=>normalizePhone(r.phone)===p);
+        return `<div style="background:#0a0a08;padding:8px;border-radius:2px;margin-bottom:4px;">
+            <strong style="color:var(--text-accent);">${d.surname||''} ${d.name||''}</strong> <span style="opacity:0.4;">${p}</span>
+            <span style="font-size:0.7rem;opacity:0.5;">| Занятий: ${d.visits||0} | Рассылка: ${d.newsletter!==false?'✅':'❌'}</span>
+            ${cr.length?`<div style="font-size:0.7rem;opacity:0.4;">${cr.map(r=>r.date+' — '+r.tariff).join('<br>')}</div>`:''}
+        </div>`;
+    }).join('');
+}
+
+function addNewDate() {
+    const dv=document.getElementById('new-date-value').value, dg=document.getElementById('new-date-group').value, ds=document.getElementById('new-date-slot').value;
+    if(!dv) { alert('Выберите дату'); return; }
+    if(allDates.some(d=>d.value===dv&&d.group===dg&&d.timeSlot===ds)) { alert('Уже есть'); return; }
+    const dt=new Date(dv), label=dt.toLocaleDateString('ru-RU',{day:'numeric',month:'long'})+' ('+['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][dt.getDay()]+')';
+    allDates.push({value:dv,label,group:dg,timeSlot:ds,maxPersons:MAX,minPersons:MIN}); saveAdminDates(); updateGlobalDates(); updateDateSelect(document.getElementById('tariff-input').value); renderAdminPanel();
+}
+
+// Рассылка
+function sendMailing(platform) {
+    const regs=getRegistrations(), clients=getClients(), msg=document.getElementById('mailing-message').value.trim();
+    if(!msg) { alert('Введите текст'); return; }
+    const phones=new Set();
+    regs.forEach(r=>{ if(r.newsletter!==false) phones.add(r.phone); });
+    Object.entries(clients).forEach(([p,d])=>{ if(d.newsletter!==false) phones.add(p); });
+    const list=[...phones];
+    if(!list.length) { document.getElementById('mailing-result').textContent='Нет согласившихся на рассылку.'; return; }
+    let links='';
+    const encoded=encodeURIComponent(msg);
+    list.forEach(p=>{
+        const clean=p.replace(/\D/g,'');
+        if(platform==='whatsapp') links+=`https://wa.me/${clean}?text=${encoded}\n`;
+        else if(platform==='vk') links+=`https://vk.com/write?phone=+${clean}\n`;
+        else if(platform==='telegram') links+=`https://t.me/msg?phone=+${clean}&text=${encoded}\n`;
+    });
+    document.getElementById('mailing-result').innerHTML=`<p style="margin-top:8px;">📨 ${list.length} номеров. Скопируйте ссылки:</p><textarea rows="6" style="width:100%;background:#0a0a08;color:var(--text-primary);border:1px solid var(--border-color);border-radius:2px;padding:6px;font-size:0.75rem;" onclick="this.select()">${links}</textarea><p style="font-size:0.65rem;opacity:0.5;">Открывайте ссылки по одной — они ведут в чат с клиентом.</p>`;
+}
+
+// Вход с телефона
+let tt;
+const ht=document.getElementById('hero-title');
+if(ht) { ht.addEventListener('touchstart',()=>{ tt=setTimeout(openAdminPanel,3000); }); ht.addEventListener('touchend',()=>clearTimeout(tt)); ht.addEventListener('touchmove',()=>clearTimeout(tt)); }
+
+// Закрытие модалок
+document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',function(e){ if(e.target===this){this.classList.remove('active');document.body.style.overflow='';} }));
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') document.querySelectorAll('.modal-overlay.active').forEach(m=>{m.classList.remove('active');document.body.style.overflow='';}); if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openAdminPanel();} });
+
+// Свайпы карусели
+let tsx=0;
+document.addEventListener('DOMContentLoaded',()=>{
+    const g=document.getElementById('gallery-main');
+    if(g){ g.addEventListener('touchstart',e=>{tsx=e.touches[0].clientX;}); g.addEventListener('touchend',e=>{if(Math.abs(tsx-e.changedTouches[0].clientX)>50) changeSlide(tsx>e.changedTouches[0].clientX?1:-1);}); }
+    const pro=document.querySelector('[data-tariff="pro"]'); if(pro){pro.classList.add('selected');pro.setAttribute('aria-checked','true');}
+    loadAdminDates(); loadGallery(); updateDateSelect('pro'); updateStars(5); renderReviews(); renderMainGallery();
+});
+</script>
+</body>
+</html>
