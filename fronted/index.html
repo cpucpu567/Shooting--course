@@ -245,18 +245,36 @@ function renderTariffs() {
             <div class="t-label">Только практика</div>
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
             <div class="t-price">${tariffPrices.practice.toLocaleString()} ₽</div>
+            <ul style="list-style:none; padding:0; margin:10px 0; font-size:0.85rem; color:var(--text-soft); text-align:left;">
+                <li>✓ Патроны</li>
+                <li>✓ Оружие (rifles)</li>
+                <li>✓ Аренда стрельбища</li>
+                <li>✓ Работа инструктора</li>
+            </ul>
             <span class="t-badge warn">после Базового или Продвинутого</span>
         </div>
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
             <div class="t-price">${tariffPrices.basic.toLocaleString()} ₽</div>
+            <ul style="list-style:none; padding:0; margin:10px 0; font-size:0.85rem; color:var(--text-soft); text-align:left;">
+                <li>✓ Патроны</li>
+                <li>✓ Оружие (rifles)</li>
+                <li>✓ Аренда стрельбища</li>
+                <li>✓ Работа инструктора</li>
+            </ul>
             <span class="t-badge">с теорией</span>
         </div>
         <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
             <div class="t-label">Продвинутый</div>
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
             <div class="t-price">${tariffPrices.pro.toLocaleString()} ₽</div>
+            <ul style="list-style:none; padding:0; margin:10px 0; font-size:0.85rem; color:var(--text-soft); text-align:left;">
+                <li>✓ Патроны</li>
+                <li>✓ Оружие (rifles)</li>
+                <li>✓ Аренда стрельбища</li>
+                <li>✓ Работа инструктора</li>
+            </ul>
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
         </div>
     `;
