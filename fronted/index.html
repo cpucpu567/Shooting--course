@@ -183,17 +183,22 @@
 <div class="modal-overlay" id="success-modal"><div class="modal" style="text-align:center;"><span style="font-size:3rem;">✅</span><h3>Заявка принята!</h3><p id="modal-message" style="margin:14px 0;"></p><button class="btn" onclick="closeModal()">Понял, жду</button></div></div>
 
 <div class="modal-overlay" id="admin-modal"><div class="modal" style="text-align:left;"><div style="text-align:center;margin-bottom:14px;"><span>🔧</span><h3>Админ-панель</h3></div><div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;"><button class="admin-tab active" onclick="switchAdminTab('dates')">📅 Даты</button><button class="admin-tab" onclick="switchAdminTab('clients')">👥 Клиенты</button><button class="admin-tab" onclick="switchAdminTab('gallery')">🖼️ Галерея</button><button class="admin-tab" onclick="switchAdminTab('prices')">💰 Цены</button><button class="admin-tab" onclick="switchAdminTab('mailing')">📨 Рассылка</button></div>
+
     <div id="admin-tab-dates"><div class="admin-section"><h4>➕ Добавить дату</h4><div style="display:flex;gap:6px;flex-wrap:wrap;"><input type="date" id="new-date-value" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><select id="new-date-group" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="1">Группа 1</option><option value="2">Группа 2</option></select><select id="new-date-slot" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="full">10–18</option><option value="10-14">10–14</option><option value="14-18">14–18</option></select><button onclick="addNewDate()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Добавить</button></div></div><div id="admin-dates-list"></div></div>
+
     <div id="admin-tab-clients" style="display:none;"><input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClientsList(this.value)" style="width:100%;padding:10px;margin-bottom:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><div id="admin-clients-list"></div></div>
+
     <div id="admin-tab-gallery" style="display:none;"><div class="admin-section"><h4>📤 Загрузить фото/видео</h4><input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;padding:8px;color:var(--text);"><p style="font-size:0.7rem;opacity:0.5;">Макс. 20 файлов</p></div><div id="admin-gallery-list"></div></div>
+
     <div id="admin-tab-prices" style="display:none;"><div class="admin-section"><h4>💰 Настройка цен</h4><div style="display:grid; gap:10px; max-width:300px;"><div><label style="font-size:0.75rem;">Только практика</label><input type="number" id="price-practice" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Базовый</label><input type="number" id="price-basic" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Продвинутый</label><input type="number" id="price-pro" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><button onclick="savePricesToBackend()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Сохранить</button></div></div></div>
+
     <div id="admin-tab-mailing" style="display:none;"><div class="admin-section"><h4>📨 Рассылка</h4><p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправить сообщение всем согласившимся.</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button onclick="sendMailing('whatsapp')" style="padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">WhatsApp</button><button onclick="sendMailing('vk')" style="padding:8px 14px;background:#0077FF;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">VK</button><button onclick="sendMailing('telegram')" style="padding:8px 14px;background:#2AABEE;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Telegram</button></div><textarea id="mailing-message" rows="3" placeholder="Текст сообщения..." style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.85rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea></div><div id="mailing-result" style="font-size:0.8rem;color:var(--text-soft);"></div></div>
+
     <button class="btn" onclick="closeAdminPanel()" style="margin-top:10px;">Закрыть</button>
 </div></div>
 
 <script>
-const API_BASE = 'http://shooting-course.onrender.com';  // ← если бэкенд локально, поменяй на свой URL
-
+// ===== Конфиг =====
 const tariffConfig = { practice:{group:'2',label:'Только практика',subGroup:true}, basic:{group:'1',label:'Базовый'}, pro:{group:'1',label:'Продвинутый'} };
 const MIN=5, MAX=10, ADMIN_PASS='777';
 
@@ -201,11 +206,15 @@ let allDates = [];
 let tariffPrices = { practice: 7000, basic: 8500, pro: 13500 };
 let galleryFiles = [], currentSlide = 0;
 
+// ===== VK Bridge =====
 vkBridge.send('VKWebAppInit');
 vkBridge.send('VKWebAppGetUserInfo').then(user => {
     if (user.first_name) document.getElementById('name').value = user.first_name;
     if (user.last_name) document.getElementById('surname').value = user.last_name;
 }).catch(() => {});
+
+// ===== API =====
+const API_BASE = 'https://shooting-course.onrender.com';
 
 async function apiFetch(url) {
     const res = await fetch(API_BASE + url);
@@ -216,6 +225,7 @@ async function apiPost(url, data) {
     return res.json();
 }
 
+// ===== Загрузка конфига =====
 async function loadConfig() {
     try {
         const config = await apiFetch('/api/config');
@@ -281,6 +291,7 @@ function selectTariff(t){
     document.getElementById('form-section').scrollIntoView({behavior:'smooth'});
 }
 
+// ===== Отправка заявки =====
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
     const fb=document.getElementById('form-feedback');
@@ -317,6 +328,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
+// ===== Админка — цены =====
 async function savePricesToBackend() {
     const prices = {
         practice: parseInt(document.getElementById('price-practice').value) || 7000,
@@ -333,6 +345,7 @@ async function savePricesToBackend() {
     }
 }
 
+// ===== Остальные функции (галерея, админка, рассылка) =====
 function showModal(){document.getElementById('success-modal').classList.add('active');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('success-modal').classList.remove('active');document.body.style.overflow='';}
 function loadGallery(){try{const s=localStorage.getItem('shooting_gallery');if(s)galleryFiles=JSON.parse(s);}catch(e){}}
@@ -344,7 +357,7 @@ function renderMainGallery(){const m=document.getElementById('gallery-main'),d=d
 function changeSlide(dir){if(!galleryFiles.length)return;currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length;renderMainGallery();}
 function setBackgroundFromGallery(){const body=document.body;if(galleryFiles.length>0&&galleryFiles[0].type==='image'){body.style.setProperty('--gallery-bg',`url('${galleryFiles[0].data}')`);body.classList.add('has-gallery-bg');}else{body.classList.remove('has-gallery-bg');body.style.removeProperty('--gallery-bg');}}
 let tt;const ht=document.getElementById('hero-title');if(ht){ht.addEventListener('touchstart',()=>{tt=setTimeout(openAdminPanel,3000);});ht.addEventListener('touchend',()=>clearTimeout(tt));ht.addEventListener('touchmove',()=>clearTimeout(tt));}
-function openAdminPanel(){const pw=prompt('🔐 Код:');if(pw!==ADMIN_PASS){if(pw)alert('❌');return;}document.getElementById('admin-modal').classList.add('active');document.body.style.overflow='hidden';}
+function openAdminPanel(){const pw=prompt('🔐 Код:');if(pw!==ADMIN_PASS){if(pw)alert('❌');return;}loadAdminDates();document.getElementById('admin-modal').classList.add('active');document.body.style.overflow='hidden';}
 function closeAdminPanel(){document.getElementById('admin-modal').classList.remove('active');document.body.style.overflow='';}
 function switchAdminTab(t){document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='dates')||(i===1&&t==='clients')||(i===2&&t==='gallery')||(i===3&&t==='prices')||(i===4&&t==='mailing')));document.getElementById('admin-tab-dates').style.display=t==='dates'?'block':'none';document.getElementById('admin-tab-clients').style.display=t==='clients'?'block':'none';document.getElementById('admin-tab-gallery').style.display=t==='gallery'?'block':'none';document.getElementById('admin-tab-prices').style.display=t==='prices'?'block':'none';document.getElementById('admin-tab-mailing').style.display=t==='mailing'?'block':'none';if(t==='clients')renderClientsList();if(t==='gallery')renderGalleryList();if(t==='prices'){document.getElementById('price-practice').value=tariffPrices.practice;document.getElementById('price-basic').value=tariffPrices.basic;document.getElementById('price-pro').value=tariffPrices.pro;}}
 function renderClientsList(q=''){/* твой код */}
