@@ -1,0 +1,20 @@
+{
+  "name": "Стрелковый интенсив",
+  "short_name": "Огневая",
+  "start_url": "https://ваш-домен.ru/index.html",
+  "display": "standalone",
+  "background_color": "#2a2824",
+  "theme_color": "#2a2824",
+  "icons": [
+    {
+      "src": "https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ],
+  "vk": {
+    "app_id": "ваш_app_id",
+    "app_type": "mini_app",
+    "allow_redirect": false
+  }
+}
