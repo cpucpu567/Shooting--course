@@ -251,8 +251,12 @@ function renderTariffs() {
                 <li>✓ Аренда стрельбища</li>
                 <li>✓ Работа инструктора</li>
             </ul>
+            <div style="font-size:0.75rem; color:var(--gold); margin-top:4px; opacity:0.7;">
+                ⚡ Только для тех, кто уже прошёл базовый или продвинутый
+            </div>
             <span class="t-badge warn">после Базового или Продвинутого</span>
         </div>
+
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
@@ -263,8 +267,12 @@ function renderTariffs() {
                 <li>✓ Аренда стрельбища</li>
                 <li>✓ Работа инструктора</li>
             </ul>
+            <div style="font-size:0.75rem; color:var(--gold); margin-top:4px; opacity:0.7;">
+                📖 Полный день: теория + практика с нуля
+            </div>
             <span class="t-badge">с теорией</span>
         </div>
+
         <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
             <div class="t-label">Продвинутый</div>
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
@@ -275,6 +283,9 @@ function renderTariffs() {
                 <li>✓ Аренда стрельбища</li>
                 <li>✓ Работа инструктора</li>
             </ul>
+            <div style="font-size:0.75rem; color:var(--gold); margin-top:4px; font-weight:600;">
+                🔥 В 2 раза больше патронов · Больше драйва · Максимальный результат
+            </div>
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
         </div>
     `;
