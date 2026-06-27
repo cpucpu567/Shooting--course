@@ -167,7 +167,18 @@
             .tariff-nav { display: none !important; } 
         }
         @media (min-width: 901px) { 
-            .tariff-dots, .tariff-nav { display: none !important; } 
+            .tariff-dots, .tariff-nav { display: none !important; }
+            /* ===== Мобильная адаптация (телефоны) ===== */
+@media (max-width: 700px) {
+    .hero h1 { font-size: 2rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr !important; gap: 15px; }
+    .why-item { padding: 16px 20px !important; min-height: auto !important; }
+    .why-item p { font-size: 0.85rem !important; line-height: 1.5; }
+    .instructor { flex-direction: column; text-align: center; }
+    .form-row { grid-template-columns: 1fr; }
+    .gallery-main { height: 250px; }
+}
         }
     </style>
 </head>
