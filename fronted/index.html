@@ -172,6 +172,85 @@
         background: rgba(255,255,255,0.05);
         border-radius: 4px;
     }
+    /* ===== Карусель тарифов (планшеты и телефоны) ===== */
+@media (max-width: 900px) {
+    .tariff-grid {
+        display: flex;
+        overflow-x: auto;
+        gap: 20px;
+        padding: 10px 0 20px 0;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        flex-wrap: nowrap;
+        width: 100%;
+        margin: 0 auto;
+        position: relative;
+    }
+    .tariff-card {
+        flex: 0 0 85%;
+        min-width: 280px;
+        scroll-snap-align: start;
+        margin-right: 10px;
+        padding: 20px 14px;
+    }
+    .tariff-card:last-child {
+        margin-right: 0;
+    }
+    .tariff-grid::-webkit-scrollbar {
+        height: 6px;
+    }
+    .tariff-grid::-webkit-scrollbar-thumb {
+        background: var(--purple);
+        border-radius: 4px;
+    }
+    .tariff-grid::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+    }
+
+    /* Индикатор (точки) */
+    .tariff-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .tariff-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #444;
+        transition: background 0.3s;
+        cursor: pointer;
+    }
+    .tariff-dot.active {
+        background: var(--purple);
+    }
+
+    /* Кнопки ← → */
+    .tariff-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        border: none;
+        font-size: 1.6rem;
+        padding: 8px 12px;
+        cursor: pointer;
+        z-index: 2;
+        border-radius: 50%;
+        display: none;  /* на телефонах скрыты, но на планшетах с мышкой видны */
+    }
+    .tariff-nav.prev { left: 5px; }
+    .tariff-nav.next { right: 5px; }
+}
+
+/* На десктопе кнопки и точки скрыты */
+@media (min-width: 901px) {
+    .tariff-dots, .tariff-nav { display: none !important; }
+}
     </style>
 </head>
 <body>
@@ -205,7 +284,17 @@
 
     <section><div class="container"><h2>Фото и видео <span>с занятий</span></h2><div class="gallery-wrapper"><div class="gallery-main" id="gallery-main"><div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div></div><button class="gallery-arrow gallery-prev" onclick="changeSlide(-1)">❮</button><button class="gallery-arrow gallery-next" onclick="changeSlide(1)">❯</button><div class="gallery-dots" id="gallery-dots"></div></div></div></section>
 
-    <section><div class="container"><h2>Форматы <span>участия</span></h2><div class="tariff-grid" id="tariff-grid"></div></div></section>
+    <section>
+    <div class="container">
+        <h2>Форматы <span>участия</span></h2>
+        <div style="position:relative;">
+            <div class="tariff-grid" id="tariff-grid"></div>
+            <button class="tariff-nav prev" id="tariff-prev">❮</button>
+            <button class="tariff-nav next" id="tariff-next">❯</button>
+        </div>
+        <div class="tariff-dots" id="tariff-dots"></div>
+    </div>
+</section>
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
@@ -274,10 +363,11 @@ async function loadConfig() {
 
 function renderTariffs() {
     const grid = document.getElementById('tariff-grid');
+    const dotsContainer = document.getElementById('tariff-dots');
+    const prevBtn = document.getElementById('tariff-prev');
+    const nextBtn = document.getElementById('tariff-next');
+
     grid.innerHTML = `
-        <div style="text-align:center; margin-bottom:20px; font-size:0.9rem; color:var(--text-soft); grid-column:1/-1;">
-            ⚡ Во все тарифы включено: <strong>патроны, оружие (rifles), аренда стрельбища, работа инструктора</strong>
-        </div>
         <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
             <div class="t-label">Только практика</div>
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
@@ -312,6 +402,57 @@ function renderTariffs() {
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
         </div>
     `;
+
+    // --- Инициализация точек и кнопок ---
+    if (window.innerWidth <= 900) {
+        const cards = grid.querySelectorAll('.tariff-card');
+        const total = cards.length;
+
+        // Создать точки
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'tariff-dot' + (i === 0 ? ' active' : '');
+            dot.dataset.index = i;
+            dot.addEventListener('click', () => {
+                cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            });
+            dotsContainer.appendChild(dot);
+        }
+
+        // Обновлять активную точку при скролле
+        const updateDots = () => {
+            const scrollLeft = grid.scrollLeft;
+            const cardWidth = cards[0]?.offsetWidth || 0;
+            const gap = 20;
+            const index = Math.round(scrollLeft / (cardWidth + gap));
+            const dots = dotsContainer.querySelectorAll('.tariff-dot');
+            dots.forEach((d, i) => d.classList.toggle('active', i === index));
+        };
+
+        grid.addEventListener('scroll', updateDots);
+
+        // Кнопки ← →
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+        prevBtn.addEventListener('click', () => {
+            const cardWidth = cards[0]?.offsetWidth || 0;
+            const gap = 20;
+            const step = cardWidth + gap;
+            grid.scrollBy({ left: -step, behavior: 'smooth' });
+        });
+        nextBtn.addEventListener('click', () => {
+            const cardWidth = cards[0]?.offsetWidth || 0;
+            const gap = 20;
+            const step = cardWidth + gap;
+            grid.scrollBy({ left: step, behavior: 'smooth' });
+        });
+    } else {
+        // На десктопе скрыть точки и кнопки
+        dotsContainer.innerHTML = '';
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+    }
 }
 
 function normalizePhone(p){return p.replace(/[\s\-\(\)\+]/g,'').replace(/^8/,'7').replace(/^7/,'+7');}
