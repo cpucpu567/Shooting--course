@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Админ-панель | Стрелковый интенсив</title>
+    <link rel="icon" type="image/jpeg" href="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <style>
+        :root {
+            --text: #e8e4e0;
+            --text-soft: #d0ccc8;
+            --gold: #c4a060;
+            --purple: #9b8af0;
+            --purple-hover: #8a78e0;
+            --bg: #1A1C20;
+            --card-bg: rgba(60, 56, 52, 0.78);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(0, 0, 0, 0.4);
+            --input-border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background-color: var(--bg);
+            background-image: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 80%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .container { max-width:1100px; margin:0 auto; padding:20px; }
+        .header { display:flex; justify-content:space-between; align-items:center; padding:20px 0; border-bottom:2px solid var(--purple); }
+        .header h1 { font-size:1.8rem; }
+        .header h1 span { color:var(--purple); }
+        .tabs { display:flex; gap:10px; margin:20px 0; flex-wrap:wrap; }
+        .tab { background:var(--card-bg); color:var(--text-soft); padding:10px 24px; border-radius:8px; cursor:pointer; border:1px solid var(--card-border); transition:0.3s; font-weight:600; }
+        .tab.active { background:var(--purple); color:#fff; border-color:var(--purple); }
+        .tab:hover:not(.active) { border-color:var(--purple); }
+        .content { display:none; }
+        .content.active { display:block; }
+        .card { background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid var(--card-border); margin-bottom:20px; }
+        .btn { background:var(--purple); color:#fff; padding:10px 24px; border:none; border-radius:6px; cursor:pointer; font-weight:600; transition:0.3s; }
+        .btn:hover { background:var(--purple-hover); }
+        .btn.secondary { background:transparent; border:1px solid var(--card-border); color:var(--text); }
+        .form-group { margin-bottom:15px; }
+        .form-group label { display:block; margin-bottom:5px; color:var(--text-soft); font-size:0.85rem; }
+        .form-group input, .form-group select { width:100%; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--input-border); border-radius:6px; font-size:0.95rem; }
+        .form-group select option { background:#1A1C20; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+        @media (max-width:700px) { .form-row { grid-template-columns:1fr; } .header h1 { font-size:1.2rem; } .tabs { gap:5px; } .tab { padding:8px 14px; font-size:0.8rem; } }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <h1>🔧 Админ-панель <span>«Стрелковый интенсив»</span></h1>
+            <button class="btn secondary" onclick="logout()">Выйти</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dates')">📅 Даты</button>
+            <button class="tab" onclick="switchTab('clients')">👥 Клиенты</button>
+            <button class="tab" onclick="switchTab('prices')">💰 Цены</button>
+            <button class="tab" onclick="switchTab('gallery')">🖼️ Галерея</button>
+            <button class="tab" onclick="switchTab('mailing')">📨 Рассылка</button>
+        </div>
+
+        <!-- Вкладка: Даты -->
+        <div id="tab-dates" class="content active">
+            <div class="card">
+                <h4>➕ Добавить дату занятия</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Дата</label><input type="date" id="new-date" /></div>
+                    <div class="form-group"><label>Название (например, "Базовый-2")</label><input type="text" id="new-date-label" placeholder="Базовый-2" /></div>
+                </div>
+                <div class="form-group">
+                    <label>Для какого тарифа эта дата?</label>
+                    <select id="new-date-tariff">
+                        <option value="all">Любой тариф</option>
+                        <option value="basic">Только Базовый</option>
+                        <option value="practice">Только Практика</option>
+                        <option value="pro">Только Расширенная практика</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="addNewDate()">Добавить дату</button>
+            </div>
+            <div id="dates-list"></div>
+        </div>
+
+        <!-- Вкладка: Клиенты -->
+        <div id="tab-clients" class="content">
+            <div class="card">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClients()" style="flex:1;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;min-width:150px;" />
+                    <button class="btn secondary" onclick="clientsFilter='all';renderClients();">👥 Все</button>
+                    <button class="btn secondary" onclick="clientsFilter='experienced';renderClients();">⭐ Опытные</button>
+                    <button class="btn secondary" onclick="clientsFilter='beginners';renderClients();">🔰 Новички</button>
+                </div>
+            </div>
+            <div id="clients-list"></div>
+        </div>
+
+        <!-- Вкладка: Цены -->
+        <div id="tab-prices" class="content">
+            <div class="card">
+                <h4>💰 Настройка цен</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Базовый (30 выстр.)</label><input type="number" id="price-basic" /></div>
+                    <div class="form-group"><label>Практика (30 выстр.)</label><input type="number" id="price-practice" /></div>
+                    <div class="form-group"><label>Расширенная практика (60 выстр.)</label><input type="number" id="price-pro" /></div>
+                </div>
+                <button class="btn" onclick="savePrices()">Сохранить цены</button>
+            </div>
+        </div>
+
+        <!-- Вкладка: Галерея -->
+        <div id="tab-gallery" class="content">
+            <div class="card">
+                <h4>📤 Загрузить фото/видео</h4>
+                <input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;" />
+                <p style="font-size:0.7rem;opacity:0.5;margin-top:5px;">Макс. 20 файлов</p>
+            </div>
+            <div id="gallery-list"></div>
+        </div>
+
+        <!-- Вкладка: Рассылка -->
+        <div id="tab-mailing" class="content">
+            <div class="card">
+                <h4>📨 Рассылка</h4>
+                <p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправить сообщение всем согласившимся.</p>
+                <div class="form-group">
+                    <label>Текст сообщения</label>
+                    <textarea id="mailing-message" rows="4" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.9rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button onclick="sendMailing('vk')" class="btn">📤 VK</button>
+                    <button onclick="sendMailing('telegram')" class="btn secondary">📤 Telegram</button>
+                </div>
+                <div id="mailing-result" style="margin-top:10px;font-size:0.85rem;color:var(--text-soft);"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== Пароль (потом поменяем) =====
+        const ADMIN_PASS = '777';
+        let clientsFilter = 'all';
+
+        // ===== API =====
+        const API_BASE = 'https://shooting-course.onrender.com';
+
+        async function apiFetch(url) {
+            const res = await fetch(API_BASE + url);
+            return res.json();
+        }
+        async function apiPost(url, data) {
+            const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            return res.json();
+        }
+
+        // ===== Вход =====
+        function checkAuth() {
+            const pw = prompt('🔐 Введите пароль администратора:');
+            if (pw !== ADMIN_PASS) {
+                alert('❌ Неверный пароль');
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+
+        if (!checkAuth()) {
+            // если не прошёл — редирект
+        }
+
+        // ===== Вкладки =====
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelector(`.tab[onclick*="'${tab}'"]`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            if (tab === 'clients') renderClients();
+            if (tab === 'dates') renderDates();
+            if (tab === 'gallery') renderGallery();
+        }
+
+        // ===== Выход =====
+        function logout() {
+            if (confirm('Выйти из админ-панели?')) {
+                window.location.href = '/';
+            }
+        }
+
+        // ===== Даты =====
+        let allDates = [];
+
+        async function loadDates() {
+            const config = await apiFetch('/api/config');
+            allDates = config.dates || [];
+            renderDates();
+        }
+
+        function renderDates() {
+            const container = document.getElementById('dates-list');
+            if (!allDates.length) {
+                container.innerHTML = '<p style="opacity:0.4;">Нет добавленных дат</p>';
+                return;
+            }
+            container.innerHTML = allDates.map(d => `
+                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                    <div>
+                        <strong>${d.label}</strong>
+                        <span style="opacity:0.4;font-size:0.85rem;">${d.value}</span>
+                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">${d.tariff || 'Любой'}</span>
+                    </div>
+                    <button onclick="deleteDate('${d.value}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        async function addNewDate() {
+            const value = document.getElementById('new-date').value;
+            const label = document.getElementById('new-date-label').value.trim();
+            const tariff = document.getElementById('new-date-tariff').value;
+            if (!value || !label) { alert('Заполните дату и название'); return; }
+            const data = { value, label, tariff };
+            await apiPost('/api/dates', data);
+            loadDates();
+            document.getElementById('new-date').value = '';
+            document.getElementById('new-date-label').value = '';
+        }
+
+        async function deleteDate(value) {
+            if (!confirm('Удалить эту дату?')) return;
+            // эндпоинт удаления (если его нет — добавить в бэкенд)
+            // пока просто перезагружаем
+            loadDates();
+        }
+
+        // ===== Клиенты =====
+        async function renderClients() {
+            const container = document.getElementById('clients-list');
+            const clients = await apiFetch('/api/clients');
+            const q = document.getElementById('client-search').value.toLowerCase();
+            let filtered = clients;
+            if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
+            if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced);
+            if (clientsFilter === 'beginners') filtered = filtered.filter(c => !c.experienced);
+            if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
+            container.innerHTML = filtered.map(c => `
+                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                    <div>
+                        <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
+                        <span style="opacity:0.4;">${c.phone}</span>
+                        <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
+                        ${c.experienced ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">✅ Опытный</span>' : ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+                    </div>
+                    <button onclick="toggleExperienced('${c.phone}')" class="btn" style="width:auto;padding:4px 12px;font-size:0.6rem;background:${c.experienced ? 'var(--purple-hover)' : 'var(--purple)'};">
+                        ${c.experienced ? '✕ Убрать' : '⭐ Сделать опытным'}
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function toggleExperienced(phone) {
+            const client = await apiFetch(`/api/clients/${phone}`);
+            const newStatus = !client.experienced;
+            await apiPost(`/api/clients/${phone}`, { experienced: newStatus });
+            renderClients();
+        }
+
+        // ===== Цены =====
+        let tariffPrices = {};
+
+        async function loadPrices() {
+            const config = await apiFetch('/api/config');
+            tariffPrices = config.prices || {};
+            document.getElementById('price-basic').value = tariffPrices.basic || 8500;
+            document.getElementById('price-practice').value = tariffPrices.practice || 7000;
+            document.getElementById('price-pro').value = tariffPrices.pro || 13500;
+        }
+
+        async function savePrices() {
+            const prices = {
+                basic: parseInt(document.getElementById('price-basic').value) || 8500,
+                practice: parseInt(document.getElementById('price-practice').value) || 7000,
+                pro: parseInt(document.getElementById('price-pro').value) || 13500
+            };
+            await apiPost('/api/prices', prices);
+            alert('✅ Цены сохранены!');
+        }
+
+        // ===== Галерея =====
+        let galleryFiles = [];
+
+        function loadGallery() {
+            try {
+                const s = localStorage.getItem('shooting_gallery');
+                if (s) galleryFiles = JSON.parse(s);
+            } catch(e) {}
+            renderGallery();
+        }
+
+        function renderGallery() {
+            const c = document.getElementById('gallery-list');
+            if (!galleryFiles.length) {
+                c.innerHTML = '<p style="opacity:0.4;">Нет файлов</p>';
+                return;
+            }
+            c.innerHTML = galleryFiles.map((f, i) => `
+                <div style="display:flex;justify-content:space-between;padding:6px;font-size:0.7rem;border-bottom:1px solid var(--input-border);">
+                    ${f.type === 'video' ? '🎬' : '🖼️'} ${f.name || 'Файл'}
+                    <button onclick="deleteGalleryFile(${i})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function uploadGalleryFiles(input) {
+            Array.from(input.files).forEach(file => {
+                if (galleryFiles.length >= 20) return;
+                const r = new FileReader();
+                r.onload = function(e) {
+                    galleryFiles.push({ type: file.type.startsWith('video') ? 'video' : 'image', data: e.target.result, name: file.name });
+                    localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
+                    renderGallery();
+                };
+                r.readAsDataURL(file);
+            });
+            input.value = '';
+        }
+
+        function deleteGalleryFile(i) {
+            if (confirm('Удалить?')) {
+                galleryFiles.splice(i, 1);
+                localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
+                renderGallery();
+            }
+        }
+
+        // ===== Рассылка =====
+        async function sendMailing(platform) {
+            const msg = document.getElementById('mailing-message').value.trim();
+            if (!msg) { alert('Введите текст сообщения'); return; }
+            const clients = await apiFetch('/api/clients');
+            const phones = clients.filter(c => c.newsletter).map(c => c.phone);
+            if (!phones.length) {
+                document.getElementById('mailing-result').textContent = 'Нет согласившихся на рассылку.';
+                return;
+            }
+            const encoded = encodeURIComponent(msg);
+            const links = phones.map(p => {
+                const clean = p.replace(/\D/g, '');
+                if (platform === 'vk') return `https://vk.com/write?phone=+${clean}`;
+                if (platform === 'telegram') return `https://t.me/msg?phone=+${clean}&text=${encoded}`;
+                return '';
+            }).join('\n');
+            document.getElementById('mailing-result').innerHTML = `
+                <p style="margin-top:8px;">📨 ${phones.length} номеров. Скопируйте ссылки:</p>
+                <textarea rows="5" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;padding:6px;font-size:0.7rem;" onclick="this.select()">${links}</textarea>
+                <p style="font-size:0.65rem;opacity:0.5;">Открывайте ссылки по одной — они ведут в чат с клиентом.</p>
+            `;
+        }
+
+        // ===== Инициализация =====
+        loadDates();
+        loadPrices();
+        loadGallery();
+        renderClients();
+    </script>
+</body>
+</html>
