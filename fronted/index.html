@@ -151,10 +151,10 @@
                 position: relative; 
             } 
             .tariff-card { 
-                flex: 0 0 90%; 
+                flex: 0 0 85%; 
                 min-width: 280px; 
-                scroll-snap-align: center; 
-                margin-right: 0; 
+                scroll-snap-align: start; 
+                margin-right: 10px; 
                 padding: 20px 14px; 
             } 
             .tariff-card:last-child { margin-right: 0; } 
@@ -205,6 +205,11 @@
     <section>
     <div class="container">
         <h2>Форматы <span>участия</span></h2>
+        <!-- Блок "Что входит в стоимость" — статично над каруселью -->
+        <div style="text-align:center; margin-bottom:25px; font-size:0.95rem; color:var(--text-soft); background:var(--card-bg); padding:12px 20px; border-radius:8px; border:1px solid var(--card-border);">
+            ⚡ В стоимость любого тарифа входит:<br>
+            <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
+        </div>
         <div style="position:relative;">
             <div class="tariff-grid" id="tariff-grid"></div>
             <button class="tariff-nav prev" id="tariff-prev">❮</button>
@@ -285,16 +290,8 @@ function renderTariffs() {
     const prevBtn = document.getElementById('tariff-prev');
     const nextBtn = document.getElementById('tariff-next');
 
-    // Общий блок "Что входит в стоимость"
-    const includeBlock = `
-        <div style="text-align:center; margin-bottom:25px; font-size:0.95rem; color:var(--text-soft); grid-column:1/-1; background:var(--card-bg); padding:12px 20px; border-radius:8px; border:1px solid var(--card-border);">
-            ⚡ В стоимость любого тарифа входит:<br>
-            <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
-        </div>
-    `;
-
     // Тарифы в правильном порядке: Базовый → Практика → Продвинутый
-    grid.innerHTML = includeBlock + `
+    grid.innerHTML = `
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
