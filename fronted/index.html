@@ -137,41 +137,7 @@
         .admin-section h4 { color:var(--text); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
         footer { text-align:center; padding:30px; color: var(--text-soft); opacity:0.5; font-size:0.8rem; }
         @media (max-width:900px) { .tariff-grid { grid-template-columns:1fr; max-width:400px; } .reviews-grid { grid-template-columns:1fr; } }
-        @media (max-width:700px) { .hero h1 { font-size:2rem; } .grid-2 { grid-template-columns:1fr; } .why-grid { grid-template-columns:1fr; } .instructor { flex-direction:column; text-align:center; } .form-row { grid-template-columns:1fr; } .gallery-main { height:250px; } /* ===== Горизонтальная карусель тарифов (для планшетов и телефонов) ===== */
-@media (max-width: 900px) {
-    .tariff-grid {
-        display: flex;
-        overflow-x: auto;
-        gap: 20px;
-        padding: 10px 0 20px 0;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-        flex-wrap: nowrap;
-        width: 100%;
-        margin: 0 auto;
-    }
-    .tariff-card {
-        flex: 0 0 85%;  /* карточка занимает 85% ширины экрана */
-        min-width: 280px;
-        scroll-snap-align: start;
-        margin-right: 10px;
-        padding: 20px 14px;
-    }
-    .tariff-card:last-child {
-        margin-right: 0;
-    }
-    .tariff-grid::-webkit-scrollbar {
-        height: 6px;
-    }
-    .tariff-grid::-webkit-scrollbar-thumb {
-        background: var(--purple);
-        border-radius: 4px;
-    }
-    .tariff-grid::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.05);
-        border-radius: 4px;
-    }
+        @media (max-width:700px) { .hero h1 { font-size:2rem; } .grid-2 { grid-template-columns:1fr; } .why-grid { grid-template-columns:1fr; } .instructor { flex-direction:column; text-align:center; } .form-row { grid-template-columns:1fr; } .gallery-main { height:250px
     /* ===== Карусель тарифов (планшеты и телефоны) ===== */
 @media (max-width: 900px) {
     .tariff-grid {
