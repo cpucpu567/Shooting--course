@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import sqlite3
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import requests
-from datetime import datetime
 
 app = FastAPI(title="Стрелковый интенсив API")
 
@@ -15,13 +15,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ===== Подключение к PostgreSQL =====
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
 def init_db():
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
-    # Таблица заявок
     c.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
             phone TEXT NOT NULL,
@@ -30,17 +35,16 @@ def init_db():
             date TEXT NOT NULL,
             time_slot TEXT,
             source TEXT,
-            newsletter BOOLEAN DEFAULT 0,
+            newsletter BOOLEAN DEFAULT FALSE,
             discount INTEGER DEFAULT 0,
             final_price INTEGER NOT NULL,
             status TEXT DEFAULT 'new',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    # Таблица дат
     c.execute('''
         CREATE TABLE IF NOT EXISTS dates (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             value TEXT NOT NULL,
             label TEXT NOT NULL,
             group_id TEXT NOT NULL,
@@ -49,27 +53,24 @@ def init_db():
             min_persons INTEGER DEFAULT 5
         )
     ''')
-    # Таблица цен
     c.execute('''
         CREATE TABLE IF NOT EXISTS config (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         )
     ''')
-    # Таблица клиентов (добавили!)
     c.execute('''
         CREATE TABLE IF NOT EXISTS clients (
             phone TEXT PRIMARY KEY,
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
             visits INTEGER DEFAULT 0,
-            experienced BOOLEAN DEFAULT 0,
-            newsletter BOOLEAN DEFAULT 0,
+            experienced BOOLEAN DEFAULT FALSE,
+            newsletter BOOLEAN DEFAULT FALSE,
             total_discounts INTEGER DEFAULT 0,
-            last_visit TEXT
+            last_visit TIMESTAMP
         )
     ''')
-    # Цены по умолчанию
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
         c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":7000,\"basic\":8500,\"pro\":13500}')")
@@ -78,6 +79,7 @@ def init_db():
 
 init_db()
 
+# ===== Модели =====
 class BookingRequest(BaseModel):
     surname: str
     name: str
@@ -102,26 +104,28 @@ class DateItem(BaseModel):
     max_persons: int = 10
     min_persons: int = 5
 
+# ===== Вспомогательные функции =====
 def get_prices():
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute("SELECT value FROM config WHERE key = 'prices'")
     row = c.fetchone()
     conn.close()
-    return eval(row[0]) if row else {"practice": 7000, "basic": 8500, "pro": 13500}
+    return eval(row['value']) if row else {"practice": 7000, "basic": 8500, "pro": 13500}
 
+# ===== API =====
 @app.get("/api/config")
 async def get_config():
     prices = get_prices()
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute("SELECT * FROM dates")
     dates = c.fetchall()
     conn.close()
     return {
         "prices": prices,
-        "dates": [{"value": r[1], "label": r[2], "group": r[3], "timeSlot": r[4],
-                   "maxPersons": r[5], "minPersons": r[6]} for r in dates]
+        "dates": [{"value": r['value'], "label": r['label'], "group": r['group_id'], "timeSlot": r['time_slot'],
+                   "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
 
 @app.post("/api/booking")
@@ -139,31 +143,31 @@ async def create_booking(data: BookingRequest):
 
     final_price = max(0, prices[data.tariff] - discount)
 
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         INSERT INTO bookings 
         (surname, name, phone, referral, tariff, date, time_slot, source, newsletter, discount, final_price)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (data.surname, data.name, data.phone, data.referral, data.tariff, data.date, data.time_slot,
-          data.source, int(data.newsletter), discount, final_price))
-    booking_id = c.lastrowid
+          data.source, data.newsletter, discount, final_price))
+    booking_id = c.fetchone()['id'] if hasattr(c, 'fetchone') else c.lastrowid
     conn.commit()
     conn.close()
 
-    # Сохраняем клиента (или обновляем)
-    conn = sqlite3.connect('shooting.db')
+    # Регистрируем/обновляем клиента
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
-        VALUES (?, ?, ?, 1, 1, ?)
-        ON CONFLICT(phone) DO UPDATE SET
-            surname = excluded.surname,
-            name = excluded.name,
-            visits = visits + 1,
-            experienced = 1,
-            newsletter = excluded.newsletter
-    ''', (data.phone, data.surname, data.name, int(data.newsletter)))
+        VALUES (%s, %s, %s, 1, TRUE, %s)
+        ON CONFLICT (phone) DO UPDATE SET
+            surname = EXCLUDED.surname,
+            name = EXCLUDED.name,
+            visits = clients.visits + 1,
+            experienced = TRUE,
+            newsletter = EXCLUDED.newsletter
+    ''', (data.phone, data.surname, data.name, data.newsletter))
     conn.commit()
     conn.close()
 
@@ -198,9 +202,9 @@ async def create_booking(data: BookingRequest):
 
 @app.post("/api/prices")
 async def update_prices(data: PriceUpdate):
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
-    c.execute("UPDATE config SET value = ? WHERE key = 'prices'", 
+    c.execute("UPDATE config SET value = %s WHERE key = 'prices'", 
               (str({"practice": data.practice, "basic": data.basic, "pro": data.pro}),))
     conn.commit()
     conn.close()
@@ -208,11 +212,11 @@ async def update_prices(data: PriceUpdate):
 
 @app.post("/api/dates")
 async def add_date(date: DateItem):
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute('''
         INSERT INTO dates (value, label, group_id, time_slot, max_persons, min_persons)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s)
     ''', (date.value, date.label, date.group_id, date.time_slot, date.max_persons, date.min_persons))
     conn.commit()
     conn.close()
@@ -220,24 +224,23 @@ async def add_date(date: DateItem):
 
 @app.get("/api/bookings")
 async def get_bookings():
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
     c.execute("SELECT * FROM bookings ORDER BY created_at DESC")
     rows = c.fetchall()
     conn.close()
-    return [{"id": r[0], "surname": r[1], "name": r[2], "phone": r[3], "tariff": r[5],
-             "date": r[6], "timeSlot": r[7], "finalPrice": r[11], "status": r[12], "createdAt": r[13]}
-            for r in rows]
+    return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "tariff": r['tariff'],
+             "date": r['date'], "timeSlot": r['time_slot'], "finalPrice": r['final_price'], "status": r['status'],
+             "createdAt": r['created_at']} for r in rows]
 
-# ===== Эндпоинт проверки доступа к тарифам (исправленный) =====
 @app.get("/api/client/access/{phone}")
 async def check_tariff_access(phone: str, tariff: str):
-    conn = sqlite3.connect('shooting.db')
+    conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT visits FROM clients WHERE phone = ?", (phone,))
+    c.execute("SELECT visits FROM clients WHERE phone = %s", (phone,))
     row = c.fetchone()
     conn.close()
-    visits = row[0] if row else 0
+    visits = row['visits'] if row else 0
     
     if tariff == 'basic':
         return {"allow": True, "message": "Базовый доступен всем"}
