@@ -223,7 +223,8 @@
             const label = document.getElementById('new-date-label').value.trim();
             const tariff = document.getElementById('new-date-tariff').value;
             if (!value || !label) { alert('Заполните дату и название'); return; }
-            const data = { value, label, tariff };
+            // ВАЖНО: tariff → group_id
+            const data = { value, label, group_id: tariff, time_slot: 'full' };
             await apiPost('/api/dates', data);
             loadDates();
             document.getElementById('new-date').value = '';
@@ -281,13 +282,26 @@
         }
 
         async function savePrices() {
-            const prices = {
-                basic: parseInt(document.getElementById('price-basic').value) || 8500,
-                practice: parseInt(document.getElementById('price-practice').value) || 7000,
-                pro: parseInt(document.getElementById('price-pro').value) || 13500
-            };
-            await apiPost('/api/prices', prices);
-            alert('✅ Цены сохранены!');
+            const practice = parseInt(document.getElementById('price-practice').value);
+            const basic = parseInt(document.getElementById('price-basic').value);
+            const pro = parseInt(document.getElementById('price-pro').value);
+            
+            if (practice < 0 || basic < 0 || pro < 0) {
+                alert('Цены не могут быть отрицательными!');
+                return;
+            }
+            
+            const res = await fetch(API_BASE + '/api/prices', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ practice, basic, pro })
+            });
+            if (res.ok) {
+                alert('✅ Цены сохранены!');
+                loadPrices();
+            } else {
+                alert('❌ Ошибка при сохранении');
+            }
         }
 
         // ===== Галерея =====
