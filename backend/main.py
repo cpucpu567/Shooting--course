@@ -236,6 +236,21 @@ async def add_date(date: DateItem):
         logger.error(f"Ошибка при добавлении даты: {str(e)}")
         raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
 
+@app.delete("/api/dates/{value}")
+async def delete_date(value: str):
+    logger.info(f"Попытка удалить дату: {value}")
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("DELETE FROM dates WHERE value = %s", (value,))
+        conn.commit()
+        conn.close()
+        logger.info(f"Дата {value} удалена")
+        return {"status": "deleted"}
+    except Exception as e:
+        logger.error(f"Ошибка при удалении даты: {str(e)}")
+        raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
+        
 @app.get("/api/bookings")
 async def get_bookings():
     conn = get_db()
