@@ -301,7 +301,6 @@ function renderTariffs() {
     const prevBtn = document.getElementById('tariff-prev');
     const nextBtn = document.getElementById('tariff-next');
 
-    // Тарифы в правильном порядке: Базовый → Практика → Продвинутый
     grid.innerHTML = `
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
@@ -330,19 +329,17 @@ function renderTariffs() {
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
             <div class="t-price">${tariffPrices.pro.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                🔥 <strong>Максимум за 1 раз.</strong> В 2 раза больше выстрелов.
-                <br>Полный день с инструктором. Углублённая работа над ошибками.
-                <br>Ты уйдёшь не с эмоциями, а с результатом.
+                🔥 <strong>Только для опытных стрелков.</strong>
+                <br>После 2-х посещений Практики — 60 выстрелов, полный день.
+                <br>Углублённая работа над ошибками. Максимальный результат.
             </div>
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
         </div>
     `;
 
-    // --- Инициализация точек и кнопок ---
     if (window.innerWidth <= 900) {
         const cards = grid.querySelectorAll('.tariff-card');
         const total = cards.length;
-
         dotsContainer.innerHTML = '';
         for (let i = 0; i < total; i++) {
             const dot = document.createElement('div');
@@ -353,7 +350,6 @@ function renderTariffs() {
             });
             dotsContainer.appendChild(dot);
         }
-
         const updateDots = () => {
             const scrollLeft = grid.scrollLeft;
             const cardWidth = cards[0]?.offsetWidth || 0;
@@ -362,10 +358,7 @@ function renderTariffs() {
             const dots = dotsContainer.querySelectorAll('.tariff-dot');
             dots.forEach((d, i) => d.classList.toggle('active', i === index));
         };
-
         grid.addEventListener('scroll', updateDots);
-
-        // Убираем кнопки на мобильных (по желанию — уже скрыты)
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
     } else {
@@ -395,13 +388,35 @@ function updateDateSelect(t){
     h.textContent=`Группа от ${MIN} до ${MAX} человек.`;
 }
 
-function selectTariff(t){
-    document.getElementById('tariff-input').value=t;
-    document.querySelectorAll('.tariff-card').forEach(c=>c.classList.toggle('selected',c.dataset.tariff===t));
-    updateDateSelect(t);
-    document.getElementById('subgroup-row').style.display=t==='practice'?'block':'none';
-    if(t!=='practice') document.getElementById('time-slot').value='full';
-    document.getElementById('form-section').scrollIntoView({behavior:'smooth'});
+async function selectTariff(t) {
+    const ph = document.getElementById('phone').value.trim();
+    const normalizedPhone = normalizePhone(ph);
+
+    // Если поле телефона пустое — не проверяем, просто выбираем
+    if (!ph) {
+        document.getElementById('tariff-input').value = t;
+        document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
+        updateDateSelect(t);
+        document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
+        if (t !== 'practice') document.getElementById('time-slot').value = 'full';
+        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+
+    // Проверяем допуск через бэкенд
+    const response = await fetch(`${API_BASE}/api/client/access/${normalizedPhone}?tariff=${t}`);
+    const data = await response.json();
+
+    if (data.allow) {
+        document.getElementById('tariff-input').value = t;
+        document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
+        updateDateSelect(t);
+        document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
+        if (t !== 'practice') document.getElementById('time-slot').value = 'full';
+        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+    } else {
+        alert(data.message || '❌ Этот тариф вам пока недоступен.');
+    }
 }
 
 // ===== Отправка заявки =====
