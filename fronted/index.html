@@ -374,43 +374,6 @@ function renderTariffs() {
         nextBtn.style.display = 'none';
     }
 }
-    `;
-
-    // --- Инициализация точек и кнопок ---
-    if (window.innerWidth <= 900) {
-        const cards = grid.querySelectorAll('.tariff-card');
-        const total = cards.length;
-
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < total; i++) {
-            const dot = document.createElement('div');
-            dot.className = 'tariff-dot' + (i === 0 ? ' active' : '');
-            dot.dataset.index = i;
-            dot.addEventListener('click', () => {
-                cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
-            });
-            dotsContainer.appendChild(dot);
-        }
-
-        const updateDots = () => {
-            const scrollLeft = grid.scrollLeft;
-            const cardWidth = cards[0]?.offsetWidth || 0;
-            const gap = 20;
-            const index = Math.round(scrollLeft / (cardWidth + gap));
-            const dots = dotsContainer.querySelectorAll('.tariff-dot');
-            dots.forEach((d, i) => d.classList.toggle('active', i === index));
-        };
-
-        grid.addEventListener('scroll', updateDots);
-
-        prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
-    } else {
-        dotsContainer.innerHTML = '';
-        prevBtn.style.display = 'none';
-        nextBtn.style.display = 'none';
-    }
-}
 
 function normalizePhone(p){return p.replace(/[\s\-\(\)\+]/g,'').replace(/^8/,'7').replace(/^7/,'+7');}
 
