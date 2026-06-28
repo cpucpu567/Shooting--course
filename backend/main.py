@@ -246,7 +246,16 @@ async def get_bookings():
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "tariff": r['tariff'],
              "date": r['date'], "timeSlot": r['time_slot'], "finalPrice": r['final_price'], "status": r['status'],
              "createdAt": r['created_at']} for r in rows]
-
+@app.get("/api/clients")
+async def get_clients():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT * FROM clients ORDER BY surname, name")
+    rows = c.fetchall()
+    conn.close()
+    return [{"phone": r['phone'], "surname": r['surname'], "name": r['name'], "visits": r['visits'], 
+             "experienced": r['experienced'], "newsletter": r['newsletter'], 
+             "totalDiscounts": r['total_discounts'], "lastVisit": r['last_visit']} for r in rows]
 @app.get("/api/client/access/{phone}")
 async def check_tariff_access(phone: str, tariff: str):
     conn = get_db()
