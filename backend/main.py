@@ -5,6 +5,10 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import requests
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
@@ -17,6 +21,7 @@ app.add_middleware(
 
 # ===== Подключение к PostgreSQL =====
 DATABASE_URL = os.getenv("DATABASE_URL")
+logger.info(f"DATABASE_URL: {DATABASE_URL}")
 
 def get_db():
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
@@ -215,15 +220,21 @@ async def update_prices(data: PriceUpdate):
 
 @app.post("/api/dates")
 async def add_date(date: DateItem):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO dates (value, label, group_id, time_slot, max_persons, min_persons)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    ''', (date.value, date.label, date.group_id, date.time_slot, date.max_persons, date.min_persons))
-    conn.commit()
-    conn.close()
-    return {"status": "added"}
+    logger.info(f"Попытка добавить дату: {date}")
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO dates (value, label, group_id, time_slot, max_persons, min_persons)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (date.value, date.label, date.group_id, date.time_slot, date.max_persons, date.min_persons))
+        conn.commit()
+        conn.close()
+        logger.info("Дата успешно добавлена")
+        return {"status": "added"}
+    except Exception as e:
+        logger.error(f"Ошибка при добавлении даты: {str(e)}")
+        raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
 
 @app.get("/api/bookings")
 async def get_bookings():
