@@ -211,7 +211,7 @@
                     <div>
                         <strong>${d.label}</strong>
                         <span style="opacity:0.4;font-size:0.85rem;">${d.value}</span>
-                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">${d.tariff || 'Любой'}</span>
+                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">${d.group || 'Любой'}</span>
                     </div>
                     <button onclick="deleteDate('${d.value}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
                 </div>
@@ -223,7 +223,6 @@
             const label = document.getElementById('new-date-label').value.trim();
             const tariff = document.getElementById('new-date-tariff').value;
             if (!value || !label) { alert('Заполните дату и название'); return; }
-            // ВАЖНО: tariff → group_id
             const data = { value, label, group_id: tariff, time_slot: 'full' };
             await apiPost('/api/dates', data);
             loadDates();
