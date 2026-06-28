@@ -195,3 +195,32 @@ async def get_bookings():
     return [{"id": r[0], "surname": r[1], "name": r[2], "phone": r[3], "tariff": r[5],
              "date": r[6], "timeSlot": r[7], "finalPrice": r[11], "status": r[12], "createdAt": r[13]}
             for r in rows]
+            @app.get("/api/client/access/{phone}")
+async def check_tariff_access(phone: str, tariff: str):
+    conn = get_db()
+    c = conn.cursor()
+    
+    # Получаем данные клиента
+    c.execute("SELECT visits FROM clients WHERE phone = %s", (phone,))
+    row = c.fetchone()
+    conn.close()
+    
+    visits = row['visits'] if row else 0
+    
+    # Правила допуска
+    if tariff == 'basic':
+        return {"allow": True, "message": "Базовый доступен всем"}
+    
+    elif tariff == 'practice':
+        if visits >= 1:
+            return {"allow": True, "message": "Практика доступна"}
+        else:
+            return {"allow": False, "message": "❌ Сначала пройдите Базовый курс (1 занятие)"}
+    
+    elif tariff == 'pro':
+        if visits >= 3:
+            return {"allow": True, "message": "Продвинутый доступен"}
+        else:
+            return {"allow": False, "message": "❌ Продвинутый требует минимум 3 занятия (Базовый + 2 Практики)"}
+    
+    return {"allow": False, "message": "Неизвестный тариф"}
