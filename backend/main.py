@@ -202,7 +202,6 @@ async def create_booking(data: BookingRequest):
 
 @app.post("/api/prices")
 async def update_prices(data: PriceUpdate):
-    # Проверка на отрицательные цены
     if data.practice < 0 or data.basic < 0 or data.pro < 0:
         raise HTTPException(400, "Цены не могут быть отрицательными")
     
