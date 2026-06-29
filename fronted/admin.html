@@ -89,16 +89,16 @@
 
         <!-- Вкладка: Клиенты -->
         <div id="tab-clients" class="content">
-            <div class="card">
-                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                    <input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClients()" style="flex:1;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;min-width:150px;" />
-                    <button class="btn secondary" onclick="clientsFilter='all';renderClients();">👥 Все</button>
-                    <button class="btn secondary" onclick="clientsFilter='experienced';renderClients();">⭐ Опытные</button>
-                    <button class="btn secondary" onclick="clientsFilter='beginners';renderClients();">🔰 Новички</button>
-                </div>
-            </div>
-            <div id="clients-list"></div>
+    <div class="card">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClients()" style="flex:1;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;min-width:150px;" />
+            <button class="btn secondary" onclick="clientsFilter='all';renderClients();">👥 Все</button>
+            <button class="btn secondary" onclick="clientsFilter='experienced';renderClients();">⭐ Опытные</button>
+            <button class="btn secondary" onclick="clientsFilter='beginners';renderClients();">🔰 Новички</button>
         </div>
+    </div>
+    <div id="admin-clients-list"></div>  <!-- ← исправлено на правильный id -->
+</div>
 
         <!-- Вкладка: Цены -->
         <div id="tab-prices" class="content">
@@ -261,28 +261,28 @@
 
         // ===== Клиенты =====
         async function renderClients() {
-            const container = document.getElementById('clients-list');
-            const clients = await apiFetch('/api/clients');
-            const q = document.getElementById('client-search').value.toLowerCase();
-            let filtered = clients;
-            if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
-            if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced);
-            if (clientsFilter === 'beginners') filtered = filtered.filter(c => !c.experienced);
-            if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
-            container.innerHTML = filtered.map(c => `
-                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                    <div>
-                        <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
-                        <span style="opacity:0.4;">${c.phone}</span>
-                        <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
-                        ${c.experienced ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">✅ Опытный</span>' : ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
-                    </div>
-                    <button onclick="toggleExperienced('${c.phone}')" class="btn" style="width:auto;padding:4px 12px;font-size:0.6rem;background:${c.experienced ? 'var(--purple-hover)' : 'var(--purple)'};">
-                        ${c.experienced ? '✕ Убрать' : '⭐ Сделать опытным'}
-                    </button>
-                </div>
-            `).join('');
-        }
+    const container = document.getElementById('admin-clients-list');
+    const clients = await apiFetch('/api/clients');
+    const q = document.getElementById('client-search').value.toLowerCase();
+    let filtered = clients;
+    if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
+    if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced);
+    if (clientsFilter === 'beginners') filtered = filtered.filter(c => !c.experienced);
+    if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
+    container.innerHTML = filtered.map(c => `
+        <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+            <div>
+                <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
+                <span style="opacity:0.4;">${c.phone}</span>
+                <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
+                ${c.experienced ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">✅ Опытный</span>' : ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+            </div>
+            <button onclick="toggleExperienced('${c.phone}')" class="btn" style="width:auto;padding:4px 12px;font-size:0.6rem;background:${c.experienced ? 'var(--purple-hover)' : 'var(--purple)'};">
+                ${c.experienced ? '✕ Убрать' : '⭐ Сделать опытным'}
+            </button>
+        </div>
+    `).join('');
+}
 
         async function toggleExperienced(phone) {
             const client = await apiFetch(`/api/clients/${phone}`);
