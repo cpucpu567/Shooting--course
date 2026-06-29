@@ -135,10 +135,12 @@ async def get_config():
                    "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
 
+from fastapi.responses import PlainTextResponse  # (добавь этот импорт в самом верху)
+
 @app.post("/api/vk/callback")
-async def vk_callback(request: Request):
-    # Мгновенно возвращаем строку подтверждения
-    return JSONResponse(content={"response": "90265fd6"})
+async def vk_callback():
+    # VK ждёт ЧИСТУЮ СТРОКУ, а не JSON
+    return PlainTextResponse(content="90265fd6")
 
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
