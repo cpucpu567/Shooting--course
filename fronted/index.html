@@ -375,21 +375,30 @@ function renderTariffs() {
 function normalizePhone(p){return p.replace(/[\s\-\(\)\+]/g,'').replace(/^8/,'7').replace(/^7/,'+7');}
 
 function updateDateSelect(t){
-    const s=document.getElementById('date'), h=document.getElementById('date-hint'), g=tariffConfig[t].group;
-    const d=allDates.filter(d=>d.group===g);
-    s.innerHTML='<option value="">Выберите дату...</option>';
-    d.forEach(d=>{
-        const ts=d.timeSlot||'full';
+    const s = document.getElementById('date');
+    const h = document.getElementById('date-hint');
+    const g = tariffConfig[t].group;
+    const d = allDates.filter(d => d.group === g);
+    
+    s.innerHTML = '<option value="">Выберите дату...</option>';
+    
+    d.forEach(d => {
+        const ts = d.timeSlot || 'full';
         const c = d.currentCount || 0;
         const mx = d.maxPersons || MAX;
         const a = c < mx;
-        const o=document.createElement('option');
-        o.value=d.value+'|'+ts;
-        o.textContent=`${d.label} ${ts!=='full'?'('+(ts==='10-14'?'10–14':'14–18')+')':'(10–18)'} — ${c}/${mx}${a?'':' (НЕТ МЕСТ)'}`;
-        o.disabled=!a;
+        
+        // Читаем дату из поля value (если label пустой — используем value)
+        const dateStr = d.label || d.value || 'Дата не указана';
+        
+        const o = document.createElement('option');
+        o.value = d.value + '|' + ts;
+        o.textContent = `${dateStr} ${ts !== 'full' ? '(' + (ts === '10-14' ? '10–14' : '14–18') + ')' : '(10–18)'} — ${c}/${mx}${a ? '' : ' (НЕТ МЕСТ)'}`;
+        o.disabled = !a;
         s.appendChild(o);
     });
-    h.textContent=`Группа от ${MIN} до ${MAX} человек.`;
+    
+    h.textContent = `Группа от ${MIN} до ${MAX} человек.`;
 }
 
 async function selectTariff(t) {
