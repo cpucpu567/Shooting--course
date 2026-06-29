@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import os
 import psycopg2
@@ -134,10 +133,6 @@ async def get_config():
         "dates": [{"value": r['value'], "label": r['label'], "group": r['group_id'], "timeSlot": r['time_slot'],
                    "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
-
-@app.post("/api/vk/callback")
-async def vk_callback():
-    return PlainTextResponse(content="90265fd6")
 
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
