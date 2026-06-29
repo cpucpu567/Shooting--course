@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import os
 import psycopg2
@@ -135,11 +135,8 @@ async def get_config():
                    "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
 
-from fastapi.responses import PlainTextResponse  # (добавь этот импорт в самом верху)
-
 @app.post("/api/vk/callback")
 async def vk_callback():
-    # VK ждёт ЧИСТУЮ СТРОКУ, а не JSON
     return PlainTextResponse(content="90265fd6")
 
 @app.post("/api/booking")
@@ -185,10 +182,9 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # ===== Отправка в VK (в чат сообщества) через API =====
+    # ===== Отправка в VK (в личные сообщения администратору) =====
     vk_token = os.getenv("VK_TOKEN", "")
-    vk_group_id = os.getenv("VK_GROUP_ID", "")
-    if vk_token and vk_group_id:
+    if vk_token:
         msg = f"""
 🔫 Новая заявка #{booking_id}
 👤 {data.surname} {data.name}
@@ -204,7 +200,7 @@ async def create_booking(data: BookingRequest):
                 params={
                     "access_token": vk_token,
                     "v": "5.131",
-                    "peer_id": -int(vk_group_id),
+                    "user_id": 304659962,
                     "message": msg,
                     "random_id": 0
                 }
