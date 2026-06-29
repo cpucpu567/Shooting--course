@@ -224,16 +224,21 @@
         }
 
         async function addNewDate() {
-            const value = document.getElementById('new-date').value;
-            const label = document.getElementById('new-date-label').value.trim();
-            const tariff = document.getElementById('new-date-tariff').value;
-            if (!value || !label) { alert('Заполните дату и название'); return; }
-            const data = { value, label, group_id: tariff, time_slot: 'full' };
-            await apiPost('/api/dates', data);
-            loadDates();
-            document.getElementById('new-date').value = '';
-            document.getElementById('new-date-label').value = '';
-        }
+    const value = document.getElementById('new-date').value;
+    const label = document.getElementById('new-date-label').value.trim();
+    const tariff = document.getElementById('new-date-tariff').value;
+    
+    if (!value) { alert('Выберите дату!'); return; }
+    
+    // Если название не введено — используем дату как название
+    const finalLabel = label || value;
+    
+    const data = { value, label: finalLabel, group_id: tariff, time_slot: 'full' };
+    await apiPost('/api/dates', data);
+    loadDates();
+    document.getElementById('new-date').value = '';
+    document.getElementById('new-date-label').value = '';
+}
 
         async function deleteDate(value) {
             if (!confirm('Удалить эту дату?')) return;
