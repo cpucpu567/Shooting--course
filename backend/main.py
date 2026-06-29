@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import requests
 import logging
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -135,11 +137,16 @@ async def get_config():
 
 @app.post("/api/vk/callback")
 async def vk_callback(request: Request):
-    data = await request.json()
-    logger.info(f"VK callback: {data}")
-    if data.get('type') == 'confirmation':
-        return {"response": "90265fd6"}
-    return {"ok": True}
+    try:
+        data = await request.json()
+        logger.info(f"VK callback: {data}")
+        if data.get('type') == 'confirmation':
+            return JSONResponse(content={"response": "90265fd6"})
+        # Если это не подтверждение, просто говорим VK "ok"
+        return JSONResponse(content={"ok": True})
+    except Exception as e:
+        logger.error(f"Ошибка в Callback API: {str(e)}")
+        return JSONResponse(content={"error": "internal error"}, status_code=500)
 
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
@@ -184,7 +191,7 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # ===== Отправка в VK (в сообщения сообщества) =====
+    # ===== Отправка в VK (в чат сообщества) через API =====
     vk_token = os.getenv("VK_TOKEN", "")
     vk_group_id = os.getenv("VK_GROUP_ID", "")
     if vk_token and vk_group_id:
