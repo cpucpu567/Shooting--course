@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
@@ -132,14 +132,15 @@ async def get_config():
         "dates": [{"value": r['value'], "label": r['label'], "group": r['group_id'], "timeSlot": r['time_slot'],
                    "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
+
 @app.post("/api/vk/callback")
-async def vk_callback(data: dict):
+async def vk_callback(request: Request):
+    data = await request.json()
     logger.info(f"VK callback: {data}")
-    # Это строчка, которую ждёт VK из твоего скриншота
     if data.get('type') == 'confirmation':
         return {"response": "90265fd6"}
     return {"ok": True}
-    
+
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
     if not data.surname or not data.name or not data.phone:
@@ -183,7 +184,7 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-            # Отправка в VK (в сообщения сообщества)
+    # ===== Отправка в VK (в сообщения сообщества) =====
     vk_token = os.getenv("VK_TOKEN", "")
     vk_group_id = os.getenv("VK_GROUP_ID", "")
     if vk_token and vk_group_id:
@@ -207,7 +208,6 @@ async def create_booking(data: BookingRequest):
                     "random_id": 0
                 }
             )
-            # Проверяем, что вернул VK
             if response.status_code != 200:
                 logger.error(f"VK ответил с кодом {response.status_code}: {response.text}")
             else:
