@@ -156,7 +156,7 @@ async def create_booking(data: BookingRequest):
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (data.surname, data.name, data.phone, data.referral, data.tariff, data.date, data.time_slot,
           data.source, data.newsletter, discount, final_price))
-    booking_id = c.fetchone()['id'] if hasattr(c, 'fetchone') else c.lastrowid
+    booking_id = c.lastrowid
     conn.commit()
     conn.close()
 
