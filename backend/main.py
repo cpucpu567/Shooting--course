@@ -132,7 +132,14 @@ async def get_config():
         "dates": [{"value": r['value'], "label": r['label'], "group": r['group_id'], "timeSlot": r['time_slot'],
                    "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
     }
-
+@app.post("/api/vk/callback")
+async def vk_callback(data: dict):
+    logger.info(f"VK callback: {data}")
+    # Это строчка, которую ждёт VK из твоего скриншота
+    if data.get('type') == 'confirmation':
+        return {"response": "90265fd6"}
+    return {"ok": True}
+    
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
     if not data.surname or not data.name or not data.phone:
