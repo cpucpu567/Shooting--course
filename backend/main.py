@@ -176,7 +176,7 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # Отправка в VK
+            # Отправка в VK (в сообщения сообщества)
     vk_token = os.getenv("VK_TOKEN", "")
     vk_group_id = os.getenv("VK_GROUP_ID", "")
     if vk_token and vk_group_id:
@@ -190,7 +190,7 @@ async def create_booking(data: BookingRequest):
 📱 Источник: {data.source or 'не указан'}
         """
         try:
-            requests.post(
+            response = requests.post(
                 "https://api.vk.com/method/messages.send",
                 params={
                     "access_token": vk_token,
@@ -200,8 +200,17 @@ async def create_booking(data: BookingRequest):
                     "random_id": 0
                 }
             )
-        except:
-            pass
+            # Проверяем, что вернул VK
+            if response.status_code != 200:
+                logger.error(f"VK ответил с кодом {response.status_code}: {response.text}")
+            else:
+                result = response.json()
+                if 'error' in result:
+                    logger.error(f"VK вернул ошибку: {result['error']}")
+                else:
+                    logger.info("VK: сообщение успешно отправлено")
+        except Exception as e:
+            logger.error(f"Ошибка при отправке в VK: {str(e)}")
 
     return {"id": booking_id, "status": "created", "finalPrice": final_price, "discount": discount}
 
