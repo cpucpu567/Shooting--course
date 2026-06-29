@@ -137,16 +137,8 @@ async def get_config():
 
 @app.post("/api/vk/callback")
 async def vk_callback(request: Request):
-    try:
-        data = await request.json()
-        logger.info(f"VK callback: {data}")
-        if data.get('type') == 'confirmation':
-            return JSONResponse(content={"response": "90265fd6"})
-        # Если это не подтверждение, просто говорим VK "ok"
-        return JSONResponse(content={"ok": True})
-    except Exception as e:
-        logger.error(f"Ошибка в Callback API: {str(e)}")
-        return JSONResponse(content={"error": "internal error"}, status_code=500)
+    # Мгновенно возвращаем строку подтверждения
+    return JSONResponse(content={"response": "90265fd6"})
 
 @app.post("/api/booking")
 async def create_booking(data: BookingRequest):
