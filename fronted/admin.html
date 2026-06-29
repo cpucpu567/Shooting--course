@@ -225,13 +225,20 @@
 
         async function addNewDate() {
     const value = document.getElementById('new-date').value;
-    const label = document.getElementById('new-date-label').value.trim();
+    const labelInput = document.getElementById('new-date-label').value.trim();
     const tariff = document.getElementById('new-date-tariff').value;
     
     if (!value) { alert('Выберите дату!'); return; }
     
-    // Если название не введено — используем дату как название
-    const finalLabel = label || value;
+    // Преобразуем дату в красивый вид (например, "12 июля 2026")
+    const dateObj = new Date(value + 'T00:00:00');
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleString('ru-RU', { month: 'long' });
+    const year = dateObj.getFullYear();
+    const prettyDate = `${day} ${month} ${year}`;
+    
+    // В label всегда записываем красивую дату. Название игнорируем.
+    const finalLabel = prettyDate;
     
     const data = { value, label: finalLabel, group_id: tariff, time_slot: 'full' };
     await apiPost('/api/dates', data);
