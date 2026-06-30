@@ -218,6 +218,10 @@
                       d.group === 'pro' ? 'Расширенная практика' :
                       'Любой'}
                 </span>
+                <!-- Добавляем отображение занятости -->
+                <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
+                    👥 ${d.currentCount || 0}/${d.maxPersons || 10}
+                </span>
             </div>
             <button onclick="deleteDate('${d.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
         </div>
