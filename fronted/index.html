@@ -232,7 +232,7 @@
 
     <section id="form-section"><div class="container"><h2>Записаться <span>на интенсив</span></h2><div class="form-card glass">
         <div style="margin-bottom:20px; text-align:center;">
-            <button id="vk-auth-btn" class="btn" onclick="vkAuth()" style="padding:12px 30px; font-size:0.95rem;">
+            <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
                 🔑 Войти через VK
             </button>
             <div id="vk-auth-status" style="font-size:0.85rem; margin-top:8px; color:var(--text-soft);"></div>
@@ -282,46 +282,59 @@ let tariffPrices = {
 };
 let galleryFiles = [], currentSlide = 0;
 
-// ===== Инициализация VK Bridge =====
+// ===== VK Bridge (инициализация) =====
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
-} else {
-    console.warn('⚠️ VK Bridge не загружен');
 }
 
-// ===== VK-авторизация =====
-async function vkAuth() {
-    if (vkAuthDone) {
-        document.getElementById('vk-auth-status').textContent = '✅ Уже авторизованы';
-        return;
-    }
-    const status = document.getElementById('vk-auth-status');
-    status.textContent = '⏳ Авторизация...';
-    try {
-        const user = await vkBridge.send('VKWebAppGetUserInfo');
-        if (user.first_name) document.getElementById('name').value = user.first_name;
-        if (user.last_name) document.getElementById('surname').value = user.last_name;
-        if (user.phone) document.getElementById('phone').value = user.phone;
-        status.textContent = '✅ Авторизация успешна!';
-        try {
-            const groups = await vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
-            if (groups.is_member) {
-                status.textContent += ' ✅ Вы уже подписаны!';
-            } else {
-                if (confirm('Подписаться на сообщество?')) {
-                    await vkBridge.send('VKWebAppJoinGroup', { group_id: 239743393 });
-                    status.textContent += ' ✅ Вы подписаны!';
-                } else {
-                    status.textContent += ' ⚠️ Подписка пропущена.';
-                }
+// ===== Переход в приложение VK (по кнопке) =====
+function openVKApp() {
+    const appId = '54646561'; // Ваш ID из manifest.json
+    
+    const vkDeepLink = `https://vk.com/app${appId}`;
+    const vkSchemeLink = `vk://vk.com/app${appId}`;
+
+    document.getElementById('vk-auth-status').textContent = '⏳ Открываем VK...';
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = vkSchemeLink;
+    document.body.appendChild(iframe);
+    
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.location.href = vkDeepLink;
+    }, 2000);
+}
+
+// ===== Автоматическая авторизация ВНУТРИ VK (при запуске) =====
+if (typeof vkBridge !== 'undefined') {
+    vkBridge.send('VKWebAppGetUserInfo')
+        .then(user => {
+            if (user.first_name) document.getElementById('name').value = user.first_name;
+            if (user.last_name) document.getElementById('surname').value = user.last_name;
+            if (user.phone) document.getElementById('phone').value = user.phone;
+            
+            const statusEl = document.getElementById('vk-auth-status');
+            if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
+
+            return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
+        })
+        .then(groups => {
+            if (!groups.is_member) {
+                return vkBridge.send('VKWebAppShowMessageBox', {
+                    message: 'Подписаться на сообщество «Стрелковый интенсив»?',
+                    buttons: ['Подписаться', 'Позже']
+                }).then(result => {
+                    if (result.button === 0) {
+                        return vkBridge.send('VKWebAppJoinGroup', { group_id: 239743393 });
+                    }
+                });
             }
-        } catch (err) {
-            status.textContent += ' ℹ️ Проверка подписки не удалась.';
-        }
-        vkAuthDone = true;
-    } catch (err) {
-        status.textContent = '❌ Ошибка авторизации: ' + err.message;
-    }
+        })
+        .catch(err => {
+            console.warn('⚠️ VK авторизация не сработала:', err.message);
+        });
 }
 
 // ===== API =====
