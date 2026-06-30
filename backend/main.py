@@ -195,38 +195,38 @@ async def create_booking(data: BookingRequest):
 
     final_price = max(0, prices[data.tariff] - discount)
 
-# 1. Сначала регистрируем/обновляем клиента (чтобы он появился в базе)
-conn = get_db()
-c = conn.cursor()
-c.execute('''
-    INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
-    VALUES (%s, %s, %s, 1, 'newbie', %s)
-    ON CONFLICT (phone) DO UPDATE SET
-        surname = EXCLUDED.surname,
-        name = EXCLUDED.name,
-        visits = clients.visits + 1,
-        experienced = CASE 
-            WHEN clients.visits + 1 >= 4 THEN 'pro' 
-            WHEN clients.visits + 1 >= 2 THEN 'experienced' 
-            ELSE 'newbie' 
-        END,
-        newsletter = EXCLUDED.newsletter
-''', (data.phone, data.surname, data.name, data.newsletter))
-conn.commit()
-conn.close()
+    # 1. Сначала регистрируем/обновляем клиента (чтобы он появился в базе)
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
+        VALUES (%s, %s, %s, 1, 'newbie', %s)
+        ON CONFLICT (phone) DO UPDATE SET
+            surname = EXCLUDED.surname,
+            name = EXCLUDED.name,
+            visits = clients.visits + 1,
+            experienced = CASE 
+                WHEN clients.visits + 1 >= 4 THEN 'pro' 
+                WHEN clients.visits + 1 >= 2 THEN 'experienced' 
+                ELSE 'newbie' 
+            END,
+            newsletter = EXCLUDED.newsletter
+    ''', (data.phone, data.surname, data.name, data.newsletter))
+    conn.commit()
+    conn.close()
 
-# 2. Теперь создаём заявку (клиент уже есть, FOREIGN KEY не ругается)
-conn = get_db()
-c = conn.cursor()
-c.execute('''
-    INSERT INTO bookings 
-    (surname, name, phone, referral, tariff, date, time_slot, source, newsletter, discount, final_price)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-''', (data.surname, data.name, data.phone, data.referral, data.tariff, data.date, data.time_slot,
-      data.source, data.newsletter, discount, final_price))
-booking_id = c.lastrowid
-conn.commit()
-conn.close()
+    # 2. Теперь создаём заявку (клиент уже есть, FOREIGN KEY не ругается)
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO bookings 
+        (surname, name, phone, referral, tariff, date, time_slot, source, newsletter, discount, final_price)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (data.surname, data.name, data.phone, data.referral, data.tariff, data.date, data.time_slot,
+          data.source, data.newsletter, discount, final_price))
+    booking_id = c.lastrowid
+    conn.commit()
+    conn.close()
 
     # ===== Отправка в VK (в личные сообщения администратору) =====
     vk_token = os.getenv("VK_TOKEN", "")
