@@ -65,18 +65,21 @@ def init_db():
             value TEXT NOT NULL
         )
     ''')
+          # === Удаляем старую таблицу клиентов, если она есть, и создаём новую ===
     c.execute('''
-        CREATE TABLE IF NOT EXISTS clients (
-            phone TEXT PRIMARY KEY,
-            surname TEXT NOT NULL,
-            name TEXT NOT NULL,
-            visits INTEGER DEFAULT 0,
-            experienced TEXT DEFAULT 'newbie',
-            newsletter BOOLEAN DEFAULT FALSE,
-            total_discounts INTEGER DEFAULT 0,
-            last_visit TIMESTAMP
-        )
-    ''')
+    DROP TABLE IF EXISTS clients CASCADE;
+
+    CREATE TABLE clients (
+        phone TEXT PRIMARY KEY,
+        surname TEXT NOT NULL,
+        name TEXT NOT NULL,
+        visits INTEGER DEFAULT 0,
+        experienced TEXT DEFAULT 'newbie',
+        newsletter BOOLEAN DEFAULT FALSE,
+        total_discounts INTEGER DEFAULT 0,
+        last_visit TIMESTAMP
+    );
+''')
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
         c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":7000,\"basic\":8500,\"pro\":13500}')")
