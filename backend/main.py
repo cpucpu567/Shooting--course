@@ -65,21 +65,34 @@ def init_db():
             value TEXT NOT NULL
         )
     ''')
-          # === Удаляем старую таблицу клиентов, если она есть, и создаём новую ===
+    
+    # === Сначала удаляем старую таблицу клиентов и создаём новую ===
     c.execute('''
-    DROP TABLE IF EXISTS clients CASCADE;
-
-    CREATE TABLE clients (
-        phone TEXT PRIMARY KEY,
-        surname TEXT NOT NULL,
-        name TEXT NOT NULL,
-        visits INTEGER DEFAULT 0,
-        experienced TEXT DEFAULT 'newbie',
-        newsletter BOOLEAN DEFAULT FALSE,
-        total_discounts INTEGER DEFAULT 0,
-        last_visit TIMESTAMP
-    );
-''')
+        DROP TABLE IF EXISTS clients CASCADE;
+        CREATE TABLE clients (
+            phone TEXT PRIMARY KEY,
+            surname TEXT NOT NULL,
+            name TEXT NOT NULL,
+            visits INTEGER DEFAULT 0,
+            experienced TEXT DEFAULT 'newbie',
+            newsletter BOOLEAN DEFAULT FALSE,
+            total_discounts INTEGER DEFAULT 0,
+            last_visit TIMESTAMP
+        );
+    ''')
+    
+    # === Теперь, когда таблица уже создана, обновляем статусы (если остались старые) ===
+    c.execute('''
+        UPDATE clients 
+        SET experienced = 
+            CASE 
+                WHEN experienced = 'true' OR experienced = '1' OR experienced = TRUE THEN 'experienced'
+                WHEN experienced = 'false' OR experienced = '0' OR experienced = FALSE THEN 'newbie'
+                ELSE experienced
+            END
+        WHERE experienced NOT IN ('newbie', 'experienced', 'pro');
+    ''')
+    
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
         c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":7000,\"basic\":8500,\"pro\":13500}')")
