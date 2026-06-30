@@ -307,17 +307,28 @@ function openVKApp() {
     }, 2000);
 }
 
-// ===== Автоматическая авторизация ВНУТРИ VK (при запуске) =====
+// ===== Автоматическая авторизация ВНУТРИ VK с запросом телефона =====
 if (typeof vkBridge !== 'undefined') {
-    vkBridge.send('VKWebAppGetUserInfo')
+
+    // 1. Сначала запрашиваем разрешение на телефон
+    vkBridge.send('VKWebAppGetPhoneNumber')
+        .then(phoneData => {
+            // Если пользователь дал телефон, сохраняем его
+            if (phoneData.phone_number) {
+                document.getElementById('phone').value = phoneData.phone_number;
+            }
+            
+            // 2. Теперь получаем остальные данные (имя, фамилию)
+            return vkBridge.send('VKWebAppGetUserInfo');
+        })
         .then(user => {
             if (user.first_name) document.getElementById('name').value = user.first_name;
             if (user.last_name) document.getElementById('surname').value = user.last_name;
-            if (user.phone) document.getElementById('phone').value = user.phone;
             
             const statusEl = document.getElementById('vk-auth-status');
             if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
 
+            // 3. Проверяем подписку на сообщество
             return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
         })
         .then(groups => {
@@ -575,6 +586,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     setBackgroundFromGallery();
     renderMainGallery();
 });
+// ===== Пинг сервера, чтобы Render не засыпал =====
+setInterval(() => {
+    fetch(`${API_BASE}/api/config`)
+        .then(() => console.log('🟢 Пинг: сервер активен'))
+        .catch(() => console.warn('🟡 Пинг не удался'));
+}, 4 * 60 * 1000); // Каждые 4 минуты
 </script>
 </body>
 </html>
