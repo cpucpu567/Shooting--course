@@ -71,7 +71,7 @@ def init_db():
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
             visits INTEGER DEFAULT 0,
-            experienced BOOLEAN DEFAULT FALSE,
+            experienced TEXT DEFAULT 'newbie',
             newsletter BOOLEAN DEFAULT FALSE,
             total_discounts INTEGER DEFAULT 0,
             last_visit TIMESTAMP
@@ -161,17 +161,21 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # Регистрируем/обновляем клиента
+    # ===== Регистрируем/обновляем клиента (новая логика статусов) =====
     conn = get_db()
     c = conn.cursor()
     c.execute('''
         INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
-        VALUES (%s, %s, %s, 1, TRUE, %s)
+        VALUES (%s, %s, %s, 1, 'newbie', %s)
         ON CONFLICT (phone) DO UPDATE SET
             surname = EXCLUDED.surname,
             name = EXCLUDED.name,
             visits = clients.visits + 1,
-            experienced = TRUE,
+            experienced = CASE 
+                WHEN clients.visits + 1 >= 4 THEN 'pro' 
+                WHEN clients.visits + 1 >= 2 THEN 'experienced' 
+                ELSE 'newbie' 
+            END,
             newsletter = EXCLUDED.newsletter
     ''', (data.phone, data.surname, data.name, data.newsletter))
     conn.commit()
@@ -279,6 +283,28 @@ async def get_clients():
     return [{"phone": r['phone'], "surname": r['surname'], "name": r['name'], "visits": r['visits'], 
              "experienced": r['experienced'], "newsletter": r['newsletter'], 
              "totalDiscounts": r['total_discounts'], "lastVisit": r['last_visit']} for r in rows]
+
+@app.post("/api/clients/{phone}")
+async def update_client_status(phone: str, data: dict):
+    new_status = data.get("experienced")
+    if new_status not in ["newbie", "experienced", "pro"]:
+        raise HTTPException(400, "Неверный статус")
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("UPDATE clients SET experienced = %s WHERE phone = %s", (new_status, phone))
+    conn.commit()
+    conn.close()
+    return {"status": "updated"}
+
+@app.delete("/api/clients/{phone}")
+async def delete_client(phone: str):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("DELETE FROM clients WHERE phone = %s", (phone,))
+    conn.commit()
+    conn.close()
+    return {"status": "deleted"}
+
 @app.get("/api/client/access/{phone}")
 async def check_tariff_access(phone: str, tariff: str):
     conn = get_db()
@@ -291,13 +317,13 @@ async def check_tariff_access(phone: str, tariff: str):
     if tariff == 'basic':
         return {"allow": True, "message": "Базовый доступен всем"}
     elif tariff == 'practice':
-        if visits >= 1:
-            return {"allow": True, "message": "Практика доступна"}
+        if visits >= 2:
+            return {"allow": True, "message": "Практика доступна (после 2-х посещений)"}
         else:
-            return {"allow": False, "message": "❌ Сначала пройдите Базовый курс (1 занятие)"}
+            return {"allow": False, "message": "❌ Практика требует минимум 2 посещения (сначала Базовый)"}
     elif tariff == 'pro':
-        if visits >= 3:
-            return {"allow": True, "message": "Продвинутый доступен"}
+        if visits >= 4:
+            return {"allow": True, "message": "Расширенный курс доступен (после 4-х посещений)"}
         else:
-            return {"allow": False, "message": "❌ Продвинутый требует минимум 3 занятия (Базовый + 2 Практики)"}
+            return {"allow": False, "message": "❌ Расширенный курс требует минимум 4 посещения (Базовый + 3 Практики)"}
     return {"allow": False, "message": "Неизвестный тариф"}
