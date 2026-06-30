@@ -129,10 +129,6 @@
         .modal-overlay { display:none; position:fixed; top:0;left:0;width:100%;height:100%; background:rgba(0,0,0,0.85); z-index:999; align-items:center; justify-content:center; padding:20px; }
         .modal-overlay.active { display:flex; }
         .modal { background:#2a2824; border:2px solid var(--purple); border-radius:8px; padding:28px; max-width:550px; width:100%; max-height:90vh; overflow-y:auto; color: var(--text); }
-        .admin-tab { background:rgba(255,255,255,0.05); color:var(--text-soft); border:1px solid rgba(255,255,255,0.1); padding:8px 14px; cursor:pointer; border-radius:6px; font-size:0.75rem; }
-        .admin-tab.active { background:var(--purple); color:#fff; border-color:var(--purple); }
-        .admin-section { background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid rgba(255,255,255,0.06); }
-        .admin-section h4 { color:var(--text); font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
         footer { text-align:center; padding:30px; color: var(--text-soft); opacity:0.5; font-size:0.8rem; }
         @media (max-width:900px) { 
             .tariff-grid { 
@@ -219,7 +215,6 @@
     <section id="tariff-section">
     <div class="container">
         <h2>Форматы <span>участия</span></h2>
-        <!-- Блок "Что входит в стоимость" — статично над каруселью -->
         <div style="text-align:center; margin-bottom:25px; font-size:0.95rem; color:var(--text-soft); background:var(--card-bg); padding:12px 20px; border-radius:8px; border:1px solid var(--card-border);">
             ⚡ В стоимость любого тарифа входит:<br>
             <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
@@ -236,7 +231,6 @@
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
     <section id="form-section"><div class="container"><h2>Записаться <span>на интенсив</span></h2><div class="form-card glass">
-        <!-- Кнопка VK-авторизации -->
         <div style="margin-bottom:20px; text-align:center;">
             <button id="vk-auth-btn" class="btn" onclick="vkAuth()" style="padding:12px 30px; font-size:0.95rem;">
                 🔑 Войти через VK
@@ -267,27 +261,11 @@
 
 <div class="modal-overlay" id="success-modal"><div class="modal" style="text-align:center;"><span style="font-size:3rem;">✅</span><h3>Заявка принята!</h3><p id="modal-message" style="margin:14px 0;"></p><button class="btn" onclick="closeModal()">Понял, жду</button></div></div>
 
-<div class="modal-overlay" id="admin-modal"><div class="modal" style="text-align:left;"><div style="text-align:center;margin-bottom:14px;"><span>🔧</span><h3>Админ-панель</h3></div><div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;"><button class="admin-tab active" onclick="switchAdminTab('dates')">📅 Даты</button><button class="admin-tab" onclick="switchAdminTab('clients')">👥 Клиенты</button><button class="admin-tab" onclick="switchAdminTab('gallery')">🖼️ Галерея</button><button class="admin-tab" onclick="switchAdminTab('prices')">💰 Цены</button><button class="admin-tab" onclick="switchAdminTab('mailing')">📨 Рассылка</button></div>
-
-    <div id="admin-tab-dates"><div class="admin-section"><h4>➕ Добавить дату</h4><div style="display:flex;gap:6px;flex-wrap:wrap;"><input type="date" id="new-date-value" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><select id="new-date-group" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="1">Группа 1</option><option value="2">Группа 2</option></select><select id="new-date-slot" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="full">10–18</option><option value="10-14">10–14</option><option value="14-18">14–18</option></select><button onclick="addNewDate()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Добавить</button></div></div><div id="admin-dates-list"></div></div>
-
-    <div id="admin-tab-clients" style="display:none;"><input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClientsList(this.value)" style="width:100%;padding:10px;margin-bottom:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><div id="admin-clients-list"></div></div>
-
-    <div id="admin-tab-gallery" style="display:none;"><div class="admin-section"><h4>📤 Загрузить фото/видео</h4><input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;padding:8px;color:var(--text);"><p style="font-size:0.7rem;opacity:0.5;">Макс. 20 файлов</p></div><div id="admin-gallery-list"></div></div>
-
-    <div id="admin-tab-prices" style="display:none;"><div class="admin-section"><h4>💰 Настройка цен</h4><div style="display:grid; gap:10px; max-width:300px;"><div><label style="font-size:0.75rem;">Только практика</label><input type="number" id="price-practice" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Базовый</label><input type="number" id="price-basic" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Продвинутый</label><input type="number" id="price-pro" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><button onclick="savePricesToBackend()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Сохранить</button></div></div></div>
-
-    <div id="admin-tab-mailing" style="display:none;"><div class="admin-section"><h4>📨 Рассылка</h4><p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправить сообщение всем согласившимся.</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button onclick="sendMailing('whatsapp')" style="padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">WhatsApp</button><button onclick="sendMailing('vk')" style="padding:8px 14px;background:#0077FF;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">VK</button><button onclick="sendMailing('telegram')" style="padding:8px 14px;background:#2AABEE;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Telegram</button></div><textarea id="mailing-message" rows="3" placeholder="Текст сообщения..." style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.85rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea></div><div id="mailing-result" style="font-size:0.8rem;color:var(--text-soft);"></div></div>
-
-    <button class="btn" onclick="closeAdminPanel()" style="margin-top:10px;">Закрыть</button>
-</div></div>
-
 <script>
 // ===== Глобальные переменные =====
 const API_BASE = 'https://shooting-course.onrender.com';
 const MIN = 5;
 const MAX = 10;
-const ADMIN_PASS = '777';
 
 const tariffConfig = { 
     practice:{group:'practice',label:'Практика',subGroup:true}, 
@@ -297,17 +275,21 @@ const tariffConfig = {
 
 let vkAuthDone = false;
 let allDates = [];
-let tariffPrices = { practice: 7000, basic: 8500, pro: 13500 };
+let tariffPrices = { 
+    practice: { base: 5000, instructor: 2000 }, 
+    basic: { base: 5000, instructor: 3500 }, 
+    pro: { base: 10000, instructor: 3500 } 
+};
 let galleryFiles = [], currentSlide = 0;
 
-// ===== Инициализация VK Bridge с проверкой =====
+// ===== Инициализация VK Bridge =====
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
 } else {
-    console.warn('⚠️ VK Bridge не загружен, функции VK недоступны');
+    console.warn('⚠️ VK Bridge не загружен');
 }
 
-// ===== Функция VK-авторизации =====
+// ===== VK-авторизация =====
 async function vkAuth() {
     if (vkAuthDone) {
         document.getElementById('vk-auth-status').textContent = '✅ Уже авторизованы';
@@ -315,37 +297,34 @@ async function vkAuth() {
     }
     const status = document.getElementById('vk-auth-status');
     status.textContent = '⏳ Авторизация...';
-    
     try {
         const user = await vkBridge.send('VKWebAppGetUserInfo');
         if (user.first_name) document.getElementById('name').value = user.first_name;
         if (user.last_name) document.getElementById('surname').value = user.last_name;
         if (user.phone) document.getElementById('phone').value = user.phone;
         status.textContent = '✅ Авторизация успешна!';
-        
         try {
             const groups = await vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
             if (groups.is_member) {
-                status.textContent += ' ✅ Вы уже подписаны на сообщество!';
+                status.textContent += ' ✅ Вы уже подписаны!';
             } else {
-                if (confirm('Подписаться на сообщество «Стрелковый интенсив»?')) {
+                if (confirm('Подписаться на сообщество?')) {
                     await vkBridge.send('VKWebAppJoinGroup', { group_id: 239743393 });
-                    status.textContent += ' ✅ Вы подписаны на сообщество!';
+                    status.textContent += ' ✅ Вы подписаны!';
                 } else {
-                    status.textContent += ' ⚠️ Подписка пропущена (можно подписаться позже).';
+                    status.textContent += ' ⚠️ Подписка пропущена.';
                 }
             }
         } catch (err) {
-            status.textContent += ' ℹ️ Проверка подписки не удалась (возможно, не в VK).';
+            status.textContent += ' ℹ️ Проверка подписки не удалась.';
         }
-        
         vkAuthDone = true;
     } catch (err) {
         status.textContent = '❌ Ошибка авторизации: ' + err.message;
     }
 }
 
-// ===== API с проверкой API_BASE =====
+// ===== API =====
 async function apiFetch(url) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     try {
@@ -353,7 +332,6 @@ async function apiFetch(url) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
     } catch (err) {
-        console.error('Ошибка API Fetch:', err);
         throw err;
     }
 }
@@ -368,7 +346,6 @@ async function apiPost(url, data) {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
     } catch (err) {
-        console.error('Ошибка API Post:', err);
         throw err;
     }
 }
@@ -382,7 +359,7 @@ async function loadConfig() {
         renderTariffs();
         updateDateSelect(document.getElementById('tariff-input').value);
     } catch (e) {
-        console.warn('Не удалось загрузить конфиг, используются локальные значения');
+        console.warn('Не удалось загрузить конфиг, локальные значения');
     }
 }
 
@@ -392,40 +369,35 @@ function renderTariffs() {
     const prevBtn = document.getElementById('tariff-prev');
     const nextBtn = document.getElementById('tariff-next');
 
+    const basicTotal = tariffPrices.basic.base + tariffPrices.basic.instructor;
+    const practiceTotal = tariffPrices.practice.base + tariffPrices.practice.instructor;
+    const proTotal = tariffPrices.pro.base + tariffPrices.pro.instructor;
+
     grid.innerHTML = `
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${tariffPrices.basic.toLocaleString()} ₽</div>
+            <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--gold);">🔰 Для новичков.</strong>
-                <br>С нуля: безопасность, устройство, стойка.
-                <br>Разбор каждого выстрела. Спокойный темп.
-                <br>Идеально, чтобы попробовать и понять, твоё ли это.
+                <strong style="color:var(--gold);">🔰 Для новичков.</strong><br>С нуля: безопасность, устройство, стойка.<br>Разбор каждого выстрела. Спокойный темп.
             </div>
             <span class="t-badge">с теорией</span>
         </div>
         <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
             <div class="t-label">Практика</div>
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
-            <div class="t-price">${tariffPrices.practice.toLocaleString()} ₽</div>
+            <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--purple);">⭐ Для опытных.</strong>
-                <br>Никакой теории — только стрельба.
-                <br>Нестандартные мишени, скоростные серии, неожиданные задания.
-                <br>Для тех, кто уже умеет держать оружие и хочет драйва.
+                <strong style="color:var(--purple);">⭐ Для опытных.</strong><br>Никакой теории — только стрельба.<br>Нестандартные мишени, скоростные серии.
             </div>
             <span class="t-badge warn">после Базового</span>
         </div>
         <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
             <div class="t-label">Продвинутый</div>
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${tariffPrices.pro.toLocaleString()} ₽</div>
+            <div class="t-price">${proTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--gold);">🏆 Только для Про.</strong>
-                <br>После 4-х посещений (Базовый + 3 Практики).
-                <br>60 выстрелов, полный день.
-                <br>Углублённая работа над ошибками. Максимальный результат.
+                <strong style="color:var(--gold);">🏆 Только для Про.</strong><br>После 4-х посещений.<br>60 выстрелов, полный день.
             </div>
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
         </div>
@@ -471,22 +443,18 @@ function updateDateSelect(t){
     const d = allDates.filter(d => d.group === g);
     
     s.innerHTML = '<option value="">Выберите дату...</option>';
-    
     d.forEach(d => {
         const ts = d.timeSlot || 'full';
         const c = d.currentCount || 0;
         const mx = d.maxPersons || MAX;
         const a = c < mx;
-        
         const dateStr = d.label || d.value || 'Дата не указана';
-        
         const o = document.createElement('option');
         o.value = d.value + '|' + ts;
         o.textContent = `${dateStr} ${ts !== 'full' ? '(' + (ts === '10-14' ? '10–14' : '14–18') + ')' : '(10–18)'} — ${c}/${mx}${a ? '' : ' (НЕТ МЕСТ)'}`;
         o.disabled = !a;
         s.appendChild(o);
     });
-    
     h.textContent = `Группа от ${MIN} до ${MAX} человек.`;
 }
 
@@ -506,11 +474,8 @@ async function selectTariff(t) {
 
     try {
         const response = await fetch(`${API_BASE}/api/client/access/${normalizedPhone}?tariff=${t}`);
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-
         if (data.allow) {
             document.getElementById('tariff-input').value = t;
             document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
@@ -563,26 +528,11 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
-// ===== Админка — цены =====
-async function savePricesToBackend() {
-    const prices = {
-        practice: parseInt(document.getElementById('price-practice').value) || 7000,
-        basic: parseInt(document.getElementById('price-basic').value) || 8500,
-        pro: parseInt(document.getElementById('price-pro').value) || 13500
-    };
-    try {
-        await apiPost('/api/prices', prices);
-        tariffPrices = prices;
-        renderTariffs();
-        alert('✅ Цены сохранены!');
-    } catch (e) {
-        alert('❌ Ошибка сохранения: ' + e.message);
-    }
-}
-
-// ===== Остальные функции (галерея, админка, рассылка) =====
+// ===== Модалка успеха =====
 function showModal(){document.getElementById('success-modal').classList.add('active');document.body.style.overflow='hidden';}
 function closeModal(){document.getElementById('success-modal').classList.remove('active');document.body.style.overflow='';}
+
+// ===== Галерея =====
 function loadGallery(){try{const s=localStorage.getItem('shooting_gallery');if(s)galleryFiles=JSON.parse(s);}catch(e){}}
 function saveGallery(){localStorage.setItem('shooting_gallery',JSON.stringify(galleryFiles));}
 function uploadGalleryFiles(input){Array.from(input.files).forEach(file=>{if(galleryFiles.length>=20)return;const r=new FileReader();r.onload=function(e){galleryFiles.push({type:file.type.startsWith('video')?'video':'image',data:e.target.result,name:file.name});saveGallery();renderGalleryList();renderMainGallery();setBackgroundFromGallery();};r.readAsDataURL(file);});input.value='';}
@@ -592,109 +542,20 @@ function renderMainGallery(){const m=document.getElementById('gallery-main'),d=d
 function changeSlide(dir){if(!galleryFiles.length)return;currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length;renderMainGallery();}
 function setBackgroundFromGallery(){const body=document.body;if(galleryFiles.length>0&&galleryFiles[0].type==='image'){body.style.setProperty('--gallery-bg',`url('${galleryFiles[0].data}')`);body.classList.add('has-gallery-bg');}else{body.classList.remove('has-gallery-bg');body.style.removeProperty('--gallery-bg');}}
 
-// ===== Доступ к админке по долгому нажатию =====
+// ===== Скрытая кнопка входа в админку (долгое нажатие на логотип) =====
 let tt;
 const ht = document.getElementById('hero-title');
 if (ht) {
     ht.addEventListener('touchstart', () => {
-        tt = setTimeout(openAdminPanel, 3000);
+        tt = setTimeout(() => {
+            window.location.href = 'https://shooting-course.vercel.app/admin.html';
+        }, 3000);
     });
     ht.addEventListener('touchend', () => clearTimeout(tt));
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
-function openAdminPanel() {
-    window.open('https://shooting-course.vercel.app/admin.html', '_blank');
-}
 
-// ===== Админ-панель: переключение вкладок =====
-function switchAdminTab(tab) {
-    document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.admin-tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
-    
-    document.querySelectorAll('[id^="admin-tab-"]').forEach(el => el.style.display = 'none');
-    document.getElementById(`admin-tab-${tab}`).style.display = 'block';
-}
-
-// ===== Админ-панель: добавить дату =====
-async function addNewDate() {
-    const dateValue = document.getElementById('new-date-value').value;
-    const group = document.getElementById('new-date-group').value;
-    const timeSlot = document.getElementById('new-date-slot').value;
-    
-    if (!dateValue) {
-        alert('Выберите дату');
-        return;
-    }
-    
-    try {
-        const result = await apiPost('/api/dates', { 
-            value: dateValue, 
-            group: group, 
-            timeSlot: timeSlot 
-        });
-        if (result.status === 'created') {
-            alert('✅ Дата добавлена!');
-            loadConfig();
-        } else {
-            alert('❌ ' + (result.detail || 'Ошибка'));
-        }
-    } catch (err) {
-        alert('❌ Ошибка: ' + err.message);
-    }
-}
-
-// ===== Админ-панель: список клиентов =====
-async function renderClientsList(search = '') {
-    try {
-        const clients = await apiFetch('/api/clients' + (search ? `?search=${encodeURIComponent(search)}` : ''));
-        const list = document.getElementById('admin-clients-list');
-        if (clients.length === 0) {
-            list.innerHTML = '<p style="opacity:0.4;">Нет записей</p>';
-            return;
-        }
-        list.innerHTML = clients.map(c => `
-            <div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid var(--input-border);font-size:0.8rem;">
-                <span>${c.name} ${c.surname}</span>
-                <span>${c.phone}</span>
-                <span>${c.tariff}</span>
-                <span>${c.date}</span>
-            </div>
-        `).join('');
-    } catch (err) {
-        console.error('Ошибка загрузки клиентов:', err);
-    }
-}
-
-// ===== Админ-панель: рассылка =====
-async function sendMailing(channel) {
-    const message = document.getElementById('mailing-message').value.trim();
-    const resultDiv = document.getElementById('mailing-result');
-    
-    if (!message) {
-        resultDiv.textContent = '⚠️ Введите текст сообщения';
-        return;
-    }
-    
-    try {
-        const result = await apiPost('/api/mailing', { 
-            channel: channel, 
-            message: message 
-        });
-        resultDiv.textContent = result.status === 'sent' 
-            ? `✅ Рассылка через ${channel} отправлена (${result.count} получателей)` 
-            : `⚠️ ${result.detail || 'Ошибка'}`;
-    } catch (err) {
-        resultDiv.textContent = '❌ Ошибка: ' + err.message;
-    }
-}
-
-function closeAdminPanel() {
-    document.getElementById('admin-modal').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-function switchAdminTab(t){document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='dates')||(i===1&&t==='clients')||(i===2&&t==='gallery')||(i===3&&t==='prices')||(i===4&&t==='mailing')));document.getElementById('admin-tab-dates').style.display=t==='dates'?'block':'none';document.getElementById('admin-tab-clients').style.display=t==='clients'?'block':'none';document.getElementById('admin-tab-gallery').style.display=t==='gallery'?'block':'none';document.getElementById('admin-tab-prices').style.display=t==='prices'?'block':'none';document.getElementById('admin-tab-mailing').style.display=t==='mailing'?'block':'none';if(t==='clients')renderClientsList();if(t==='gallery')renderGalleryList();if(t==='prices'){document.getElementById('price-practice').value=tariffPrices.practice;document.getElementById('price-basic').value=tariffPrices.basic;document.getElementById('price-pro').value=tariffPrices.pro;}}
-
+// ===== Инициализация =====
 document.addEventListener('DOMContentLoaded',()=>{
     loadConfig();
     loadGallery();
