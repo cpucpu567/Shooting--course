@@ -31,13 +31,13 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    # === Удаляем старые таблицы, чтобы пересоздать их с каскадным удалением ===
+    # === Удаляем старые таблицы ===
     c.execute('DROP TABLE IF EXISTS bookings CASCADE;')
     c.execute('DROP TABLE IF EXISTS clients CASCADE;')
     c.execute('DROP TABLE IF EXISTS dates CASCADE;')
     c.execute('DROP TABLE IF EXISTS config CASCADE;')
     
-    # === Сначала создаём клиентов (родительская таблица) ===
+    # === Таблица клиентов (с referrer) ===
     c.execute('''
         CREATE TABLE clients (
             phone TEXT PRIMARY KEY,
@@ -47,11 +47,12 @@ def init_db():
             experienced TEXT DEFAULT 'newbie',
             newsletter BOOLEAN DEFAULT FALSE,
             total_discounts INTEGER DEFAULT 0,
-            last_visit TIMESTAMP
+            last_visit TIMESTAMP,
+            referrer TEXT
         );
     ''')
     
-    # === Затем создаём заявки с внешним ключом и каскадным удалением ===
+    # === Таблица заявок ===
     c.execute('''
         CREATE TABLE bookings (
             id SERIAL PRIMARY KEY,
@@ -72,7 +73,7 @@ def init_db():
         );
     ''')
     
-    # === Даты ===
+    # === Таблица дат ===
     c.execute('''
         CREATE TABLE dates (
             id SERIAL PRIMARY KEY,
@@ -85,7 +86,7 @@ def init_db():
         );
     ''')
     
-    # === Конфиг (цены) ===
+    # === Таблица цен ===
     c.execute('''
         CREATE TABLE config (
             key TEXT PRIMARY KEY,
@@ -93,7 +94,7 @@ def init_db():
         );
     ''')
     
-    # === Обновляем старые статусы, если они ещё есть ===
+    # === Миграция старых статусов ===
     c.execute('''
         UPDATE clients 
         SET experienced = 
@@ -154,11 +155,9 @@ async def get_config():
     conn = get_db()
     c = conn.cursor()
     
-    # Получаем все даты
     c.execute("SELECT * FROM dates")
     dates = c.fetchall()
     
-    # Для каждой даты считаем количество записей
     result_dates = []
     for d in dates:
         c.execute("SELECT COUNT(*) FROM bookings WHERE date = %s", (d['value'],))
@@ -195,12 +194,12 @@ async def create_booking(data: BookingRequest):
 
     final_price = max(0, prices[data.tariff] - discount)
 
-    # 1. Сначала регистрируем/обновляем клиента (чтобы он появился в базе)
+    # 1. Регистрируем/обновляем клиента
     conn = get_db()
     c = conn.cursor()
     c.execute('''
-        INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
-        VALUES (%s, %s, %s, 1, 'newbie', %s)
+        INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, referrer)
+        VALUES (%s, %s, %s, 1, 'newbie', %s, %s)
         ON CONFLICT (phone) DO UPDATE SET
             surname = EXCLUDED.surname,
             name = EXCLUDED.name,
@@ -210,12 +209,13 @@ async def create_booking(data: BookingRequest):
                 WHEN clients.visits + 1 >= 2 THEN 'experienced' 
                 ELSE 'newbie' 
             END,
-            newsletter = EXCLUDED.newsletter
-    ''', (data.phone, data.surname, data.name, data.newsletter))
+            newsletter = EXCLUDED.newsletter,
+            referrer = COALESCE(EXCLUDED.referrer, clients.referrer)
+    ''', (data.phone, data.surname, data.name, data.newsletter, data.referral))
     conn.commit()
     conn.close()
 
-    # 2. Теперь создаём заявку (клиент уже есть, FOREIGN KEY не ругается)
+    # 2. Создаём заявку
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -228,7 +228,60 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # ===== Отправка в VK (в личные сообщения администратору) =====
+    # 3. Если пришёл друг — начисляем скидку обоим и отправляем уведомления
+    if data.referral:
+        try:
+            conn = get_db()
+            c = conn.cursor()
+            # Текущему (новому) клиенту — скидка на следующее занятие
+            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
+            # Привёдшему — скидка на следующее занятие
+            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.referral,))
+            conn.commit()
+            conn.close()
+            logger.info(f"Скидка 500 ₽ начислена обоим")
+
+            # === Уведомление привёдшему (в VK) ===
+            vk_token = os.getenv("VK_TOKEN", "")
+            if vk_token:
+                msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался на занятие. Вы получили скидку 500 ₽ на следующее посещение!"
+                try:
+                    requests.post(
+                        "https://api.vk.com/method/messages.send",
+                        params={
+                            "access_token": vk_token,
+                            "v": "5.131",
+                            "user_id": 304659962,
+                            "message": msg,
+                            "random_id": 0
+                        }
+                    )
+                    logger.info("VK: уведомление о скидке отправлено привёдшему")
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке уведомления о скидке в VK: {str(e)}")
+
+            # === Уведомление привёдшему (в Telegram) ===
+            telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+            chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+            user_id = os.getenv("TELEGRAM_USER_ID", "")
+            if telegram_token and chat_id and user_id:
+                tg_msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался на занятие. Вы получили скидку 500 ₽ на следующее посещение!"
+                try:
+                    requests.post(
+                        f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                        json={"chat_id": chat_id, "text": tg_msg}
+                    )
+                    requests.post(
+                        f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                        json={"chat_id": user_id, "text": tg_msg}
+                    )
+                    logger.info("Telegram: уведомление о скидке отправлено привёдшему")
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке уведомления о скидке в Telegram: {str(e)}")
+        except Exception as e:
+            logger.error(f"Ошибка при начислении скидки: {str(e)}")
+
+    # ===== Отправка в VK (админу) =====
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token:
         msg = f"""
@@ -241,7 +294,7 @@ async def create_booking(data: BookingRequest):
 📱 Источник: {data.source or 'не указан'}
         """
         try:
-            response = requests.post(
+            requests.post(
                 "https://api.vk.com/method/messages.send",
                 params={
                     "access_token": vk_token,
@@ -251,22 +304,14 @@ async def create_booking(data: BookingRequest):
                     "random_id": 0
                 }
             )
-            if response.status_code != 200:
-                logger.error(f"VK ответил с кодом {response.status_code}: {response.text}")
-            else:
-                result = response.json()
-                if 'error' in result:
-                    logger.error(f"VK вернул ошибку: {result['error']}")
-                else:
-                    logger.info("VK: сообщение успешно отправлено")
+            logger.info("VK: сообщение отправлено")
         except Exception as e:
             logger.error(f"Ошибка при отправке в VK: {str(e)}")
             
-    # ===== Отправка в Telegram (в канал и в личные сообщения) =====
+    # ===== Отправка в Telegram (в канал и админу) =====
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")       # ID канала
-    user_id = os.getenv("TELEGRAM_USER_ID", "")       # твой личный ID
-
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+    user_id = os.getenv("TELEGRAM_USER_ID", "")
     if telegram_token and chat_id and user_id:
         tg_msg = f"""
 🔫 Новая заявка #{booking_id}
@@ -277,17 +322,15 @@ async def create_booking(data: BookingRequest):
 💰 Итог: {final_price} ₽
         """
         try:
-            # Отправляем в канал
             requests.post(
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                 json={"chat_id": chat_id, "text": tg_msg}
             )
-            # Отправляем в личные сообщения
             requests.post(
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                 json={"chat_id": user_id, "text": tg_msg}
             )
-            logger.info("Telegram: уведомления отправлены (в канал и в личку)")
+            logger.info("Telegram: уведомления отправлены")
         except Exception as e:
             logger.error(f"Ошибка при отправке в Telegram: {str(e)}")
 
@@ -358,7 +401,8 @@ async def get_clients():
     conn.close()
     return [{"phone": r['phone'], "surname": r['surname'], "name": r['name'], "visits": r['visits'], 
              "experienced": r['experienced'], "newsletter": r['newsletter'], 
-             "totalDiscounts": r['total_discounts'], "lastVisit": r['last_visit']} for r in rows]
+             "totalDiscounts": r['total_discounts'], "lastVisit": r['last_visit'],
+             "referrer": r['referrer']} for r in rows]
 
 @app.post("/api/clients/{phone}")
 async def update_client_status(phone: str, data: dict):
