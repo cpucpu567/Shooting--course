@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -25,19 +25,21 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 logger.info(f"DATABASE_URL: {DATABASE_URL}")
 
 def get_db():
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    try:
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    except Exception as e:
+        logger.error(f"Ошибка подключения к БД: {str(e)}")
+        raise HTTPException(500, "Ошибка подключения к базе данных")
 
 def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    # === Удаляем старые таблицы ===
     c.execute('DROP TABLE IF EXISTS bookings CASCADE;')
     c.execute('DROP TABLE IF EXISTS clients CASCADE;')
     c.execute('DROP TABLE IF EXISTS dates CASCADE;')
     c.execute('DROP TABLE IF EXISTS config CASCADE;')
     
-    # === Таблица клиентов (с referrer) ===
     c.execute('''
         CREATE TABLE clients (
             phone TEXT PRIMARY KEY,
@@ -52,7 +54,6 @@ def init_db():
         );
     ''')
     
-    # === Таблица заявок ===
     c.execute('''
         CREATE TABLE bookings (
             id SERIAL PRIMARY KEY,
@@ -73,7 +74,6 @@ def init_db():
         );
     ''')
     
-    # === Таблица дат ===
     c.execute('''
         CREATE TABLE dates (
             id SERIAL PRIMARY KEY,
@@ -86,7 +86,6 @@ def init_db():
         );
     ''')
     
-    # === Таблица цен ===
     c.execute('''
         CREATE TABLE config (
             key TEXT PRIMARY KEY,
@@ -94,7 +93,6 @@ def init_db():
         );
     ''')
     
-    # === Миграция старых статусов ===
     c.execute('''
         UPDATE clients 
         SET experienced = 
@@ -108,7 +106,7 @@ def init_db():
     
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
-        c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":7000,\"basic\":8500,\"pro\":13500}')")
+        c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":{\"base\":5000,\"instructor\":2000},\"basic\":{\"base\":5000,\"instructor\":3500},\"pro\":{\"base\":10000,\"instructor\":3500}}')")
     conn.commit()
     conn.close()
 
@@ -127,9 +125,9 @@ class BookingRequest(BaseModel):
     newsletter: bool = False
 
 class PriceUpdate(BaseModel):
-    practice: int
-    basic: int
-    pro: int
+    practice: dict = Field(..., description="{'base': int, 'instructor': int}")
+    basic: dict = Field(..., description="{'base': int, 'instructor': int}")
+    pro: dict = Field(..., description="{'base': int, 'instructor': int}")
 
 class DateItem(BaseModel):
     value: str
@@ -146,7 +144,20 @@ def get_prices():
     c.execute("SELECT value FROM config WHERE key = 'prices'")
     row = c.fetchone()
     conn.close()
-    return eval(row['value']) if row else {"practice": 7000, "basic": 8500, "pro": 13500}
+    if row:
+        try:
+            return json.loads(row['value'])
+        except json.JSONDecodeError:
+            return {
+                "practice": {"base": 5000, "instructor": 2000},
+                "basic": {"base": 5000, "instructor": 3500},
+                "pro": {"base": 10000, "instructor": 3500}
+            }
+    return {
+        "practice": {"base": 5000, "instructor": 2000},
+        "basic": {"base": 5000, "instructor": 3500},
+        "pro": {"base": 10000, "instructor": 3500}
+    }
 
 # ===== API =====
 @app.get("/api/config")
@@ -184,17 +195,36 @@ async def create_booking(data: BookingRequest):
     if not data.surname or not data.name or not data.phone:
         raise HTTPException(400, "Заполните все обязательные поля")
     
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT id FROM dates WHERE value = %s", (data.date,))
+    if not c.fetchone():
+        conn.close()
+        raise HTTPException(400, "Выбранная дата не существует")
+    conn.close()
+    
     prices = get_prices()
     if data.tariff not in prices:
         raise HTTPException(400, "Неверный тариф")
 
-    discount = 0
-    if data.referral:
-        discount += 500
+    # === Разбиваем цену ===
+    price = prices[data.tariff]
+    base_price = price["base"]
+    instructor_price = price["instructor"]
 
-    final_price = max(0, prices[data.tariff] - discount)
+    # === Загружаем скидку ===
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT total_discounts FROM clients WHERE phone = %s", (data.phone,))
+    client = c.fetchone()
+    total_discount = client['total_discounts'] if client else 0
+    conn.close()
+    
+    # === Скидка только на инструктора ===
+    discount = min(total_discount, instructor_price)
+    final_price = base_price + (instructor_price - discount)
 
-    # 1. Регистрируем/обновляем клиента
+    # === 1. Регистрируем клиента ===
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -215,7 +245,20 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # 2. Создаём заявку
+    # === Бонус за 5-е, 10-е, 15-е посещение ===
+    if not data.referral:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT visits FROM clients WHERE phone = %s", (data.phone,))
+        row = c.fetchone()
+        visits = row['visits'] if row else 0
+        if visits % 5 == 0:
+            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
+            conn.commit()
+            logger.info(f"Бонус 500 ₽ за {visits}-е посещение")
+        conn.close()
+
+    # === 2. Создаём заявку ===
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -228,23 +271,29 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # 3. Если пришёл друг — начисляем скидку обоим и отправляем уведомления
+    # === 3. Списание использованной скидки ===
+    if discount > 0:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("UPDATE clients SET total_discounts = total_discounts - %s WHERE phone = %s", (discount, data.phone))
+        conn.commit()
+        conn.close()
+
+    # === 4. Начисление скидки за приведённого друга ===
     if data.referral:
         try:
             conn = get_db()
             c = conn.cursor()
-            # Текущему (новому) клиенту — скидка на следующее занятие
             c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
-            # Привёдшему — скидка на следующее занятие
             c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.referral,))
             conn.commit()
             conn.close()
             logger.info(f"Скидка 500 ₽ начислена обоим")
 
-            # === Уведомление привёдшему (в VK) ===
+            # Уведомление привёдшему в VK
             vk_token = os.getenv("VK_TOKEN", "")
             if vk_token:
-                msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался на занятие. Вы получили скидку 500 ₽ на следующее посещение!"
+                msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался. Вы получили скидку 500 ₽!"
                 try:
                     requests.post(
                         "https://api.vk.com/method/messages.send",
@@ -258,14 +307,14 @@ async def create_booking(data: BookingRequest):
                     )
                     logger.info("VK: уведомление о скидке отправлено привёдшему")
                 except Exception as e:
-                    logger.error(f"Ошибка при отправке уведомления о скидке в VK: {str(e)}")
+                    logger.error(f"Ошибка VK: {str(e)}", exc_info=True)
 
-            # === Уведомление привёдшему (в Telegram) ===
+            # Уведомление привёдшему в Telegram
             telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
             chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
             user_id = os.getenv("TELEGRAM_USER_ID", "")
             if telegram_token and chat_id and user_id:
-                tg_msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался на занятие. Вы получили скидку 500 ₽ на следующее посещение!"
+                tg_msg = f"🎉 Поздравляем! Ваш друг {data.surname} {data.name} записался. Вы получили скидку 500 ₽!"
                 try:
                     requests.post(
                         f"https://api.telegram.org/bot{telegram_token}/sendMessage",
@@ -275,13 +324,13 @@ async def create_booking(data: BookingRequest):
                         f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                         json={"chat_id": user_id, "text": tg_msg}
                     )
-                    logger.info("Telegram: уведомление о скидке отправлено привёдшему")
+                    logger.info("Telegram: уведомление о скидке отправлено")
                 except Exception as e:
-                    logger.error(f"Ошибка при отправке уведомления о скидке в Telegram: {str(e)}")
+                    logger.error(f"Ошибка Telegram: {str(e)}", exc_info=True)
         except Exception as e:
-            logger.error(f"Ошибка при начислении скидки: {str(e)}")
+            logger.error(f"Ошибка начисления скидки другу: {str(e)}", exc_info=True)
 
-    # ===== Отправка в VK (админу) =====
+    # === 5. Уведомление админу о новой заявке ===
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token:
         msg = f"""
@@ -304,11 +353,10 @@ async def create_booking(data: BookingRequest):
                     "random_id": 0
                 }
             )
-            logger.info("VK: сообщение отправлено")
+            logger.info("VK: сообщение администратору отправлено")
         except Exception as e:
-            logger.error(f"Ошибка при отправке в VK: {str(e)}")
+            logger.error(f"Ошибка VK админу: {str(e)}", exc_info=True)
             
-    # ===== Отправка в Telegram (в канал и админу) =====
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
     user_id = os.getenv("TELEGRAM_USER_ID", "")
@@ -330,21 +378,27 @@ async def create_booking(data: BookingRequest):
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                 json={"chat_id": user_id, "text": tg_msg}
             )
-            logger.info("Telegram: уведомления отправлены")
+            logger.info("Telegram: уведомления администратору отправлены")
         except Exception as e:
-            logger.error(f"Ошибка при отправке в Telegram: {str(e)}")
+            logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
 
     return {"id": booking_id, "status": "created", "finalPrice": final_price, "discount": discount}
 
 @app.post("/api/prices")
 async def update_prices(data: PriceUpdate):
-    if data.practice < 0 or data.basic < 0 or data.pro < 0:
-        raise HTTPException(400, "Цены не могут быть отрицательными")
+    # Проверяем, что цены неотрицательные и структура правильная
+    for key in ["practice", "basic", "pro"]:
+        if data.dict()[key]["base"] < 0 or data.dict()[key]["instructor"] < 0:
+            raise HTTPException(400, "Цены не могут быть отрицательными")
     
     conn = get_db()
     c = conn.cursor()
     c.execute("UPDATE config SET value = %s WHERE key = 'prices'", 
-              (str({"practice": data.practice, "basic": data.basic, "pro": data.pro}),))
+              (json.dumps({
+                  "practice": data.practice,
+                  "basic": data.basic,
+                  "pro": data.pro
+              }),))
     conn.commit()
     conn.close()
     return {"status": "updated"}
@@ -383,20 +437,20 @@ async def delete_date(id: int):
         raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
         
 @app.get("/api/bookings")
-async def get_bookings():
+async def get_bookings(limit: int = 100, offset: int = 0):
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT * FROM bookings ORDER BY created_at DESC")
+    c.execute("SELECT * FROM bookings ORDER BY created_at DESC LIMIT %s OFFSET %s", (limit, offset))
     rows = c.fetchall()
     conn.close()
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "tariff": r['tariff'],
              "date": r['date'], "timeSlot": r['time_slot'], "finalPrice": r['final_price'], "status": r['status'],
              "createdAt": r['created_at']} for r in rows]
 @app.get("/api/clients")
-async def get_clients():
+async def get_clients(limit: int = 100, offset: int = 0):
     conn = get_db()
     c = conn.cursor()
-    c.execute("SELECT * FROM clients ORDER BY surname, name")
+    c.execute("SELECT * FROM clients ORDER BY surname, name LIMIT %s OFFSET %s", (limit, offset))
     rows = c.fetchall()
     conn.close()
     return [{"phone": r['phone'], "surname": r['surname'], "name": r['name'], "visits": r['visits'], 
