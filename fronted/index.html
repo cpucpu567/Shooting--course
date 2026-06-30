@@ -218,7 +218,7 @@
 
     <section><div class="container"><h2>Фото и видео <span>с занятий</span></h2><div class="gallery-wrapper"><div class="gallery-main" id="gallery-main"><div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div></div><button class="gallery-arrow gallery-prev" onclick="changeSlide(-1)">❮</button><button class="gallery-arrow gallery-next" onclick="changeSlide(1)">❯</button><div class="gallery-dots" id="gallery-dots"></div></div></div></section>
 
-    <<section id="tariff-section">
+    <section id="tariff-section">
     <div class="container">
         <h2>Форматы <span>участия</span></h2>
         <!-- Блок "Что входит в стоимость" — статично над каруселью -->
@@ -316,7 +316,8 @@ function renderTariffs() {
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
             <div class="t-price">${tariffPrices.basic.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                📖 <strong>Для новичков.</strong> С нуля: безопасность, устройство, стойка.
+                <strong style="color:var(--gold);">🔰 Для новичков.</strong>
+                <br>С нуля: безопасность, устройство, стойка.
                 <br>Разбор каждого выстрела. Спокойный темп.
                 <br>Идеально, чтобы попробовать и понять, твоё ли это.
             </div>
@@ -327,7 +328,8 @@ function renderTariffs() {
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
             <div class="t-price">${tariffPrices.practice.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                ⚡ <strong>Для опытных.</strong> Никакой теории — только стрельба.
+                <strong style="color:var(--purple);">⭐ Для опытных.</strong>
+                <br>Никакой теории — только стрельба.
                 <br>Нестандартные мишени, скоростные серии, неожиданные задания.
                 <br>Для тех, кто уже умеет держать оружие и хочет драйва.
             </div>
@@ -338,8 +340,9 @@ function renderTariffs() {
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
             <div class="t-price">${tariffPrices.pro.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                🔥 <strong>Только для опытных стрелков.</strong>
-                <br>После 2-х посещений Практики — 60 выстрелов, полный день.
+                <strong style="color:var(--gold);">🏆 Только для Про.</strong>
+                <br>После 4-х посещений (Базовый + 3 Практики).
+                <br>60 выстрелов, полный день.
                 <br>Углублённая работа над ошибками. Максимальный результат.
             </div>
             <span class="t-badge rec">РЕКОМЕНДУЮ</span>
