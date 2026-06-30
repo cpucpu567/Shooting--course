@@ -128,13 +128,31 @@ async def get_config():
     prices = get_prices()
     conn = get_db()
     c = conn.cursor()
+    
+    # Получаем все даты
     c.execute("SELECT * FROM dates")
     dates = c.fetchall()
+    
+    # Для каждой даты считаем количество записей
+    result_dates = []
+    for d in dates:
+        c.execute("SELECT COUNT(*) FROM bookings WHERE date = %s", (d['value'],))
+        count = c.fetchone()['count']
+        result_dates.append({
+            "id": d['id'],
+            "value": d['value'],
+            "label": d['label'],
+            "group": d['group_id'],
+            "timeSlot": d['time_slot'],
+            "maxPersons": d['max_persons'],
+            "minPersons": d['min_persons'],
+            "currentCount": count
+        })
+    
     conn.close()
     return {
         "prices": prices,
-        "dates": [{"value": r['value'], "label": r['label'], "group": r['group_id'], "timeSlot": r['time_slot'],
-                   "maxPersons": r['max_persons'], "minPersons": r['min_persons']} for r in dates]
+        "dates": result_dates
     }
 
 @app.post("/api/booking")
