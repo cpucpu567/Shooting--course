@@ -30,8 +30,30 @@ def get_db():
 def init_db():
     conn = get_db()
     c = conn.cursor()
+    
+    # === Удаляем старые таблицы, чтобы пересоздать их с каскадным удалением ===
+    c.execute('DROP TABLE IF EXISTS bookings CASCADE;')
+    c.execute('DROP TABLE IF EXISTS clients CASCADE;')
+    c.execute('DROP TABLE IF EXISTS dates CASCADE;')
+    c.execute('DROP TABLE IF EXISTS config CASCADE;')
+    
+    # === Сначала создаём клиентов (родительская таблица) ===
     c.execute('''
-        CREATE TABLE IF NOT EXISTS bookings (
+        CREATE TABLE clients (
+            phone TEXT PRIMARY KEY,
+            surname TEXT NOT NULL,
+            name TEXT NOT NULL,
+            visits INTEGER DEFAULT 0,
+            experienced TEXT DEFAULT 'newbie',
+            newsletter BOOLEAN DEFAULT FALSE,
+            total_discounts INTEGER DEFAULT 0,
+            last_visit TIMESTAMP
+        );
+    ''')
+    
+    # === Затем создаём заявки с внешним ключом и каскадным удалением ===
+    c.execute('''
+        CREATE TABLE bookings (
             id SERIAL PRIMARY KEY,
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
@@ -45,11 +67,14 @@ def init_db():
             discount INTEGER DEFAULT 0,
             final_price INTEGER NOT NULL,
             status TEXT DEFAULT 'new',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (phone) REFERENCES clients(phone) ON DELETE CASCADE
+        );
     ''')
+    
+    # === Даты ===
     c.execute('''
-        CREATE TABLE IF NOT EXISTS dates (
+        CREATE TABLE dates (
             id SERIAL PRIMARY KEY,
             value TEXT NOT NULL,
             label TEXT NOT NULL,
@@ -57,41 +82,28 @@ def init_db():
             time_slot TEXT,
             max_persons INTEGER DEFAULT 10,
             min_persons INTEGER DEFAULT 5
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS config (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        )
-    ''')
-    
-    # === Сначала удаляем старую таблицу клиентов и создаём новую ===
-    c.execute('''
-        DROP TABLE IF EXISTS clients CASCADE;
-        CREATE TABLE clients (
-            phone TEXT PRIMARY KEY,
-            surname TEXT NOT NULL,
-            name TEXT NOT NULL,
-            visits INTEGER DEFAULT 0,
-            experienced TEXT DEFAULT 'newbie',
-            newsletter BOOLEAN DEFAULT FALSE,
-            total_discounts INTEGER DEFAULT 0,
-            last_visit TIMESTAMP
         );
     ''')
     
-    # === Теперь, когда таблица уже создана, обновляем статусы (если остались старые) ===
+    # === Конфиг (цены) ===
     c.execute('''
-    UPDATE clients 
-    SET experienced = 
-        CASE 
-            WHEN experienced = 'true' OR experienced = '1' THEN 'experienced'
-            WHEN experienced = 'false' OR experienced = '0' THEN 'newbie'
-            ELSE experienced
-        END
-    WHERE experienced NOT IN ('newbie', 'experienced', 'pro');
-''')
+        CREATE TABLE config (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+    ''')
+    
+    # === Обновляем старые статусы, если они ещё есть ===
+    c.execute('''
+        UPDATE clients 
+        SET experienced = 
+            CASE 
+                WHEN experienced = 'true' OR experienced = '1' THEN 'experienced'
+                WHEN experienced = 'false' OR experienced = '0' THEN 'newbie'
+                ELSE experienced
+            END
+        WHERE experienced NOT IN ('newbie', 'experienced', 'pro');
+    ''')
     
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
@@ -248,10 +260,11 @@ async def create_booking(data: BookingRequest):
                     logger.info("VK: сообщение успешно отправлено")
         except Exception as e:
             logger.error(f"Ошибка при отправке в VK: {str(e)}")
+            
     # ===== Отправка в Telegram (в канал и в личные сообщения) =====
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")      # ID канала
-    user_id = os.getenv("TELEGRAM_USER_ID", "")      # твой личный ID
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")       # ID канала
+    user_id = os.getenv("TELEGRAM_USER_ID", "")       # твой личный ID
 
     if telegram_token and chat_id and user_id:
         tg_msg = f"""
@@ -268,7 +281,7 @@ async def create_booking(data: BookingRequest):
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                 json={"chat_id": chat_id, "text": tg_msg}
             )
-            # Отправляем в личные сообщения (тебе)
+            # Отправляем в личные сообщения
             requests.post(
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
                 json={"chat_id": user_id, "text": tg_msg}
@@ -276,6 +289,7 @@ async def create_booking(data: BookingRequest):
             logger.info("Telegram: уведомления отправлены (в канал и в личку)")
         except Exception as e:
             logger.error(f"Ошибка при отправке в Telegram: {str(e)}")
+
     return {"id": booking_id, "status": "created", "finalPrice": final_price, "discount": discount}
 
 @app.post("/api/prices")
