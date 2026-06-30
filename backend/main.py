@@ -248,10 +248,12 @@ async def create_booking(data: BookingRequest):
                     logger.info("VK: сообщение успешно отправлено")
         except Exception as e:
             logger.error(f"Ошибка при отправке в VK: {str(e)}")
-    # ===== Отправка в Telegram =====
+    # ===== Отправка в Telegram (в канал и в личные сообщения) =====
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
-    if telegram_token and telegram_chat_id:
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")      # ID канала
+    user_id = os.getenv("TELEGRAM_USER_ID", "")      # твой личный ID
+
+    if telegram_token and chat_id and user_id:
         tg_msg = f"""
 🔫 Новая заявка #{booking_id}
 👤 {data.surname} {data.name}
@@ -261,14 +263,17 @@ async def create_booking(data: BookingRequest):
 💰 Итог: {final_price} ₽
         """
         try:
+            # Отправляем в канал
             requests.post(
                 f"https://api.telegram.org/bot{telegram_token}/sendMessage",
-                json={
-                    "chat_id": telegram_chat_id,
-                    "text": tg_msg
-                }
+                json={"chat_id": chat_id, "text": tg_msg}
             )
-            logger.info("Telegram: уведомление отправлено")
+            # Отправляем в личные сообщения (тебе)
+            requests.post(
+                f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                json={"chat_id": user_id, "text": tg_msg}
+            )
+            logger.info("Telegram: уведомления отправлены (в канал и в личку)")
         except Exception as e:
             logger.error(f"Ошибка при отправке в Telegram: {str(e)}")
     return {"id": booking_id, "status": "created", "finalPrice": final_price, "discount": discount}
