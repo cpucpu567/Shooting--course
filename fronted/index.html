@@ -398,34 +398,45 @@ function renderTariffs() {
     const proTotal = tariffPrices.pro.base + tariffPrices.pro.instructor;
 
     grid.innerHTML = `
-        <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
-            <div class="t-label">Базовый</div>
-            <div class="t-sub">30 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
-            <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--gold);">🔰 Для новичков.</strong><br>С нуля: безопасность, устройство, стойка.<br>Разбор каждого выстрела. Спокойный темп.
-            </div>
-            <span class="t-badge">с теорией</span>
+    <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
+        <div class="t-label">🔰 Базовый</div>
+        <div class="t-sub">Первое знакомство</div>
+        <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:left; line-height:1.6; padding:0 6px;">
+            <strong style="color:var(--gold);">Для кого:</strong> Абсолютные новички.<br>
+            <strong style="color:var(--gold);">Формат:</strong> Теория + 30 выстрелов.<br>
+            <strong style="color:var(--gold);">Результат:</strong> Понимание оружия, безопасность, первое попадание.<br>
+            <span style="display:block; margin-top:10px; font-weight:600; color:var(--purple);">⏱ 10:00 – 18:00</span>
         </div>
-        <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
-            <div class="t-label">Практика</div>
-            <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
-            <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
-            <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--purple);">⭐ Для опытных.</strong><br>Никакой теории — только стрельба.<br>Нестандартные мишени, скоростные серии.
-            </div>
-            <span class="t-badge warn">после Базового</span>
+        <span class="t-badge">С теорией</span>
+    </div>
+
+    <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
+        <div class="t-label">⚡ Практика</div>
+        <div class="t-sub">Скорость и реакция</div>
+        <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:left; line-height:1.6; padding:0 6px;">
+            <strong style="color:var(--purple);">Для кого:</strong> Прошли «Базовый».<br>
+            <strong style="color:var(--purple);">Формат:</strong> 30 выстрелов в динамике.<br>
+            <strong style="color:var(--purple);">Результат:</strong> Скоростные серии, нестандартные мишени.<br>
+            <span style="display:block; margin-top:10px; font-weight:600; color:var(--gold);">⏱ 10–14 или 14–18</span>
         </div>
-        <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
-            <div class="t-label">Продвинутый</div>
-            <div class="t-sub">60 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${proTotal.toLocaleString()} ₽</div>
-            <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--gold);">🏆 Только для Про.</strong><br>После 4-х посещений.<br>60 выстрелов, полный день.
-            </div>
-            <span class="t-badge rec">РЕКОМЕНДУЮ</span>
+        <span class="t-badge warn">Только после Базового</span>
+    </div>
+
+    <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
+        <div class="t-label" style="color:var(--gold); font-size:1.2rem;">🏆 Продвинутый</div>
+        <div class="t-sub" style="color:var(--gold);">Максимум. Только для профи.</div>
+        <div class="t-price" style="color:var(--gold); font-size:2.2rem;">${proTotal.toLocaleString()} ₽</div>
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:left; line-height:1.6; padding:0 6px;">
+            <strong style="color:var(--gold);">Для кого:</strong> 4+ посещений (статус «Про»).<br>
+            <strong style="color:var(--gold);">Формат:</strong> <span style="font-size:1.1rem; font-weight:700; color:#fff;">60 выстрелов</span> — в 2 раза больше Практики!<br>
+            <strong style="color:var(--gold);">Результат:</strong> Углублённый разбор ошибок, контроль дыхания и темпа.<br>
+            <span style="display:block; margin-top:10px; font-weight:600; color:var(--purple);">⏱ 10:00 – 18:00 · Полный день</span>
         </div>
-    `;
+        <span class="t-badge rec" style="background:var(--gold); color:#1A1C20;">🔥 ТОП-формат</span>
+    </div>
+`;
 
     if (window.innerWidth <= 900) {
         const cards = grid.querySelectorAll('.tariff-card');
