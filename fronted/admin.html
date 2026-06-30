@@ -303,7 +303,7 @@ async function changeClientStatus(phone, newStatus) {
     const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ experienced: newStatus })
+        body: JSON.stringify({ experienced: newStatus })  // ← ВАЖНО: передаём как объект
     });
     if (res.ok) {
         renderClients();
