@@ -109,9 +109,16 @@
             <div class="card">
                 <h4>💰 Настройка цен</h4>
                 <div class="form-row">
-                    <div class="form-group"><label>Базовый (30 выстр.)</label><input type="number" id="price-basic" /></div>
-                    <div class="form-group"><label>Практика (30 выстр.)</label><input type="number" id="price-practice" /></div>
-                    <div class="form-group"><label>Расширенная практика (60 выстр.)</label><input type="number" id="price-pro" /></div>
+                    <div class="form-group"><label>Базовый (патроны)</label><input type="number" id="price-basic-base" /></div>
+                    <div class="form-group"><label>Базовый (инструктор)</label><input type="number" id="price-basic-instructor" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Практика (патроны)</label><input type="number" id="price-practice-base" /></div>
+                    <div class="form-group"><label>Практика (инструктор)</label><input type="number" id="price-practice-instructor" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Продвинутый (патроны)</label><input type="number" id="price-pro-base" /></div>
+                    <div class="form-group"><label>Продвинутый (инструктор)</label><input type="number" id="price-pro-instructor" /></div>
                 </div>
                 <button class="btn" onclick="savePrices()">Сохранить цены</button>
             </div>
@@ -186,12 +193,31 @@
         const API_BASE = 'https://shooting-course.onrender.com';
 
         async function apiFetch(url) {
-            const res = await fetch(API_BASE + url);
-            return res.json();
+            if (!API_BASE) throw new Error('API_BASE не задана');
+            try {
+                const res = await fetch(API_BASE + url);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            } catch (err) {
+                console.error('Ошибка API:', err);
+                throw err;
+            }
         }
+
         async function apiPost(url, data) {
-            const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            return res.json();
+            if (!API_BASE) throw new Error('API_BASE не задана');
+            try {
+                const res = await fetch(API_BASE + url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            } catch (err) {
+                console.error('Ошибка API:', err);
+                throw err;
+            }
         }
 
         // ===== Вход =====
@@ -213,8 +239,11 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.querySelector(`.tab[onclick*="'${tab}'"]`).classList.add('active');
-            document.getElementById(`tab-${tab}`).classList.add('active');
+            const tabElement = document.querySelector(`.tab[onclick*="'${tab}'"]`);
+            if (tabElement) tabElement.classList.add('active');
+            const contentElement = document.getElementById(`tab-${tab}`);
+            if (contentElement) contentElement.classList.add('active');
+            
             if (tab === 'clients') renderClients();
             if (tab === 'dates') renderDates();
             if (tab === 'gallery') renderGallery();
@@ -233,9 +262,13 @@
         let allDates = [];
 
         async function loadDates() {
-            const config = await apiFetch('/api/config');
-            allDates = config.dates || [];
-            renderDates();
+            try {
+                const config = await apiFetch('/api/config');
+                allDates = config.dates || [];
+                renderDates();
+            } catch (err) {
+                document.getElementById('dates-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
+            }
         }
 
         function renderDates() {
@@ -282,71 +315,90 @@
                 finalLabel = `${day} ${month} ${year}`;
             }
             
-            const data = { value, label: finalLabel, group_id: tariff, time_slot: 'full' };
-            await apiPost('/api/dates', data);
-            loadDates();
-            document.getElementById('new-date').value = '';
-            document.getElementById('new-date-label').value = '';
+            try {
+                const data = { value, label: finalLabel, group_id: tariff, time_slot: 'full' };
+                await apiPost('/api/dates', data);
+                loadDates();
+                document.getElementById('new-date').value = '';
+                document.getElementById('new-date-label').value = '';
+            } catch (err) {
+                alert('❌ Ошибка при добавлении даты: ' + err.message);
+            }
         }
 
         async function deleteDate(id) {
             if (!confirm('Удалить это занятие?')) return;
-            const res = await fetch(API_BASE + '/api/dates/' + encodeURIComponent(id), {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                loadDates();
-            } else {
-                alert('❌ Ошибка при удалении занятия');
+            try {
+                const res = await fetch(API_BASE + '/api/dates/' + encodeURIComponent(id), {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    loadDates();
+                } else {
+                    alert('❌ Ошибка при удалении занятия');
+                }
+            } catch (err) {
+                alert('❌ Ошибка сети: ' + err.message);
             }
         }
 
         // ===== Клиенты =====
         async function renderClients() {
             const container = document.getElementById('admin-clients-list');
-            const clients = await apiFetch('/api/clients');
-            const bookings = await apiFetch('/api/bookings');
-            const q = document.getElementById('client-search').value.toLowerCase();
-            
-            let filtered = clients;
-            if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
-            if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced === 'experienced');
-            if (clientsFilter === 'beginners') filtered = filtered.filter(c => c.experienced === 'newbie');
-            if (clientsFilter === 'pro') filtered = filtered.filter(c => c.experienced === 'pro');
-            if (clientsFilter === 'referrals') filtered = filtered.filter(c => c.referrer);
-            
-            if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
-            
-            container.innerHTML = filtered.map(c => {
-                const userBookings = bookings.filter(b => b.phone === c.phone);
-                return `
-                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                    <div>
-                        <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
-                        <span style="opacity:0.4;">${c.phone}</span>
-                        <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
-                        ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
-                          c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
-                          ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
-                        ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
-                        ${userBookings.length ? `<div style="font-size:0.7rem;opacity:0.4;margin-top:4px;">📅 ${userBookings.map(b => b.date + ' — ' + b.tariff).join('<br>')}</div>` : ''}
+            try {
+                const clients = await apiFetch('/api/clients');
+                const bookings = await apiFetch('/api/bookings');
+                const q = document.getElementById('client-search').value.toLowerCase();
+                
+                let filtered = clients;
+                if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
+                if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced === 'experienced');
+                if (clientsFilter === 'beginners') filtered = filtered.filter(c => c.experienced === 'newbie');
+                if (clientsFilter === 'pro') filtered = filtered.filter(c => c.experienced === 'pro');
+                if (clientsFilter === 'referrals') filtered = filtered.filter(c => c.referrer);
+                
+                if (!filtered.length) {
+                    container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>';
+                    return;
+                }
+                
+                container.innerHTML = filtered.map(c => {
+                    const userBookings = bookings.filter(b => b.phone === c.phone);
+                    return `
+                    <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <div>
+                            <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
+                            <span style="opacity:0.4;">${c.phone}</span>
+                            <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
+                            ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
+                              c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
+                              ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+                            ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
+                            ${userBookings.length ? `<div style="font-size:0.7rem;opacity:0.4;margin-top:4px;">📅 ${userBookings.map(b => b.date + ' — ' + b.tariff).join('<br>')}</div>` : ''}
+                        </div>
+                        <div>
+                            <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
+                        </div>
                     </div>
-                    <div>
-                        <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
-                    </div>
-                </div>
-            `}).join('');
+                `}).join('');
+            } catch (err) {
+                container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки клиентов: ${err.message}</p>`;
+            }
         }
 
         async function deleteClient(phone) {
             if (!confirm(`Удалить клиента ${phone}? Это удалит все его данные.`)) return;
-            const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
-                method: 'DELETE'
-            });
-            if (res.ok) {
-                renderClients();
-            } else {
-                alert('❌ Ошибка при удалении клиента');
+            try {
+                const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
+                    method: 'DELETE'
+                });
+                if (res.ok) {
+                    renderClients();
+                } else {
+                    alert('❌ Ошибка при удалении клиента');
+                }
+            } catch (err) {
+                alert('❌ Ошибка сети: ' + err.message);
             }
         }
 
@@ -354,33 +406,59 @@
         let tariffPrices = {};
 
         async function loadPrices() {
-            const config = await apiFetch('/api/config');
-            tariffPrices = config.prices || {};
-            document.getElementById('price-basic').value = tariffPrices.basic || 8500;
-            document.getElementById('price-practice').value = tariffPrices.practice || 7000;
-            document.getElementById('price-pro').value = tariffPrices.pro || 13500;
+            try {
+                const config = await apiFetch('/api/config');
+                tariffPrices = config.prices || {};
+                document.getElementById('price-basic-base').value = tariffPrices.basic?.base || 5000;
+                document.getElementById('price-basic-instructor').value = tariffPrices.basic?.instructor || 3500;
+                document.getElementById('price-practice-base').value = tariffPrices.practice?.base || 5000;
+                document.getElementById('price-practice-instructor').value = tariffPrices.practice?.instructor || 2000;
+                document.getElementById('price-pro-base').value = tariffPrices.pro?.base || 10000;
+                document.getElementById('price-pro-instructor').value = tariffPrices.pro?.instructor || 3500;
+            } catch (err) {
+                document.getElementById('tab-prices').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки цен: ${err.message}</p>`;
+            }
         }
 
         async function savePrices() {
-            const practice = parseInt(document.getElementById('price-practice').value);
-            const basic = parseInt(document.getElementById('price-basic').value);
-            const pro = parseInt(document.getElementById('price-pro').value);
+            const practiceBase = parseInt(document.getElementById('price-practice-base').value);
+            const practiceInstructor = parseInt(document.getElementById('price-practice-instructor').value);
+            const basicBase = parseInt(document.getElementById('price-basic-base').value);
+            const basicInstructor = parseInt(document.getElementById('price-basic-instructor').value);
+            const proBase = parseInt(document.getElementById('price-pro-base').value);
+            const proInstructor = parseInt(document.getElementById('price-pro-instructor').value);
             
-            if (practice < 0 || basic < 0 || pro < 0) {
+            if (isNaN(practiceBase) || isNaN(practiceInstructor) || 
+                isNaN(basicBase) || isNaN(basicInstructor) || 
+                isNaN(proBase) || isNaN(proInstructor)) {
+                alert('Введите корректные числа!');
+                return;
+            }
+            if (practiceBase < 0 || practiceInstructor < 0 || 
+                basicBase < 0 || basicInstructor < 0 || 
+                proBase < 0 || proInstructor < 0) {
                 alert('Цены не могут быть отрицательными!');
                 return;
             }
             
-            const res = await fetch(API_BASE + '/api/prices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ practice, basic, pro })
-            });
-            if (res.ok) {
-                alert('✅ Цены сохранены!');
-                loadPrices();
-            } else {
-                alert('❌ Ошибка при сохранении');
+            try {
+                const res = await fetch(API_BASE + '/api/prices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        practice: { base: practiceBase, instructor: practiceInstructor },
+                        basic: { base: basicBase, instructor: basicInstructor },
+                        pro: { base: proBase, instructor: proInstructor }
+                    })
+                });
+                if (res.ok) {
+                    alert('✅ Цены сохранены!');
+                    loadPrices();
+                } else {
+                    alert('❌ Ошибка при сохранении');
+                }
+            } catch (err) {
+                alert('❌ Ошибка сети: ' + err.message);
             }
         }
 
@@ -411,10 +489,18 @@
 
         function uploadGalleryFiles(input) {
             Array.from(input.files).forEach(file => {
-                if (galleryFiles.length >= 20) return;
+                if (galleryFiles.length >= 20) {
+                    alert('Достигнут лимит в 20 файлов');
+                    return;
+                }
                 const r = new FileReader();
+                r.onerror = () => alert(`Ошибка при чтении файла ${file.name}`);
                 r.onload = function(e) {
-                    galleryFiles.push({ type: file.type.startsWith('video') ? 'video' : 'image', data: e.target.result, name: file.name });
+                    galleryFiles.push({ 
+                        type: file.type.startsWith('video') ? 'video' : 'image', 
+                        data: e.target.result, 
+                        name: file.name 
+                    });
                     localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
                     renderGallery();
                 };
@@ -434,130 +520,143 @@
         // ===== Рассылка =====
         async function sendMailing(platform) {
             const msg = document.getElementById('mailing-message').value.trim();
-            if (!msg) { alert('Введите текст сообщения'); return; }
-            const clients = await apiFetch('/api/clients');
-            const phones = clients.filter(c => c.newsletter).map(c => c.phone);
-            if (!phones.length) {
-                document.getElementById('mailing-result').textContent = 'Нет согласившихся на рассылку.';
+            const resultDiv = document.getElementById('mailing-result');
+            if (!msg) {
+                resultDiv.textContent = '⚠️ Введите текст сообщения';
                 return;
             }
-            const encoded = encodeURIComponent(msg);
-            const links = phones.map(p => {
-                const clean = p.replace(/\D/g, '');
-                if (platform === 'vk') return `https://vk.com/write?phone=+${clean}`;
-                if (platform === 'telegram') return `https://t.me/msg?phone=+${clean}&text=${encoded}`;
-                return '';
-            }).join('\n');
-            document.getElementById('mailing-result').innerHTML = `
-                <p style="margin-top:8px;">📨 ${phones.length} номеров. Скопируйте ссылки:</p>
-                <textarea rows="5" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;padding:6px;font-size:0.7rem;" onclick="this.select()">${links}</textarea>
-                <p style="font-size:0.65rem;opacity:0.5;">Открывайте ссылки по одной — они ведут в чат с клиентом.</p>
-            `;
+            try {
+                const clients = await apiFetch('/api/clients');
+                const phones = clients
+                    .filter(c => c.newsletter && c.phone && c.phone.length >= 10)
+                    .map(c => c.phone);
+                
+                if (!phones.length) {
+                    resultDiv.textContent = 'Нет согласившихся на рассылку.';
+                    return;
+                }
+                const encoded = encodeURIComponent(msg);
+                const links = phones.map(p => {
+                    const clean = p.replace(/\D/g, '');
+                    if (platform === 'vk') return `https://vk.com/write?phone=+${clean}`;
+                    if (platform === 'telegram') return `https://t.me/msg?phone=+${clean}&text=${encoded}`;
+                    return '';
+                }).join('\n');
+                resultDiv.innerHTML = `
+                    <p style="margin-top:8px;">📨 ${phones.length} номеров. Скопируйте ссылки:</p>
+                    <textarea rows="5" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;padding:6px;font-size:0.7rem;" onclick="this.select()">${links}</textarea>
+                    <p style="font-size:0.65rem;opacity:0.5;">Открывайте ссылки по одной — они ведут в чат с клиентом.</p>
+                `;
+            } catch (err) {
+                resultDiv.textContent = '❌ Ошибка: ' + err.message;
+            }
         }
 
         // ===== Отчёт =====
         async function renderReport() {
             const container = document.getElementById('report-body');
             if (!container) return;
-            
-            const bookings = await apiFetch('/api/bookings');
-            
-            if (!bookings.length) {
-                container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5;">Нет записей</td></tr>';
-                return;
-            }
-            
-            const grouped = {};
-            bookings.forEach(b => {
-                if (!grouped[b.date]) grouped[b.date] = [];
-                grouped[b.date].push(b);
-            });
-            
-            let html = '';
-            Object.keys(grouped).sort().forEach(date => {
-                const items = grouped[date];
-                items.forEach((b, index) => {
-                    html += `
-                        <tr style="${index % 2 === 0 ? 'background:var(--input-bg);' : ''}">
-                            <td style="padding:8px;">${date}</td>
-                            <td style="padding:8px;">${b.surname} ${b.name}</td>
-                            <td style="padding:8px;">${b.phone}</td>
-                            <td style="padding:8px;">${b.tariff}</td>
-                            <td style="padding:8px;">${b.timeSlot}</td>
-                            <td style="padding:8px;">${b.finalPrice} ₽</td>
-                        </tr>
-                    `;
+            try {
+                const bookings = await apiFetch('/api/bookings');
+                if (!bookings.length) {
+                    container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5;">Нет записей</td></tr>';
+                    return;
+                }
+                const grouped = {};
+                bookings.forEach(b => {
+                    if (!grouped[b.date]) grouped[b.date] = [];
+                    grouped[b.date].push(b);
                 });
-            });
-            
-            container.innerHTML = html;
+                let html = '';
+                Object.keys(grouped).sort().forEach(date => {
+                    const items = grouped[date];
+                    items.forEach((b, index) => {
+                        html += `
+                            <tr style="${index % 2 === 0 ? 'background:var(--input-bg);' : ''}">
+                                <td style="padding:8px;">${date}</td>
+                                <td style="padding:8px;">${b.surname} ${b.name}</td>
+                                <td style="padding:8px;">${b.phone}</td>
+                                <td style="padding:8px;">${b.tariff}</td>
+                                <td style="padding:8px;">${b.timeSlot}</td>
+                                <td style="padding:8px;">${b.finalPrice} ₽</td>
+                            </tr>
+                        `;
+                    });
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</td></tr>`;
+            }
         }
 
         // ===== Календарь =====
         async function renderCalendar() {
             const container = document.getElementById('calendar-container');
             if (!container) return;
+            try {
+                const config = await apiFetch('/api/config');
+                const dates = config.dates || [];
 
-            const config = await apiFetch('/api/config');
-            const dates = config.dates || [];
-
-            if (!dates.length) {
-                container.innerHTML = '<p style="opacity:0.5;">Нет добавленных дат</p>';
-                return;
-            }
-
-            const dateMap = {};
-            dates.forEach(d => {
-                dateMap[d.value] = {
-                    label: d.label,
-                    group: d.group,
-                    maxPersons: d.maxPersons,
-                    currentCount: d.currentCount || 0
-                };
-            });
-
-            const firstDate = new Date(Math.min(...dates.map(d => new Date(d.value))));
-            const lastDate = new Date(Math.max(...dates.map(d => new Date(d.value))));
-            firstDate.setDate(1);
-            lastDate.setDate(1);
-            lastDate.setMonth(lastDate.getMonth() + 1);
-            lastDate.setDate(0);
-
-            let html = '';
-            const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-            
-            days.forEach(day => {
-                html += `<div style="text-align:center; font-weight:600; color:var(--gold); font-size:0.8rem;">${day}</div>`;
-            });
-
-            const startDay = firstDate.getDay();
-            for (let i = 0; i < startDay; i++) {
-                html += `<div style="background:var(--input-bg); border-radius:6px; min-height:60px;"></div>`;
-            }
-
-            for (let d = new Date(firstDate); d <= lastDate; d.setDate(d.getDate() + 1)) {
-                const dateStr = d.toISOString().split('T')[0];
-                const info = dateMap[dateStr];
-                
-                if (info) {
-                    const color = info.group === 'basic' ? 'var(--gold)' : info.group === 'practice' ? 'var(--purple)' : 'var(--gold)';
-                    html += `
-                        <div style="background:var(--card-bg); border:1px solid ${color}; border-radius:6px; padding:8px; min-height:60px; position:relative;">
-                            <div style="font-size:0.7rem; opacity:0.5;">${d.getDate()}</div>
-                            <div style="font-size:0.75rem; font-weight:600; color:${color};">${info.label}</div>
-                            <div style="font-size:0.6rem; opacity:0.6; margin-top:4px;">${info.currentCount}/${info.maxPersons}</div>
-                        </div>
-                    `;
-                } else {
-                    html += `
-                        <div style="background:var(--input-bg); border-radius:6px; min-height:60px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; opacity:0.3;">
-                            ${d.getDate()}
-                        </div>
-                    `;
+                if (!dates.length) {
+                    container.innerHTML = '<p style="opacity:0.5;">Нет добавленных дат</p>';
+                    return;
                 }
-            }
 
-            container.innerHTML = html;
+                const dateMap = {};
+                dates.forEach(d => {
+                    dateMap[d.value] = {
+                        label: d.label,
+                        group: d.group,
+                        maxPersons: d.maxPersons,
+                        currentCount: d.currentCount || 0
+                    };
+                });
+
+                const firstDate = new Date(Math.min(...dates.map(d => new Date(d.value))));
+                const lastDate = new Date(Math.max(...dates.map(d => new Date(d.value))));
+                firstDate.setDate(1);
+                lastDate.setDate(1);
+                lastDate.setMonth(lastDate.getMonth() + 1);
+                lastDate.setDate(0);
+
+                let html = '';
+                const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+                
+                days.forEach(day => {
+                    html += `<div style="text-align:center; font-weight:600; color:var(--gold); font-size:0.8rem;">${day}</div>`;
+                });
+
+                const startDay = firstDate.getDay();
+                for (let i = 0; i < startDay; i++) {
+                    html += `<div style="background:var(--input-bg); border-radius:6px; min-height:60px;"></div>`;
+                }
+
+                for (let d = new Date(firstDate); d <= lastDate; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    const info = dateMap[dateStr];
+                    
+                    if (info) {
+                        const color = info.group === 'basic' ? 'var(--gold)' : info.group === 'practice' ? 'var(--purple)' : 'var(--gold)';
+                        html += `
+                            <div style="background:var(--card-bg); border:1px solid ${color}; border-radius:6px; padding:8px; min-height:60px; position:relative;">
+                                <div style="font-size:0.7rem; opacity:0.5;">${d.getDate()}</div>
+                                <div style="font-size:0.75rem; font-weight:600; color:${color};">${info.label}</div>
+                                <div style="font-size:0.6rem; opacity:0.6; margin-top:4px;">${info.currentCount}/${info.maxPersons}</div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="background:var(--input-bg); border-radius:6px; min-height:60px; display:flex; align-items:center; justify-content:center; font-size:0.6rem; opacity:0.3;">
+                                ${d.getDate()}
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки календаря: ${err.message}</p>`;
+            }
         }
 
         // ===== Инициализация =====

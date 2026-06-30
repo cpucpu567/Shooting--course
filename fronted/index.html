@@ -22,19 +22,19 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior:smooth; }
         body {
-    font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-    background-color: #1A1C20;
-    background-image: url('https://raw.githubusercontent.com/cpucpu567/Shooting--course/refs/heads/main/fronted/KToFj.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center center;
-    background-repeat: no-repeat;
-    color: var(--text);
-    line-height: 1.6;
-    min-height: 100vh;
-    min-height: 100dvh;
-    position: relative;
-}
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background-color: #1A1C20;
+            background-image: url('https://raw.githubusercontent.com/cpucpu567/Shooting--course/refs/heads/main/fronted/KToFj.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center center;
+            background-repeat: no-repeat;
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            min-height: 100dvh;
+            position: relative;
+        }
         body.has-gallery-bg {
             background-image:
                 linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 80%),
@@ -283,21 +283,29 @@
 </div></div>
 
 <script>
-// ===== Конфиг =====
+// ===== Глобальные переменные =====
+const API_BASE = 'https://shooting-course.onrender.com';
+const MIN = 5;
+const MAX = 10;
+const ADMIN_PASS = '777';
+
 const tariffConfig = { 
     practice:{group:'practice',label:'Практика',subGroup:true}, 
     basic:{group:'basic',label:'Базовый'}, 
     pro:{group:'pro',label:'Продвинутый'} 
 };
-const MIN=5, MAX=10, ADMIN_PASS='777';
-let vkAuthDone = false;
 
+let vkAuthDone = false;
 let allDates = [];
 let tariffPrices = { practice: 7000, basic: 8500, pro: 13500 };
 let galleryFiles = [], currentSlide = 0;
 
-// ===== Инициализация VK Bridge =====
-vkBridge.send('VKWebAppInit');
+// ===== Инициализация VK Bridge с проверкой =====
+if (typeof vkBridge !== 'undefined') {
+    vkBridge.send('VKWebAppInit');
+} else {
+    console.warn('⚠️ VK Bridge не загружен, функции VK недоступны');
+}
 
 // ===== Функция VK-авторизации =====
 async function vkAuth() {
@@ -309,20 +317,17 @@ async function vkAuth() {
     status.textContent = '⏳ Авторизация...';
     
     try {
-        // 1. Получаем данные пользователя
         const user = await vkBridge.send('VKWebAppGetUserInfo');
         if (user.first_name) document.getElementById('name').value = user.first_name;
         if (user.last_name) document.getElementById('surname').value = user.last_name;
         if (user.phone) document.getElementById('phone').value = user.phone;
         status.textContent = '✅ Авторизация успешна!';
         
-        // 2. Проверяем, подписан ли пользователь на сообщество
         try {
             const groups = await vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
             if (groups.is_member) {
                 status.textContent += ' ✅ Вы уже подписаны на сообщество!';
             } else {
-                // 3. Если не подписан — предлагаем подписаться
                 if (confirm('Подписаться на сообщество «Стрелковый интенсив»?')) {
                     await vkBridge.send('VKWebAppJoinGroup', { group_id: 239743393 });
                     status.textContent += ' ✅ Вы подписаны на сообщество!';
@@ -340,19 +345,32 @@ async function vkAuth() {
     }
 }
 
-// ===== Остальной код (без изменений) =====
-vkBridge.send('VKWebAppGetUserInfo').then(user => {
-    if (user.first_name) document.getElementById('name').value = user.first_name;
-    if (user.last_name) document.getElementById('surname').value = user.last_name;
-}).catch(() => {});
-
+// ===== API с проверкой API_BASE =====
 async function apiFetch(url) {
-    const res = await fetch(API_BASE + url);
-    return res.json();
+    if (!API_BASE) throw new Error('API_BASE не задана');
+    try {
+        const res = await fetch(API_BASE + url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    } catch (err) {
+        console.error('Ошибка API Fetch:', err);
+        throw err;
+    }
 }
 async function apiPost(url, data) {
-    const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    return res.json();
+    if (!API_BASE) throw new Error('API_BASE не задана');
+    try {
+        const res = await fetch(API_BASE + url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+    } catch (err) {
+        console.error('Ошибка API Post:', err);
+        throw err;
+    }
 }
 
 // ===== Загрузка конфига =====
@@ -486,18 +504,25 @@ async function selectTariff(t) {
         return;
     }
 
-    const response = await fetch(`${API_BASE}/api/client/access/${normalizedPhone}?tariff=${t}`);
-    const data = await response.json();
+    try {
+        const response = await fetch(`${API_BASE}/api/client/access/${normalizedPhone}?tariff=${t}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
 
-    if (data.allow) {
-        document.getElementById('tariff-input').value = t;
-        document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
-        updateDateSelect(t);
-        document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
-        if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-    } else {
-        alert(data.message || '❌ Этот тариф вам пока недоступен.');
+        if (data.allow) {
+            document.getElementById('tariff-input').value = t;
+            document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
+            updateDateSelect(t);
+            document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
+            if (t !== 'practice') document.getElementById('time-slot').value = 'full';
+            document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert(data.message || '❌ Этот тариф вам пока недоступен.');
+        }
+    } catch (err) {
+        alert('❌ Ошибка при проверке доступа: ' + err.message);
     }
 }
 
@@ -567,7 +592,108 @@ function renderMainGallery(){const m=document.getElementById('gallery-main'),d=d
 function changeSlide(dir){if(!galleryFiles.length)return;currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length;renderMainGallery();}
 function setBackgroundFromGallery(){const body=document.body;if(galleryFiles.length>0&&galleryFiles[0].type==='image'){body.style.setProperty('--gallery-bg',`url('${galleryFiles[0].data}')`);body.classList.add('has-gallery-bg');}else{body.classList.remove('has-gallery-bg');body.style.removeProperty('--gallery-bg');}}
 
-const API_BASE = 'https://shooting-course.onrender.com';
+// ===== Доступ к админке по долгому нажатию =====
+let tt;
+const ht = document.getElementById('hero-title');
+if (ht) {
+    ht.addEventListener('touchstart', () => {
+        tt = setTimeout(openAdminPanel, 3000);
+    });
+    ht.addEventListener('touchend', () => clearTimeout(tt));
+    ht.addEventListener('touchmove', () => clearTimeout(tt));
+}
+function openAdminPanel() {
+    window.open('https://shooting-course.vercel.app/admin.html', '_blank');
+}
+
+// ===== Админ-панель: переключение вкладок =====
+function switchAdminTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.admin-tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
+    
+    document.querySelectorAll('[id^="admin-tab-"]').forEach(el => el.style.display = 'none');
+    document.getElementById(`admin-tab-${tab}`).style.display = 'block';
+}
+
+// ===== Админ-панель: добавить дату =====
+async function addNewDate() {
+    const dateValue = document.getElementById('new-date-value').value;
+    const group = document.getElementById('new-date-group').value;
+    const timeSlot = document.getElementById('new-date-slot').value;
+    
+    if (!dateValue) {
+        alert('Выберите дату');
+        return;
+    }
+    
+    try {
+        const result = await apiPost('/api/dates', { 
+            value: dateValue, 
+            group: group, 
+            timeSlot: timeSlot 
+        });
+        if (result.status === 'created') {
+            alert('✅ Дата добавлена!');
+            loadConfig();
+        } else {
+            alert('❌ ' + (result.detail || 'Ошибка'));
+        }
+    } catch (err) {
+        alert('❌ Ошибка: ' + err.message);
+    }
+}
+
+// ===== Админ-панель: список клиентов =====
+async function renderClientsList(search = '') {
+    try {
+        const clients = await apiFetch('/api/clients' + (search ? `?search=${encodeURIComponent(search)}` : ''));
+        const list = document.getElementById('admin-clients-list');
+        if (clients.length === 0) {
+            list.innerHTML = '<p style="opacity:0.4;">Нет записей</p>';
+            return;
+        }
+        list.innerHTML = clients.map(c => `
+            <div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid var(--input-border);font-size:0.8rem;">
+                <span>${c.name} ${c.surname}</span>
+                <span>${c.phone}</span>
+                <span>${c.tariff}</span>
+                <span>${c.date}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Ошибка загрузки клиентов:', err);
+    }
+}
+
+// ===== Админ-панель: рассылка =====
+async function sendMailing(channel) {
+    const message = document.getElementById('mailing-message').value.trim();
+    const resultDiv = document.getElementById('mailing-result');
+    
+    if (!message) {
+        resultDiv.textContent = '⚠️ Введите текст сообщения';
+        return;
+    }
+    
+    try {
+        const result = await apiPost('/api/mailing', { 
+            channel: channel, 
+            message: message 
+        });
+        resultDiv.textContent = result.status === 'sent' 
+            ? `✅ Рассылка через ${channel} отправлена (${result.count} получателей)` 
+            : `⚠️ ${result.detail || 'Ошибка'}`;
+    } catch (err) {
+        resultDiv.textContent = '❌ Ошибка: ' + err.message;
+    }
+}
+
+function closeAdminPanel() {
+    document.getElementById('admin-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function switchAdminTab(t){document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='dates')||(i===1&&t==='clients')||(i===2&&t==='gallery')||(i===3&&t==='prices')||(i===4&&t==='mailing')));document.getElementById('admin-tab-dates').style.display=t==='dates'?'block':'none';document.getElementById('admin-tab-clients').style.display=t==='clients'?'block':'none';document.getElementById('admin-tab-gallery').style.display=t==='gallery'?'block':'none';document.getElementById('admin-tab-prices').style.display=t==='prices'?'block':'none';document.getElementById('admin-tab-mailing').style.display=t==='mailing'?'block':'none';if(t==='clients')renderClientsList();if(t==='gallery')renderGalleryList();if(t==='prices'){document.getElementById('price-practice').value=tariffPrices.practice;document.getElementById('price-basic').value=tariffPrices.basic;document.getElementById('price-pro').value=tariffPrices.pro;}}
 
 document.addEventListener('DOMContentLoaded',()=>{
     loadConfig();
