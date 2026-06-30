@@ -95,6 +95,7 @@
             <button class="btn secondary" onclick="clientsFilter='all';renderClients();">👥 Все</button>
             <button class="btn secondary" onclick="clientsFilter='experienced';renderClients();">⭐ Опытные</button>
             <button class="btn secondary" onclick="clientsFilter='beginners';renderClients();">🔰 Новички</button>
+            <button class="btn secondary" onclick="clientsFilter='pro';renderClients();">🏆 Про</button>
         </div>
     </div>
     <div id="admin-clients-list"></div>  <!-- ← исправлено на правильный id -->
@@ -266,8 +267,9 @@
     const q = document.getElementById('client-search').value.toLowerCase();
     let filtered = clients;
     if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
-    if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced);
-    if (clientsFilter === 'beginners') filtered = filtered.filter(c => !c.experienced);
+    if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced === 'experienced');
+    if (clientsFilter === 'beginners') filtered = filtered.filter(c => c.experienced === 'newbie');
+    if (clientsFilter === 'pro') filtered = filtered.filter(c => c.experienced === 'pro');
     if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
     container.innerHTML = filtered.map(c => `
         <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
@@ -275,11 +277,18 @@
                 <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
                 <span style="opacity:0.4;">${c.phone}</span>
                 <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
-                ${c.experienced ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">✅ Опытный</span>' : ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+                ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
+                  c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
+                  ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
             </div>
-            <button onclick="toggleExperienced('${c.phone}')" class="btn" style="width:auto;padding:4px 12px;font-size:0.6rem;background:${c.experienced ? 'var(--purple-hover)' : 'var(--purple)'};">
-                ${c.experienced ? '✕ Убрать' : '⭐ Сделать опытным'}
-            </button>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <select onchange="changeClientStatus('${c.phone}', this.value)" style="padding:4px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:4px;font-size:0.6rem;">
+                    <option value="newbie" ${c.experienced === 'newbie' ? 'selected' : ''}>🔰 Новичок</option>
+                    <option value="experienced" ${c.experienced === 'experienced' ? 'selected' : ''}>⭐ Опытный</option>
+                    <option value="pro" ${c.experienced === 'pro' ? 'selected' : ''}>🏆 Про</option>
+                </select>
+                <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
+            </div>
         </div>
     `).join('');
 }
@@ -290,7 +299,30 @@
             await apiPost(`/api/clients/${phone}`, { experienced: newStatus });
             renderClients();
         }
+async function changeClientStatus(phone, newStatus) {
+    const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ experienced: newStatus })
+    });
+    if (res.ok) {
+        renderClients();
+    } else {
+        alert('❌ Ошибка при изменении статуса');
+    }
+}
 
+async function deleteClient(phone) {
+    if (!confirm(`Удалить клиента ${phone}? Это удалит все его данные.`)) return;
+    const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
+        method: 'DELETE'
+    });
+    if (res.ok) {
+        renderClients();
+    } else {
+        alert('❌ Ошибка при удалении клиента');
+    }
+}
         // ===== Цены =====
         let tariffPrices = {};
 
