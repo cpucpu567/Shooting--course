@@ -393,13 +393,13 @@ async def check_tariff_access(phone: str, tariff: str):
     if tariff == 'basic':
         return {"allow": True, "message": "Базовый доступен всем"}
     elif tariff == 'practice':
-        if visits >= 2:
-            return {"allow": True, "message": "Практика доступна (после 2-х посещений)"}
+        if visits >= 1:
+            return {"allow": True, "message": "Практика доступна (после 1-го посещения)"}
         else:
-            return {"allow": False, "message": "❌ Практика требует минимум 2 посещения (сначала Базовый)"}
+            return {"allow": False, "message": "❌ Сначала пройдите Базовый курс (1 занятие)"}
     elif tariff == 'pro':
         if visits >= 4:
-            return {"allow": True, "message": "Расширенный курс доступен (после 4-х посещений)"}
+            return {"allow": True, "message": "Продвинутый доступен (после 4-х посещений)"}
         else:
-            return {"allow": False, "message": "❌ Расширенный курс требует минимум 4 посещения (Базовый + 3 Практики)"}
+            return {"allow": False, "message": "❌ Продвинутый требует минимум 4 посещения (Базовый + 3 Практики)"}
     return {"allow": False, "message": "Неизвестный тариф"}
