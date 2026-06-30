@@ -83,15 +83,15 @@ def init_db():
     
     # === Теперь, когда таблица уже создана, обновляем статусы (если остались старые) ===
     c.execute('''
-        UPDATE clients 
-        SET experienced = 
-            CASE 
-                WHEN experienced = 'true' OR experienced = '1' OR experienced = TRUE THEN 'experienced'
-                WHEN experienced = 'false' OR experienced = '0' OR experienced = FALSE THEN 'newbie'
-                ELSE experienced
-            END
-        WHERE experienced NOT IN ('newbie', 'experienced', 'pro');
-    ''')
+    UPDATE clients 
+    SET experienced = 
+        CASE 
+            WHEN experienced = 'true' OR experienced = '1' THEN 'experienced'
+            WHEN experienced = 'false' OR experienced = '0' THEN 'newbie'
+            ELSE experienced
+        END
+    WHERE experienced NOT IN ('newbie', 'experienced', 'pro');
+''')
     
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
