@@ -98,6 +98,7 @@
                     <button class="btn secondary" onclick="clientsFilter='experienced';renderClients();">⭐ Опытные</button>
                     <button class="btn secondary" onclick="clientsFilter='beginners';renderClients();">🔰 Новички</button>
                     <button class="btn secondary" onclick="clientsFilter='pro';renderClients();">🏆 Про</button>
+                    <button class="btn secondary" onclick="clientsFilter='referrals';renderClients();">👫 По приглашениям</button>
                 </div>
             </div>
             <div id="admin-clients-list"></div>
@@ -312,6 +313,7 @@
             if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced === 'experienced');
             if (clientsFilter === 'beginners') filtered = filtered.filter(c => c.experienced === 'newbie');
             if (clientsFilter === 'pro') filtered = filtered.filter(c => c.experienced === 'pro');
+            if (clientsFilter === 'referrals') filtered = filtered.filter(c => c.referrer);
             
             if (!filtered.length) { container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>'; return; }
             
@@ -326,6 +328,7 @@
                         ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
                           c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
                           ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+                        ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
                         ${userBookings.length ? `<div style="font-size:0.7rem;opacity:0.4;margin-top:4px;">📅 ${userBookings.map(b => b.date + ' — ' + b.tariff).join('<br>')}</div>` : ''}
                     </div>
                     <div>
@@ -464,7 +467,6 @@
                 return;
             }
             
-            // Группируем по дате
             const grouped = {};
             bookings.forEach(b => {
                 if (!grouped[b.date]) grouped[b.date] = [];
@@ -504,7 +506,6 @@
                 return;
             }
 
-            // Собираем все даты в объект
             const dateMap = {};
             dates.forEach(d => {
                 dateMap[d.value] = {
@@ -515,7 +516,6 @@
                 };
             });
 
-            // Получаем первый и последний день месяца
             const firstDate = new Date(Math.min(...dates.map(d => new Date(d.value))));
             const lastDate = new Date(Math.max(...dates.map(d => new Date(d.value))));
             firstDate.setDate(1);
@@ -526,18 +526,15 @@
             let html = '';
             const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
             
-            // Заголовки дней недели
             days.forEach(day => {
                 html += `<div style="text-align:center; font-weight:600; color:var(--gold); font-size:0.8rem;">${day}</div>`;
             });
 
-            // Пустые ячейки перед первым числом
             const startDay = firstDate.getDay();
             for (let i = 0; i < startDay; i++) {
                 html += `<div style="background:var(--input-bg); border-radius:6px; min-height:60px;"></div>`;
             }
 
-            // Ячейки с датами
             for (let d = new Date(firstDate); d <= lastDate; d.setDate(d.getDate() + 1)) {
                 const dateStr = d.toISOString().split('T')[0];
                 const info = dateMap[dateStr];
