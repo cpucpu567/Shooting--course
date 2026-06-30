@@ -164,8 +164,13 @@
             .tariff-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; } 
             .tariff-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.3s; cursor: pointer; } 
             .tariff-dot.active { background: var(--purple); } 
-            .tariff-nav { display: none !important; } 
-        }
+            ..tariff-nav {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
         @media (min-width: 901px) { 
             .tariff-dots, .tariff-nav { display: none !important; }
         }
