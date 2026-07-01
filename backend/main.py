@@ -258,16 +258,18 @@ async def create_booking(data: BookingRequest):
             logger.info(f"Бонус 500 ₽ за {visits}-е посещение")
         conn.close()
 
-    # === 2. Создаём заявку ===
+    # === 2. Создаём заявку и сразу получаем ID (исправлено для PostgreSQL) ===
     conn = get_db()
     c = conn.cursor()
     c.execute('''
         INSERT INTO bookings 
         (surname, name, phone, referral, tariff, date, time_slot, source, newsletter, discount, final_price)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
     ''', (data.surname, data.name, data.phone, data.referral, data.tariff, data.date, data.time_slot,
           data.source, data.newsletter, discount, final_price))
-    booking_id = c.lastrowid
+    
+    booking_id = c.fetchone()['id']  # Правильное получение ID для PostgreSQL
     conn.commit()
     conn.close()
 
@@ -330,7 +332,7 @@ async def create_booking(data: BookingRequest):
         except Exception as e:
             logger.error(f"Ошибка начисления скидки другу: {str(e)}", exc_info=True)
 
-    # === 5. Уведомление админу о новой заявке ===
+    # === 5. Уведомление админу о новой заявке (с правильным ID) ===
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token:
         msg = f"""
@@ -446,6 +448,7 @@ async def get_bookings(limit: int = 100, offset: int = 0):
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "tariff": r['tariff'],
              "date": r['date'], "timeSlot": r['time_slot'], "finalPrice": r['final_price'], "status": r['status'],
              "createdAt": r['created_at']} for r in rows]
+
 @app.get("/api/clients")
 async def get_clients(limit: int = 100, offset: int = 0):
     conn = get_db()
