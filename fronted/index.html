@@ -215,7 +215,6 @@
     <section id="tariff-section">
     <div class="container">
         <h2>Форматы <span>участия</span></h2>
-        <!-- Блок "Что входит в стоимость" — статично над каруселью -->
         <div style="text-align:center; margin-bottom:25px; font-size:0.95rem; color:var(--text-soft); background:var(--card-bg); padding:12px 20px; border-radius:8px; border:1px solid var(--card-border);">
             ⚡ В стоимость любого тарифа входит:<br>
             <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
@@ -232,7 +231,6 @@
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
     <section id="form-section"><div class="container"><h2>Записаться <span>на интенсив</span></h2><div class="form-card glass">
-        <!-- Кнопка VK-авторизации -->
         <div style="margin-bottom:20px; text-align:center;">
             <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
                 🔑 Войти через VK
@@ -289,7 +287,12 @@ const MIN=5, MAX=10, ADMIN_PASS='777';
 let vkAuthDone = false;
 
 let allDates = [];
-let tariffPrices = { practice: 7000, basic: 8500, pro: 13500 };
+// ВАЖНО: теперь цены — объекты с base и instructor
+let tariffPrices = { 
+    practice: { base: 5000, instructor: 2000 }, 
+    basic: { base: 5000, instructor: 3500 }, 
+    pro: { base: 10000, instructor: 3500 } 
+};
 let galleryFiles = [], currentSlide = 0;
 
 // ===== Инициализация VK Bridge =====
@@ -386,11 +389,16 @@ function renderTariffs() {
     const prevBtn = document.getElementById('tariff-prev');
     const nextBtn = document.getElementById('tariff-next');
 
+    // Суммируем base + instructor для каждого тарифа
+    const basicTotal = tariffPrices.basic.base + tariffPrices.basic.instructor;
+    const practiceTotal = tariffPrices.practice.base + tariffPrices.practice.instructor;
+    const proTotal = tariffPrices.pro.base + tariffPrices.pro.instructor;
+
     grid.innerHTML = `
         <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
             <div class="t-label">Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${tariffPrices.basic.toLocaleString()} ₽</div>
+            <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
                 <strong style="color:var(--gold);">🔰 Для новичков.</strong>
                 <br>С нуля: безопасность, устройство, стойка.
@@ -402,7 +410,7 @@ function renderTariffs() {
         <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
             <div class="t-label">Практика</div>
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
-            <div class="t-price">${tariffPrices.practice.toLocaleString()} ₽</div>
+            <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
                 <strong style="color:var(--purple);">⭐ Для опытных.</strong>
                 <br>Никакой теории — только стрельба.
@@ -414,7 +422,7 @@ function renderTariffs() {
         <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
             <div class="t-label">Продвинутый</div>
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
-            <div class="t-price">${tariffPrices.pro.toLocaleString()} ₽</div>
+            <div class="t-price">${proTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
                 <strong style="color:var(--gold);">🏆 Только для Про.</strong>
                 <br>После 4-х посещений (Базовый + 3 Практики).
@@ -552,10 +560,20 @@ document.getElementById('order-form').addEventListener('submit', async function(
 
 // ===== Админка — цены =====
 async function savePricesToBackend() {
+    // Обратите внимание: теперь цены — объекты с base и instructor
     const prices = {
-        practice: parseInt(document.getElementById('price-practice').value) || 7000,
-        basic: parseInt(document.getElementById('price-basic').value) || 8500,
-        pro: parseInt(document.getElementById('price-pro').value) || 13500
+        practice: { 
+            base: parseInt(document.getElementById('price-practice').value) || 5000,
+            instructor: 2000 
+        },
+        basic: { 
+            base: parseInt(document.getElementById('price-basic').value) || 5000,
+            instructor: 3500 
+        },
+        pro: { 
+            base: parseInt(document.getElementById('price-pro').value) || 10000,
+            instructor: 3500 
+        }
     };
     try {
         await apiPost('/api/prices', prices);
