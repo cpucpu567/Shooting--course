@@ -395,20 +395,20 @@ function renderTariffs() {
     const proTotal = tariffPrices.pro.base + tariffPrices.pro.instructor;
 
     grid.innerHTML = `
-        <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')">
-            <div class="t-label">Базовый</div>
+        <div class="tariff-card glass" data-tariff="basic" onclick="selectTariff('basic')" style="border: 1px solid var(--text-soft);">
+            <div class="t-label" style="color: var(--text-soft);">🔰 Базовый</div>
             <div class="t-sub">30 выстрелов · 10:00–18:00</div>
             <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-                <strong style="color:var(--gold);">🔰 Для новичков.</strong>
+                <strong style="color:var(--text-soft);">🔰 Для новичков.</strong>
                 <br>С нуля: безопасность, устройство, стойка.
                 <br>Разбор каждого выстрела. Спокойный темп.
                 <br>Идеально, чтобы попробовать и понять, твоё ли это.
             </div>
             <span class="t-badge">с теорией</span>
         </div>
-        <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')">
-            <div class="t-label">Практика</div>
+        <div class="tariff-card glass" data-tariff="practice" onclick="selectTariff('practice')" style="border: 2px solid var(--purple);">
+            <div class="t-label" style="color: var(--purple);">⚡ Практика</div>
             <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
             <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
@@ -419,8 +419,8 @@ function renderTariffs() {
             </div>
             <span class="t-badge warn">после Базового</span>
         </div>
-        <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')">
-            <div class="t-label">Продвинутый</div>
+        <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')" style="border: 2px solid var(--gold);">
+            <div class="t-label" style="color: var(--gold);">🏆 Продвинутый</div>
             <div class="t-sub">60 выстрелов · 10:00–18:00</div>
             <div class="t-price">${proTotal.toLocaleString()} ₽</div>
             <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
