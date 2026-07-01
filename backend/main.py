@@ -160,7 +160,7 @@ def get_prices():
     }
 
 # ===== API =====
-@app.get("/api/config")
+@app.api_route("/api/config", methods=["GET", "HEAD"])
 async def get_config():
     prices = get_prices()
     conn = get_db()
