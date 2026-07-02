@@ -6,6 +6,8 @@
     <title>Админ-панель | Стрелковый интенсив</title>
     <link rel="icon" type="image/jpeg" href="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --text: #e8e4e0;
@@ -61,13 +63,13 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('dates')">📅 Даты</button>
-            <button class="tab" onclick="switchTab('clients')">👥 Клиенты</button>
-            <button class="tab" onclick="switchTab('prices')">💰 Цены</button>
-            <button class="tab" onclick="switchTab('gallery')">🖼️ Галерея</button>
-            <button class="tab" onclick="switchTab('mailing')">📨 Рассылка</button>
-            <button class="tab" onclick="switchTab('report')">📊 Отчёт</button>
-            <button class="tab" onclick="switchTab('calendar')">📅 Календарь</button>
+            <button class="tab active" onclick="switchTab('dates')"><i class="fas fa-calendar-days"></i> Даты</button>
+            <button class="tab" onclick="switchTab('clients')"><i class="fas fa-users"></i> Клиенты</button>
+            <button class="tab" onclick="switchTab('prices')"><i class="fas fa-tags"></i> Цены</button>
+            <button class="tab" onclick="switchTab('gallery')"><i class="fas fa-image"></i> Галерея</button>
+            <button class="tab" onclick="switchTab('mailing')"><i class="fas fa-envelope"></i> Рассылка</button>
+            <button class="tab" onclick="switchTab('report')"><i class="fas fa-chart-bar"></i> Отчёт</button>
+            <button class="tab" onclick="switchTab('calendar')"><i class="fas fa-calendar-alt"></i> Календарь</button>
         </div>
 
         <!-- Вкладка: Даты (с выбором времени для Практики) -->
