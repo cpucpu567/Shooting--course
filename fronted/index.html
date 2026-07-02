@@ -7,6 +7,8 @@
     <link rel="icon" type="image/jpeg" href="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <meta property="og:image" content="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --text: #e8e4e0;
@@ -261,7 +263,7 @@
 
 <div class="modal-overlay" id="success-modal"><div class="modal" style="text-align:center;"><span style="font-size:3rem;">✅</span><h3>Заявка принята!</h3><p id="modal-message" style="margin:14px 0;"></p><button class="btn" onclick="closeModal()">Понял, жду</button></div></div>
 
-<div class="modal-overlay" id="admin-modal"><div class="modal" style="text-align:left;"><div style="text-align:center;margin-bottom:14px;"><span>🔧</span><h3>Админ-панель</h3></div><div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;"><button class="admin-tab active" onclick="switchAdminTab('dates')">📅 Даты</button><button class="admin-tab" onclick="switchAdminTab('clients')">👥 Клиенты</button><button class="admin-tab" onclick="switchAdminTab('gallery')">🖼️ Галерея</button><button class="admin-tab" onclick="switchAdminTab('prices')">💰 Цены</button><button class="admin-tab" onclick="switchAdminTab('mailing')">📨 Рассылка</button></div>
+<div class="modal-overlay" id="admin-modal"><div class="modal" style="text-align:left;"><div style="text-align:center;margin-bottom:14px;"><span>🔧</span><h3>Админ-панель</h3></div><div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;"><button class="admin-tab active" onclick="switchAdminTab('dates')"><i class="fas fa-calendar-days"></i> Даты</button><button class="admin-tab" onclick="switchAdminTab('clients')"><i class="fas fa-users"></i> Клиенты</button><button class="admin-tab" onclick="switchAdminTab('gallery')"><i class="fas fa-image"></i> Галерея</button><button class="admin-tab" onclick="switchAdminTab('prices')"><i class="fas fa-tags"></i> Цены</button><button class="admin-tab" onclick="switchAdminTab('mailing')"><i class="fas fa-envelope"></i> Рассылка</button></div>
 
     <div id="admin-tab-dates"><div class="admin-section"><h4>➕ Добавить дату</h4><div style="display:flex;gap:6px;flex-wrap:wrap;"><input type="date" id="new-date-value" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><select id="new-date-group" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="1">Группа 1</option><option value="2">Группа 2</option></select><select id="new-date-slot" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="full">10–18</option><option value="10-14">10–14</option><option value="14-18">14–18</option></select><button onclick="addNewDate()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Добавить</button></div></div><div id="admin-dates-list"></div></div>
 
