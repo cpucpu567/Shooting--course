@@ -8,9 +8,8 @@
     <meta property="og:image" content="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
-    <!-- Font Awesome CDN (два варианта для надёжности) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.0/css/all.css">
 
     <style>
         :root {
@@ -235,31 +234,47 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <section id="form-section"><div class="container"><h2>Записаться <span>на интенсив</span></h2><div class="form-card glass">
-        <div style="margin-bottom:20px; text-align:center;">
-            <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
-                🔑 Войти через VK
-            </button>
-            <div id="vk-auth-status" style="font-size:0.85rem; margin-top:8px; color:var(--text-soft);"></div>
-        </div>
-        
-        <form id="order-form" novalidate>
-            <input type="hidden" id="tariff-input" value="pro">
-            <div class="form-row">
-                <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
-                <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
+    <section id="form-section">
+    <div class="container">
+        <h2>Записаться <span>на интенсив</span></h2>
+        <div class="form-card glass" style="padding:32px 28px;">
+            
+            <!-- ИНДИКАТОР ВЫБРАННОГО КУРСА -->
+            <div id="selected-course-indicator" style="display:none; text-align:center; margin-bottom:20px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.05); border:2px solid var(--text-soft); color:var(--text-soft);">
+                <strong>Вы записываетесь на: </strong>
+                <span id="selected-course-name" style="font-weight:700; text-transform:uppercase;"></span>
             </div>
-            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
-            <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
-            <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-            <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
-            <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
-            <div class="form-group checkbox-group"><input type="checkbox" id="agree" required><label>Согласен с правилами</label></div>
-            <div class="form-group checkbox-group"><input type="checkbox" id="newsletter" checked><label>Согласен на рассылку</label></div>
-            <button type="submit" class="btn" style="width:100%; letter-spacing: 2px;">Попасть в себя</button>
-            <div class="feedback" id="form-feedback"></div>
-        </form>
-    </div></div></section>
+
+            <div style="margin-bottom:20px; text-align:center;">
+                <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
+                    🔑 Войти через VK
+                </button>
+                <div id="vk-auth-status" style="font-size:0.85rem; margin-top:8px; color:var(--text-soft);"></div>
+            </div>
+            
+            <form id="order-form" novalidate>
+                <input type="hidden" id="tariff-input" value="pro">
+                <div class="form-row">
+                    <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
+                    <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
+                </div>
+                <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
+                
+                <!-- СТАТУС КЛИЕНТА -->
+                <div id="client-status" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);"></div>
+
+                <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
+                <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
+                <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
+                <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                <div class="form-group checkbox-group"><input type="checkbox" id="agree" required><label>Согласен с правилами</label></div>
+                <div class="form-group checkbox-group"><input type="checkbox" id="newsletter" checked><label>Согласен на рассылку</label></div>
+                <button type="submit" id="submit-btn" class="btn" style="width:100%; letter-spacing: 2px;">Попасть в себя</button>
+                <div class="feedback" id="form-feedback"></div>
+            </form>
+        </div>
+    </div>
+</section>
 </main>
 
 <footer><div class="container">Стрелковый интенсив. Пермь.</div></footer>
@@ -292,13 +307,13 @@ const MIN=5, MAX=10, ADMIN_PASS='777';
 let vkAuthDone = false;
 
 let allDates = [];
-// ВАЖНО: теперь цены — объекты с base и instructor
 let tariffPrices = { 
     practice: { base: 5000, instructor: 2000 }, 
     basic: { base: 5000, instructor: 3500 }, 
     pro: { base: 10000, instructor: 3500 } 
 };
 let galleryFiles = [], currentSlide = 0;
+let selectedCourse = 'pro';
 
 // ===== Инициализация VK Bridge =====
 if (typeof vkBridge !== 'undefined') {
@@ -362,6 +377,8 @@ if (typeof vkBridge !== 'undefined') {
 }
 
 // ===== API =====
+const API_BASE = 'https://shooting-course.onrender.com';
+
 async function apiFetch(url) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url);
@@ -388,13 +405,86 @@ async function loadConfig() {
     }
 }
 
+// ===== Выбор тарифа (обновляет индикатор) =====
+function selectTariff(t) {
+    selectedCourse = t;
+    document.getElementById('tariff-input').value = t;
+    document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
+    updateDateSelect(t);
+    document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
+    if (t !== 'practice') document.getElementById('time-slot').value = 'full';
+    document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+
+    // Обновляем индикатор выбранного курса
+    const courseNames = {
+        basic: { name: 'Базовый', color: 'var(--text-soft)' },
+        practice: { name: 'Практика', color: 'var(--purple)' },
+        pro: { name: 'Продвинутый', color: 'var(--gold)' }
+    };
+    const course = courseNames[t] || courseNames.basic;
+    const indicator = document.getElementById('selected-course-indicator');
+    const nameEl = document.getElementById('selected-course-name');
+    if (indicator && nameEl) {
+        indicator.style.display = 'block';
+        indicator.style.borderColor = course.color;
+        indicator.style.color = course.color;
+        nameEl.textContent = course.name;
+        nameEl.style.color = course.color;
+    }
+    // Меняем цвет кнопки отправки
+    const submitBtn = document.getElementById('submit-btn');
+    if (submitBtn) {
+        submitBtn.style.background = course.color;
+        submitBtn.style.borderColor = course.color;
+    }
+}
+
+// ===== Проверка статуса клиента по телефону =====
+let statusTimeout;
+document.getElementById('phone').addEventListener('input', function() {
+    clearTimeout(statusTimeout);
+    const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
+    if (rawPhone.length < 10) {
+        document.getElementById('client-status').style.display = 'none';
+        return;
+    }
+    statusTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/client/status/${rawPhone}`);
+            if (res.ok) {
+                const data = await res.json();
+                const statusEl = document.getElementById('client-status');
+                const levelColors = {
+                    pro: 'var(--gold)',
+                    experienced: 'var(--purple)',
+                    newbie: 'var(--text-soft)'
+                };
+                const levelLabels = {
+                    pro: '🏆 Про',
+                    experienced: '⭐ Опытный',
+                    newbie: '🔰 Новичок'
+                };
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = `
+                    <strong>Ваш статус:</strong> 
+                    <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
+                        ${levelLabels[data.level] || data.level}
+                    </span>
+                    ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
+                `;
+            }
+        } catch (err) {
+            console.warn('Ошибка проверки статуса:', err);
+        }
+    }, 800);
+});
+
 function renderTariffs() {
     const grid = document.getElementById('tariff-grid');
     const dotsContainer = document.getElementById('tariff-dots');
     const prevBtn = document.getElementById('tariff-prev');
     const nextBtn = document.getElementById('tariff-next');
 
-    // Суммируем base + instructor для каждого тарифа
     const basicTotal = tariffPrices.basic.base + tariffPrices.basic.instructor;
     const practiceTotal = tariffPrices.practice.base + tariffPrices.practice.instructor;
     const proTotal = tariffPrices.pro.base + tariffPrices.pro.instructor;
@@ -498,35 +588,6 @@ function updateDateSelect(t){
     h.textContent = `Группа от ${MIN} до ${MAX} человек.`;
 }
 
-async function selectTariff(t) {
-    const ph = document.getElementById('phone').value.trim();
-    const normalizedPhone = normalizePhone(ph);
-
-    if (!ph) {
-        document.getElementById('tariff-input').value = t;
-        document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
-        updateDateSelect(t);
-        document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
-        if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-        return;
-    }
-
-    const response = await fetch(`${API_BASE}/api/client/access/${normalizedPhone}?tariff=${t}`);
-    const data = await response.json();
-
-    if (data.allow) {
-        document.getElementById('tariff-input').value = t;
-        document.querySelectorAll('.tariff-card').forEach(c => c.classList.toggle('selected', c.dataset.tariff === t));
-        updateDateSelect(t);
-        document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
-        if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-        document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-    } else {
-        alert(data.message || '❌ Этот тариф вам пока недоступен.');
-    }
-}
-
 // ===== Отправка заявки =====
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
@@ -566,7 +627,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
 
 // ===== Админка — цены =====
 async function savePricesToBackend() {
-    // Обратите внимание: теперь цены — объекты с base и instructor
     const prices = {
         practice: { 
             base: parseInt(document.getElementById('price-practice').value) || 5000,
@@ -603,15 +663,6 @@ function renderMainGallery(){const m=document.getElementById('gallery-main'),d=d
 function changeSlide(dir){if(!galleryFiles.length)return;currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length;renderMainGallery();}
 function setBackgroundFromGallery(){const body=document.body;if(galleryFiles.length>0&&galleryFiles[0].type==='image'){body.style.setProperty('--gallery-bg',`url('${galleryFiles[0].data}')`);body.classList.add('has-gallery-bg');}else{body.classList.remove('has-gallery-bg');body.style.removeProperty('--gallery-bg');}}
 
-const API_BASE = 'https://shooting-course.onrender.com';
-
-document.addEventListener('DOMContentLoaded',()=>{
-    loadConfig();
-    loadGallery();
-    setBackgroundFromGallery();
-    renderMainGallery();
-});
-
 // ===== Скрытая кнопка входа в админку (долгое нажатие на новый заголовок) =====
 let tt;
 const ht = document.getElementById('hero-title');
@@ -624,6 +675,100 @@ if (ht) {
     ht.addEventListener('touchend', () => clearTimeout(tt));
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
+
+// ===== Админ-панель: переключение вкладок =====
+function switchAdminTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
+    document.querySelector(`.admin-tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
+    
+    document.querySelectorAll('[id^="admin-tab-"]').forEach(el => el.style.display = 'none');
+    document.getElementById(`admin-tab-${tab}`).style.display = 'block';
+}
+
+// ===== Админ-панель: добавить дату =====
+async function addNewDate() {
+    const dateValue = document.getElementById('new-date-value').value;
+    const group = document.getElementById('new-date-group').value;
+    const timeSlot = document.getElementById('new-date-slot').value;
+    
+    if (!dateValue) {
+        alert('Выберите дату');
+        return;
+    }
+    
+    try {
+        const result = await apiPost('/api/dates', { 
+            value: dateValue, 
+            group: group, 
+            timeSlot: timeSlot 
+        });
+        if (result.status === 'created') {
+            alert('✅ Дата добавлена!');
+            loadConfig();
+        } else {
+            alert('❌ ' + (result.detail || 'Ошибка'));
+        }
+    } catch (err) {
+        alert('❌ Ошибка: ' + err.message);
+    }
+}
+
+// ===== Админ-панель: список клиентов =====
+async function renderClientsList(search = '') {
+    try {
+        const clients = await apiFetch('/api/clients' + (search ? `?search=${encodeURIComponent(search)}` : ''));
+        const list = document.getElementById('admin-clients-list');
+        if (clients.length === 0) {
+            list.innerHTML = '<p style="opacity:0.4;">Нет записей</p>';
+            return;
+        }
+        list.innerHTML = clients.map(c => `
+            <div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid var(--input-border);font-size:0.8rem;">
+                <span>${c.name} ${c.surname}</span>
+                <span>${c.phone}</span>
+                <span>${c.tariff}</span>
+                <span>${c.date}</span>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Ошибка загрузки клиентов:', err);
+    }
+}
+
+// ===== Админ-панель: рассылка =====
+async function sendMailing(channel) {
+    const message = document.getElementById('mailing-message').value.trim();
+    const resultDiv = document.getElementById('mailing-result');
+    
+    if (!message) {
+        resultDiv.textContent = '⚠️ Введите текст сообщения';
+        return;
+    }
+    
+    try {
+        const result = await apiPost('/api/mailing', { 
+            channel: channel, 
+            message: message 
+        });
+        resultDiv.textContent = result.status === 'sent' 
+            ? `✅ Рассылка через ${channel} отправлена (${result.count} получателей)` 
+            : `⚠️ ${result.detail || 'Ошибка'}`;
+    } catch (err) {
+        resultDiv.textContent = '❌ Ошибка: ' + err.message;
+    }
+}
+
+function closeAdminPanel() {
+    document.getElementById('admin-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    loadConfig();
+    loadGallery();
+    setBackgroundFromGallery();
+    renderMainGallery();
+});
 </script>
 </body>
 </html>
