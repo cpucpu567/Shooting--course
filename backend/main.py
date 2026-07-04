@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import os
@@ -36,16 +36,8 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    c.execute('DROP TABLE IF EXISTS gallery CASCADE;')
-    c.execute('DROP TABLE IF EXISTS event_bookings CASCADE;')
-    c.execute('DROP TABLE IF EXISTS events CASCADE;')
-    c.execute('DROP TABLE IF EXISTS bookings CASCADE;')
-    c.execute('DROP TABLE IF EXISTS clients CASCADE;')
-    c.execute('DROP TABLE IF EXISTS dates CASCADE;')
-    c.execute('DROP TABLE IF EXISTS config CASCADE;')
-    
     c.execute('''
-        CREATE TABLE clients (
+        CREATE TABLE IF NOT EXISTS clients (
             phone TEXT PRIMARY KEY,
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
@@ -60,7 +52,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE bookings (
+        CREATE TABLE IF NOT EXISTS bookings (
             id SERIAL PRIMARY KEY,
             surname TEXT NOT NULL,
             name TEXT NOT NULL,
@@ -80,7 +72,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE dates (
+        CREATE TABLE IF NOT EXISTS dates (
             id SERIAL PRIMARY KEY,
             value TEXT NOT NULL,
             label TEXT NOT NULL,
@@ -93,7 +85,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE events (
+        CREATE TABLE IF NOT EXISTS events (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
@@ -110,7 +102,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE event_bookings (
+        CREATE TABLE IF NOT EXISTS event_bookings (
             id SERIAL PRIMARY KEY,
             event_id INTEGER NOT NULL,
             surname TEXT NOT NULL,
@@ -126,7 +118,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE gallery (
+        CREATE TABLE IF NOT EXISTS gallery (
             id SERIAL PRIMARY KEY,
             url TEXT NOT NULL,
             type TEXT NOT NULL,
@@ -136,7 +128,7 @@ def init_db():
     ''')
     
     c.execute('''
-        CREATE TABLE config (
+        CREATE TABLE IF NOT EXISTS config (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
@@ -629,7 +621,7 @@ async def delete_gallery_item(id: int):
         logger.error(f"Ошибка при удалении из галереи: {str(e)}")
         raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
 
-# ===== API: События (с новой логикой) =====
+# ===== API: События (с полной обработкой ошибок) =====
 @app.get("/api/events")
 async def get_events():
     conn = get_db()
@@ -638,8 +630,10 @@ async def get_events():
     rows = c.fetchall()
     conn.close()
     return [{"id": r['id'], "title": r['title'], "description": r['description'], "date": r['date'],
-             "time": r['time'], "location": r['location'], "price": r['price'], "posterUrl": r['poster_url'],
-             "minParticipants": r['min_participants'], "maxParticipants": r['max_participants'], "status": r['status']} for r in rows]
+             "time": r['time'], "location": r['location'], "price": r['price'], 
+             "posterUrl": r['poster_url'],  # ✅ camelCase
+             "minParticipants": r['min_participants'], "maxParticipants": r['max_participants'], 
+             "status": r['status']} for r in rows]
 
 @app.post("/api/events")
 async def create_event(event: EventItem):
@@ -736,9 +730,12 @@ async def create_event(event: EventItem):
                     logger.error(f"❌ Ошибка отправки подписчику VK: {str(e)}")
         
         return {"id": event_id, "status": "created"}
+    except psycopg2.IntegrityError as e:
+        logger.error(f"Ошибка целостности данных при создании события: {str(e)}", exc_info=True)
+        raise HTTPException(400, f"Ошибка целостности данных: {str(e)}")
     except Exception as e:
-        logger.error(f"Ошибка при создании события: {str(e)}")
-        raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
+        logger.error(f"Ошибка при создании события: {str(e)}", exc_info=True)
+        raise HTTPException(500, f"Внутренняя ошибка сервера при создании события: {str(e)}")
 
 @app.delete("/api/events/{id}")
 async def delete_event(id: int):
@@ -767,25 +764,18 @@ async def create_event_booking(data: EventBookingRequest):
         raise HTTPException(400, "Событие не найдено")
     conn.close()
 
-    # Регистрация клиента (visits НЕ увеличиваем, experienced НЕ меняем)
     conn = get_db()
     c = conn.cursor()
-    
-    # Сначала проверяем, есть ли уже клиент
     c.execute("SELECT visits, experienced, total_discounts FROM clients WHERE phone = %s", (data.phone,))
     client = c.fetchone()
     
     if client:
-        # Клиент уже существует — обновляем только имя и фамилию
         c.execute("UPDATE clients SET surname = %s, name = %s, newsletter = newsletter WHERE phone = %s",
                   (data.surname, data.name, data.phone))
-        
-        # Если клиент уже был на основном курсе (visits > 0), даём 500 ₽ за событие
         if client['visits'] > 0:
             c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
             logger.info(f"✅ Действующий член клуба (+500 ₽ за событие): {data.phone}")
     else:
-        # Новый клиент. Если подписался на соцсети — даём 500 ₽, если нет — 0 ₽
         if data.subscribed:
             c.execute('''
                 INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, total_discounts)
@@ -802,7 +792,6 @@ async def create_event_booking(data: EventBookingRequest):
     conn.commit()
     conn.close()
 
-    # Создание брони
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -813,8 +802,10 @@ async def create_event_booking(data: EventBookingRequest):
     booking_id = c.fetchone()['id']
     conn.commit()
     conn.close()
+
+    # ✅ Отправляем уведомление администратору о бронировании события
+    send_admin_notification(booking_id, data, event['price'], 0)
     
-    # Проверка порога
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM event_bookings WHERE event_id = %s", (data.event_id,))
