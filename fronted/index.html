@@ -8,7 +8,7 @@
     <meta property="og:image" content="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     
-    <!-- Font Awesome -->
+    <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -234,17 +234,46 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
+    <!-- ===== КАРУСЕЛЬ СОБЫТИЙ ===== -->
+    <section id="events-section" style="padding: 50px 0;">
+        <div class="container">
+            <h2>События и <span style="color: var(--purple);">акции</span></h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;">
+                <!-- СЛЕВА: форма записи на события -->
+                <div id="events-form-wrapper">
+                    <div class="form-card glass" style="padding: 32px 28px;">
+                        <h3 style="text-align:center; margin-bottom:20px;">Записаться на событие</h3>
+                        <form id="events-form" novalidate>
+                            <input type="hidden" id="event-id" value="">
+                            <div class="form-row">
+                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
+                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+                            </div>
+                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
+                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+                            <div class="feedback" id="events-form-feedback"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- СПРАВА: карусель постеров -->
+                <div id="events-carousel-wrapper" style="position:relative;">
+                    <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);">
+                        <!-- Слайды будут загружаться динамически -->
+                    </div>
+                    <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❮</button>
+                    <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❯</button>
+                    <div id="event-dots" style="display:flex; justify-content:center; gap:10px; padding:15px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="form-section">
     <div class="container">
         <h2>Записаться <span>на интенсив</span></h2>
         <div class="form-card glass" style="padding:32px 28px;">
-            
-            <!-- ИНДИКАТОР ВЫБРАННОГО КУРСА -->
-            <div id="selected-course-indicator" style="display:none; text-align:center; margin-bottom:20px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.05); border:2px solid var(--text-soft); color:var(--text-soft);">
-                <strong>Вы записываетесь на: </strong>
-                <span id="selected-course-name" style="font-weight:700; text-transform:uppercase;"></span>
-            </div>
-
             <div style="margin-bottom:20px; text-align:center;">
                 <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
                     🔑 Войти через VK
@@ -254,21 +283,45 @@
             
             <form id="order-form" novalidate>
                 <input type="hidden" id="tariff-input" value="pro">
+                <input type="hidden" id="vk-id" value="">
+                
                 <div class="form-row">
                     <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
                     <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
                 </div>
+                
                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
                 
-                <!-- СТАТУС КЛИЕНТА -->
-                <div id="client-status" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);"></div>
+                <!-- БОНУСЫ И СТАТУС -->
+                <div id="client-info" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);">
+                    <div id="client-status"></div>
+                    <div id="client-bonus" style="margin-top:6px;">
+                        💰 Бонусы: <span id="bonus-amount">0</span> ₽
+                        <label style="margin-left:15px; cursor:pointer;">
+                            <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
+                        </label>
+                    </div>
+                </div>
 
                 <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
                 <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
                 <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
                 <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
-                <div class="form-group checkbox-group"><input type="checkbox" id="agree" required><label>Согласен с правилами</label></div>
-                <div class="form-group checkbox-group"><input type="checkbox" id="newsletter" checked><label>Согласен на рассылку</label></div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="agree" required>
+                    <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="privacy" required>
+                    <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="newsletter" checked>
+                    <label>Согласен на рассылку</label>
+                </div>
+                
                 <button type="submit" id="submit-btn" class="btn" style="width:100%; letter-spacing: 2px;">Попасть в себя</button>
                 <div class="feedback" id="form-feedback"></div>
             </form>
@@ -279,22 +332,53 @@
 
 <footer><div class="container">Стрелковый интенсив. Пермь.</div></footer>
 
-<div class="modal-overlay" id="success-modal"><div class="modal" style="text-align:center;"><span style="font-size:3rem;">✅</span><h3>Заявка принята!</h3><p id="modal-message" style="margin:14px 0;"></p><button class="btn" onclick="closeModal()">Понял, жду</button></div></div>
+<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
+<div class="modal-overlay" id="success-modal">
+    <div class="modal" style="text-align:center;">
+        <span style="font-size:3rem;">✅</span>
+        <h3>Заявка принята!</h3>
+        <p id="modal-message" style="margin:14px 0;"></p>
+        <button class="btn" onclick="closeModal()">Понял, жду</button>
+    </div>
+</div>
 
-<div class="modal-overlay" id="admin-modal"><div class="modal" style="text-align:left;"><div style="text-align:center;margin-bottom:14px;"><span>🔧</span><h3>Админ-панель</h3></div><div style="display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;"><button class="admin-tab active" onclick="switchAdminTab('dates')"><i class="fas fa-calendar-days"></i> Даты</button><button class="admin-tab" onclick="switchAdminTab('clients')"><i class="fas fa-users"></i> Клиенты</button><button class="admin-tab" onclick="switchAdminTab('gallery')"><i class="fas fa-image"></i> Галерея</button><button class="admin-tab" onclick="switchAdminTab('prices')"><i class="fas fa-tags"></i> Цены</button><button class="admin-tab" onclick="switchAdminTab('mailing')"><i class="fas fa-envelope"></i> Рассылка</button></div>
+<div class="modal-overlay" id="rules-modal">
+    <div class="modal" style="text-align:left;">
+        <h3>📜 Правила клуба «Стрелковый интенсив»</h3>
+        <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
+            <p><strong>1. Безопасность</strong><br>Участник обязан строго соблюдать все инструкции инструктора по обращению с оружием. Запрещено направлять оружие на людей.</p>
+            <p><strong>2. Оплата и отмена</strong><br>В случае отмены менее чем за 24 часа, оплата не возвращается.</p>
+            <p><strong>3. Фото и видео</strong><br>На занятиях ведётся съёмка для архива и соцсетей.</p>
+        </div>
+        <button class="btn" onclick="closeRulesModal()">Принимаю</button>
+    </div>
+</div>
 
-    <div id="admin-tab-dates"><div class="admin-section"><h4>➕ Добавить дату</h4><div style="display:flex;gap:6px;flex-wrap:wrap;"><input type="date" id="new-date-value" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><select id="new-date-group" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="1">Группа 1</option><option value="2">Группа 2</option></select><select id="new-date-slot" style="flex:1;min-width:100px;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><option value="full">10–18</option><option value="10-14">10–14</option><option value="14-18">14–18</option></select><button onclick="addNewDate()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Добавить</button></div></div><div id="admin-dates-list"></div></div>
+<div class="modal-overlay" id="privacy-modal">
+    <div class="modal" style="text-align:left;">
+        <h3>🔒 Политика конфиденциальности</h3>
+        <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
+            <p><strong>1. Какие данные собираем</strong><br>Имя, фамилия, номер телефона, которые вы вводите в форме.</p>
+            <p><strong>2. Как используем</strong><br>Для связи по поводу записи и отправки уведомлений.</p>
+            <p><strong>3. Как храним</strong><br>В защищённой базе данных на серверах Render.com.</p>
+            <p><strong>4. Передача третьим лицам</strong><br>Данные не передаются без вашего согласия.</p>
+        </div>
+        <button class="btn" onclick="closePrivacyModal()">Принимаю</button>
+    </div>
+</div>
 
-    <div id="admin-tab-clients" style="display:none;"><input type="text" id="client-search" placeholder="🔍 Поиск..." oninput="renderClientsList(this.value)" style="width:100%;padding:10px;margin-bottom:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"><div id="admin-clients-list"></div></div>
-
-    <div id="admin-tab-gallery" style="display:none;"><div class="admin-section"><h4>📤 Загрузить фото/видео</h4><input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;padding:8px;color:var(--text);"><p style="font-size:0.7rem;opacity:0.5;">Макс. 20 файлов</p></div><div id="admin-gallery-list"></div></div>
-
-    <div id="admin-tab-prices" style="display:none;"><div class="admin-section"><h4>💰 Настройка цен</h4><div style="display:grid; gap:10px; max-width:300px;"><div><label style="font-size:0.75rem;">Только практика</label><input type="number" id="price-practice" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Базовый</label><input type="number" id="price-basic" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><div><label style="font-size:0.75rem;">Продвинутый</label><input type="number" id="price-pro" style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;"></div><button onclick="savePricesToBackend()" class="btn" style="width:auto;padding:8px 16px;font-size:0.75rem;">Сохранить</button></div></div></div>
-
-    <div id="admin-tab-mailing" style="display:none;"><div class="admin-section"><h4>📨 Рассылка</h4><p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправить сообщение всем согласившимся.</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"><button onclick="sendMailing('whatsapp')" style="padding:8px 14px;background:#25D366;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">WhatsApp</button><button onclick="sendMailing('vk')" style="padding:8px 14px;background:#0077FF;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">VK</button><button onclick="sendMailing('telegram')" style="padding:8px 14px;background:#2AABEE;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Telegram</button></div><textarea id="mailing-message" rows="3" placeholder="Текст сообщения..." style="width:100%;padding:8px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.85rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea></div><div id="mailing-result" style="font-size:0.8rem;color:var(--text-soft);"></div></div>
-
-    <button class="btn" onclick="closeAdminPanel()" style="margin-top:10px;">Закрыть</button>
-</div></div>
+<div class="modal-overlay" id="event-modal">
+    <div class="modal" style="text-align:center; max-width:600px;">
+        <img id="event-modal-img" src="" alt="" style="max-width:100%; border-radius:8px; margin-bottom:15px;">
+        <h2 id="event-modal-title"></h2>
+        <p id="event-modal-desc" style="color:var(--text-soft);"></p>
+        <p><strong>Дата:</strong> <span id="event-modal-date"></span></p>
+        <p><strong>Время:</strong> <span id="event-modal-time"></span></p>
+        <p><strong>Место:</strong> <span id="event-modal-location"></span></p>
+        <p><strong>Цена:</strong> <span id="event-modal-price"></span></p>
+        <button class="btn" onclick="closeEventModal()" style="margin-top:15px;">Закрыть</button>
+    </div>
+</div>
 
 <script>
 // ===== Конфиг =====
@@ -303,9 +387,7 @@ const tariffConfig = {
     basic:{group:'basic',label:'Базовый'}, 
     pro:{group:'pro',label:'Продвинутый'} 
 };
-const MIN=5, MAX=10, ADMIN_PASS='777';
 let vkAuthDone = false;
-
 let allDates = [];
 let tariffPrices = { 
     practice: { base: 5000, instructor: 2000 }, 
@@ -314,6 +396,11 @@ let tariffPrices = {
 };
 let galleryFiles = [], currentSlide = 0;
 let selectedCourse = 'pro';
+let eventsData = [];
+let currentEventSlide = 0;
+let eventsLoaded = false;
+
+const API_BASE = 'https://shooting-course.onrender.com';
 
 // ===== Инициализация VK Bridge =====
 if (typeof vkBridge !== 'undefined') {
@@ -322,8 +409,7 @@ if (typeof vkBridge !== 'undefined') {
 
 // ===== Переход в приложение VK (по кнопке) =====
 function openVKApp() {
-    const appId = '54646561'; // Ваш ID из manifest.json
-    
+    const appId = '54664967'; // Новый ID мини-приложения
     const vkDeepLink = `https://vk.com/app${appId}`;
     const vkSchemeLink = `vk://vk.com/app${appId}`;
 
@@ -340,33 +426,31 @@ function openVKApp() {
     }, 2000);
 }
 
-// ===== Автоматическая авторизация ВНУТРИ VK с запросом телефона =====
+// ===== Автоматическая авторизация внутри VK =====
 if (typeof vkBridge !== 'undefined') {
-
-    vkBridge.send('VKWebAppGetPhoneNumber')
-        .then(phoneData => {
-            if (phoneData.phone_number) {
-                document.getElementById('phone').value = phoneData.phone_number;
-            }
-            return vkBridge.send('VKWebAppGetUserInfo');
-        })
+    // Автоматически получаем данные пользователя (без телефона)
+    vkBridge.send('VKWebAppGetUserInfo')
         .then(user => {
             if (user.first_name) document.getElementById('name').value = user.first_name;
             if (user.last_name) document.getElementById('surname').value = user.last_name;
+            if (user.id) document.getElementById('vk-id').value = user.id;
             
             const statusEl = document.getElementById('vk-auth-status');
             if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
 
+            // Подписка через VKWebAppShowSubscriptionBox
             return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
         })
         .then(groups => {
             if (!groups.is_member) {
-                return vkBridge.send('VKWebAppShowMessageBox', {
-                    message: 'Подписаться на сообщество «Стрелковый интенсив»?',
-                    buttons: ['Подписаться', 'Позже']
+                return vkBridge.send('VKWebAppShowSubscriptionBox', {
+                    subscribe: true,
+                    message: 'Подпишитесь на сообщество «Стрелковый интенсив», чтобы получать анонсы и новости.',
+                    buttonText: 'Подписаться',
+                    skipButtonText: 'Позже'
                 }).then(result => {
-                    if (result.button === 0) {
-                        return vkBridge.send('VKWebAppJoinGroup', { group_id: 239743393 });
+                    if (result.is_subscribed) {
+                        console.log('✅ Пользователь подписался!');
                     }
                 });
             }
@@ -376,15 +460,14 @@ if (typeof vkBridge !== 'undefined') {
         });
 }
 
-// ===== API =====
-const API_BASE = 'https://shooting-course.onrender.com';
-
+// ===== API функции =====
 async function apiFetch(url) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
 }
+
 async function apiPost(url, data) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
@@ -405,7 +488,7 @@ async function loadConfig() {
     }
 }
 
-// ===== Выбор тарифа (обновляет индикатор) =====
+// ===== Выбор тарифа =====
 function selectTariff(t) {
     selectedCourse = t;
     document.getElementById('tariff-input').value = t;
@@ -422,62 +505,12 @@ function selectTariff(t) {
         pro: { name: 'Продвинутый', color: 'var(--gold)' }
     };
     const course = courseNames[t] || courseNames.basic;
-    const indicator = document.getElementById('selected-course-indicator');
-    const nameEl = document.getElementById('selected-course-name');
-    if (indicator && nameEl) {
-        indicator.style.display = 'block';
-        indicator.style.borderColor = course.color;
-        indicator.style.color = course.color;
-        nameEl.textContent = course.name;
-        nameEl.style.color = course.color;
-    }
-    // Меняем цвет кнопки отправки
     const submitBtn = document.getElementById('submit-btn');
     if (submitBtn) {
         submitBtn.style.background = course.color;
         submitBtn.style.borderColor = course.color;
     }
 }
-
-// ===== Проверка статуса клиента по телефону =====
-let statusTimeout;
-document.getElementById('phone').addEventListener('input', function() {
-    clearTimeout(statusTimeout);
-    const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
-    if (rawPhone.length < 10) {
-        document.getElementById('client-status').style.display = 'none';
-        return;
-    }
-    statusTimeout = setTimeout(async () => {
-        try {
-            const res = await fetch(`${API_BASE}/api/client/status/${rawPhone}`);
-            if (res.ok) {
-                const data = await res.json();
-                const statusEl = document.getElementById('client-status');
-                const levelColors = {
-                    pro: 'var(--gold)',
-                    experienced: 'var(--purple)',
-                    newbie: 'var(--text-soft)'
-                };
-                const levelLabels = {
-                    pro: '🏆 Про',
-                    experienced: '⭐ Опытный',
-                    newbie: '🔰 Новичок'
-                };
-                statusEl.style.display = 'block';
-                statusEl.innerHTML = `
-                    <strong>Ваш статус:</strong> 
-                    <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
-                        ${levelLabels[data.level] || data.level}
-                    </span>
-                    ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
-                `;
-            }
-        } catch (err) {
-            console.warn('Ошибка проверки статуса:', err);
-        }
-    }, 800);
-});
 
 function renderTariffs() {
     const grid = document.getElementById('tariff-grid');
@@ -573,22 +606,80 @@ function updateDateSelect(t){
     d.forEach(d => {
         const ts = d.timeSlot || 'full';
         const c = d.currentCount || 0;
-        const mx = d.maxPersons || MAX;
+        const mx = d.maxPersons || 10;
         const a = c < mx;
-        
         const dateStr = d.label || d.value || 'Дата не указана';
-        
         const o = document.createElement('option');
         o.value = d.value + '|' + ts;
-        o.textContent = `${dateStr} ${ts !== 'full' ? '(' + (ts === '10-14' ? '10–14' : '14–18') + ')' : '(10–18)'} — ${c}/${mx}${a ? '' : ' (НЕТ МЕСТ)'}`;
+        const statusText = d.status === 'confirmed' ? '✅' : '⏳';
+        o.textContent = `${statusText} ${dateStr} ${ts !== 'full' ? '(' + (ts === '10-14' ? '10–14' : '14–18') + ')' : '(10–18)'} — ${c}/${mx}${a ? '' : ' (НЕТ МЕСТ)'}`;
         o.disabled = !a;
         s.appendChild(o);
     });
     
-    h.textContent = `Группа от ${MIN} до ${MAX} человек.`;
+    h.textContent = `Группа от ${d[0]?.minPersons || 5} до ${d[0]?.maxPersons || 10} человек.`;
 }
 
-// ===== Отправка заявки =====
+// ===== Проверка статуса и бонусов клиента =====
+let statusTimeout;
+document.getElementById('phone').addEventListener('input', function() {
+    clearTimeout(statusTimeout);
+    const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
+    if (rawPhone.length < 10) {
+        document.getElementById('client-info').style.display = 'none';
+        return;
+    }
+    statusTimeout = setTimeout(async () => {
+        try {
+            const data = await apiFetch(`/api/client/status/${rawPhone}`);
+            const infoEl = document.getElementById('client-info');
+            const statusEl = document.getElementById('client-status');
+            const bonusEl = document.getElementById('bonus-amount');
+            
+            const levelColors = {
+                pro: 'var(--gold)',
+                experienced: 'var(--purple)',
+                newbie: 'var(--text-soft)'
+            };
+            const levelLabels = {
+                pro: '🏆 Про',
+                experienced: '⭐ Опытный',
+                newbie: '🔰 Новичок'
+            };
+            
+            infoEl.style.display = 'block';
+            statusEl.innerHTML = `
+                <strong>Ваш статус:</strong> 
+                <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
+                    ${levelLabels[data.level] || data.level}
+                </span>
+                ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
+            `;
+            bonusEl.textContent = data.bonus || 0;
+            
+            // Ограничение: максимум 30% от стоимости инструктора
+            const instructorPrice = tariffPrices[selectedCourse]?.instructor || 2000;
+            const maxBonus = Math.floor(instructorPrice * 0.3);
+            const bonusCheckbox = document.getElementById('use-bonus');
+            if (data.bonus > 0) {
+                bonusCheckbox.disabled = false;
+                bonusCheckbox.parentElement.innerHTML = `
+                    💰 Бонусы: <span id="bonus-amount">${data.bonus}</span> ₽ (макс. списание ${maxBonus} ₽)
+                    <label style="margin-left:15px; cursor:pointer;">
+                        <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
+                    </label>
+                `;
+            } else {
+                bonusCheckbox.disabled = true;
+                bonusCheckbox.parentElement.innerHTML = `💰 Бонусы: 0 ₽`;
+            }
+        } catch (err) {
+            console.warn('Ошибка проверки статуса:', err);
+        }
+    }, 800);
+});
+
+// ===== Отправка заявки на курс =====
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
     const fb=document.getElementById('form-feedback');
@@ -602,21 +693,41 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const ts=document.getElementById('time-slot').value;
     const src=document.getElementById('source').value;
     const ag=document.getElementById('agree').checked;
+    const pr=document.getElementById('privacy').checked;
     const nl=document.getElementById('newsletter').checked;
     const tr=document.getElementById('tariff-input').value;
+    const useBonus = document.getElementById('use-bonus').checked;
+    const vkId = document.getElementById('vk-id').value;
 
     const er=[];
-    if(!sn) er.push('Фамилия'); if(!nm) er.push('Имя'); if(!ph) er.push('Телефон'); if(!dr) er.push('Дата'); if(!ag) er.push('Согласие');
+    if(!sn) er.push('Фамилия'); if(!nm) er.push('Имя'); if(!ph) er.push('Телефон'); if(!dr) er.push('Дата'); if(!ag) er.push('Согласие с правилами'); if(!pr) er.push('Согласие на обработку ПД');
     if(er.length){ fb.className='feedback error'; fb.textContent='❌ '+er.join(', '); return; }
 
     const [dv, timeSlot] = dr.split('|');
-    const data = { surname: sn, name: nm, phone: normalizePhone(ph), referral: rf ? normalizePhone(rf) : '', tariff: tr, date: dv, timeSlot: timeSlot, source: src, newsletter: nl };
+    const data = { 
+        surname: sn, 
+        name: nm, 
+        phone: normalizePhone(ph), 
+        referral: rf ? normalizePhone(rf) : '', 
+        tariff: tr, 
+        date: dv, 
+        timeSlot: timeSlot, 
+        source: src, 
+        newsletter: nl, 
+        use_bonus: useBonus,
+        vk_id: vkId
+    };
 
     try {
         const result = await apiPost('/api/booking', data);
         if (result.status === 'created') {
             document.getElementById('modal-message').textContent = `✅ Запись на ${dv}. Формат: ${tariffConfig[tr].label}. Итог: ${result.finalPrice} ₽`;
-            showModal(); this.reset(); selectTariff('pro'); updateDateSelect('pro');
+            document.getElementById('success-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('order-form').reset();
+            selectTariff('pro');
+            updateDateSelect('pro');
+            document.getElementById('client-info').style.display = 'none';
         } else {
             fb.className='feedback error'; fb.textContent='❌ ' + (result.detail || 'Ошибка');
         }
@@ -625,45 +736,204 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
-// ===== Админка — цены =====
-async function savePricesToBackend() {
-    const prices = {
-        practice: { 
-            base: parseInt(document.getElementById('price-practice').value) || 5000,
-            instructor: 2000 
-        },
-        basic: { 
-            base: parseInt(document.getElementById('price-basic').value) || 5000,
-            instructor: 3500 
-        },
-        pro: { 
-            base: parseInt(document.getElementById('price-pro').value) || 10000,
-            instructor: 3500 
-        }
-    };
+// ===== КАРУСЕЛЬ СОБЫТИЙ =====
+async function loadEvents() {
     try {
-        await apiPost('/api/prices', prices);
-        tariffPrices = prices;
-        renderTariffs();
-        alert('✅ Цены сохранены!');
-    } catch (e) {
-        alert('❌ Ошибка сохранения: ' + e.message);
+        const data = await apiFetch('/api/events');
+        eventsData = data || [];
+        renderEventsCarousel();
+    } catch (err) {
+        console.warn('Не удалось загрузить события:', err);
     }
 }
 
-// ===== Остальные функции (галерея, админка, рассылка) =====
-function showModal(){document.getElementById('success-modal').classList.add('active');document.body.style.overflow='hidden';}
-function closeModal(){document.getElementById('success-modal').classList.remove('active');document.body.style.overflow='';}
-function loadGallery(){try{const s=localStorage.getItem('shooting_gallery');if(s)galleryFiles=JSON.parse(s);}catch(e){}}
-function saveGallery(){localStorage.setItem('shooting_gallery',JSON.stringify(galleryFiles));}
-function uploadGalleryFiles(input){Array.from(input.files).forEach(file=>{if(galleryFiles.length>=20)return;const r=new FileReader();r.onload=function(e){galleryFiles.push({type:file.type.startsWith('video')?'video':'image',data:e.target.result,name:file.name});saveGallery();renderGalleryList();renderMainGallery();setBackgroundFromGallery();};r.readAsDataURL(file);});input.value='';}
-function deleteGalleryFile(i){if(confirm('Удалить?')){galleryFiles.splice(i,1);saveGallery();renderGalleryList();renderMainGallery();setBackgroundFromGallery();if(currentSlide>=galleryFiles.length)currentSlide=Math.max(0,galleryFiles.length-1);}}
-function renderGalleryList(){const c=document.getElementById('admin-gallery-list');if(!c)return;c.innerHTML=galleryFiles.length?galleryFiles.map((f,i)=>`<div style="display:flex;justify-content:space-between;padding:6px;font-size:0.7rem;border-bottom:1px solid var(--input-border);">${f.type==='video'?'🎬':'🖼️'} ${f.name||'Файл'}<button onclick="deleteGalleryFile(${i})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button></div>`).join(''):'<p style="opacity:0.4;">Нет файлов</p>';}
-function renderMainGallery(){const m=document.getElementById('gallery-main'),d=document.getElementById('gallery-dots');if(!m||!d)return;if(!galleryFiles.length){m.innerHTML='<div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>';d.innerHTML='';return;}const f=galleryFiles[currentSlide];m.innerHTML=f.type==='video'?`<video src="${f.data}" controls playsinline style="max-width:100%;max-height:100%;"></video>`:`<img src="${f.data}" style="max-width:100%;max-height:100%;">`;d.innerHTML=galleryFiles.map((_,i)=>`<div class="gallery-dot ${i===currentSlide?'active':''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');}
-function changeSlide(dir){if(!galleryFiles.length)return;currentSlide=(currentSlide+dir+galleryFiles.length)%galleryFiles.length;renderMainGallery();}
-function setBackgroundFromGallery(){const body=document.body;if(galleryFiles.length>0&&galleryFiles[0].type==='image'){body.style.setProperty('--gallery-bg',`url('${galleryFiles[0].data}')`);body.classList.add('has-gallery-bg');}else{body.classList.remove('has-gallery-bg');body.style.removeProperty('--gallery-bg');}}
+function renderEventsCarousel() {
+    const container = document.getElementById('events-carousel');
+    const dotsContainer = document.getElementById('event-dots');
+    
+    if (!eventsData || eventsData.length === 0) {
+        container.innerHTML = `
+            <div class="event-slide" style="min-width:100%; padding:40px; background:var(--card-bg); text-align:center;">
+                <p style="color:var(--text-soft);">Событий пока нет. Загляните позже!</p>
+            </div>
+        `;
+        dotsContainer.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = eventsData.map((e, i) => `
+        <div class="event-slide" style="min-width:100%; padding:40px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
+            ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:20px;">` : ''}
+            <h3>${e.title}</h3>
+            <p style="color:var(--text-soft);">${e.description.substring(0, 100)}${e.description.length > 100 ? '...' : ''}</p>
+            <p><strong>Дата:</strong> ${e.date}</p>
+            <p><strong>Цена:</strong> ${e.price.toLocaleString()} ₽</p>
+            <button class="btn" onclick="openEventDetails(${i})" style="padding:10px 24px; font-size:0.9rem;">Подробнее</button>
+        </div>
+    `).join('');
+    
+    dotsContainer.innerHTML = eventsData.map((_, i) => `
+        <div class="event-dot" style="width:10px; height:10px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="goToEventSlide(${i})"></div>
+    `).join('');
+    
+    currentEventSlide = 0;
+    eventsLoaded = true;
+}
 
-// ===== Скрытая кнопка входа в админку (долгое нажатие на новый заголовок) =====
+function changeEventSlide(dir) {
+    if (!eventsData.length) return;
+    const slides = document.querySelectorAll('.event-slide');
+    slides[currentEventSlide].style.display = 'none';
+    currentEventSlide = (currentEventSlide + dir + slides.length) % slides.length;
+    slides[currentEventSlide].style.display = 'block';
+    updateEventDots();
+}
+
+function goToEventSlide(index) {
+    if (!eventsData.length) return;
+    const slides = document.querySelectorAll('.event-slide');
+    slides[currentEventSlide].style.display = 'none';
+    currentEventSlide = index;
+    slides[currentEventSlide].style.display = 'block';
+    updateEventDots();
+}
+
+function updateEventDots() {
+    const dots = document.querySelectorAll('.event-dot');
+    dots.forEach((dot, i) => {
+        dot.style.background = i === currentEventSlide ? 'var(--purple)' : '#444';
+    });
+}
+
+function openEventDetails(index) {
+    const e = eventsData[index];
+    document.getElementById('event-modal-img').src = e.posterUrl || '';
+    document.getElementById('event-modal-title').textContent = e.title;
+    document.getElementById('event-modal-desc').textContent = e.description;
+    document.getElementById('event-modal-date').textContent = e.date;
+    document.getElementById('event-modal-time').textContent = e.time || '';
+    document.getElementById('event-modal-location').textContent = e.location || '';
+    document.getElementById('event-modal-price').textContent = e.price.toLocaleString() + ' ₽';
+    document.getElementById('event-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEventModal() {
+    document.getElementById('event-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Адаптивность карусели
+if (window.innerWidth <= 900) {
+    const wrapper = document.getElementById('events-section');
+    const grid = wrapper?.querySelector('.container > div');
+    if (grid) {
+        grid.style.gridTemplateColumns = '1fr';
+    }
+}
+
+// ===== Модальные окна правил и политики =====
+function openRulesModal() {
+    document.getElementById('rules-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRulesModal() {
+    document.getElementById('rules-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function openPrivacyModal() {
+    document.getElementById('privacy-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePrivacyModal() {
+    document.getElementById('privacy-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function closeModal() {
+    document.getElementById('success-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// ===== Галерея (по ссылкам) =====
+function loadGallery() {
+    try {
+        const s = localStorage.getItem('shooting_gallery');
+        if (s) galleryFiles = JSON.parse(s);
+    } catch(e) {}
+    renderMainGallery();
+}
+
+function renderMainGallery() {
+    const m = document.getElementById('gallery-main'), d = document.getElementById('gallery-dots');
+    if (!m || !d) return;
+    if (!galleryFiles.length) {
+        m.innerHTML = '<div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>';
+        d.innerHTML = '';
+        return;
+    }
+    const f = galleryFiles[currentSlide];
+    m.innerHTML = f.type === 'video' ? `<video src="${f.url}" controls playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${f.url}" style="max-width:100%;max-height:100%;">`;
+    d.innerHTML = galleryFiles.map((_, i) => `<div class="gallery-dot ${i === currentSlide ? 'active' : ''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');
+}
+
+function changeSlide(dir) {
+    if (!galleryFiles.length) return;
+    currentSlide = (currentSlide + dir + galleryFiles.length) % galleryFiles.length;
+    renderMainGallery();
+}
+
+// ===== Запись на события =====
+document.getElementById('events-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fb = document.getElementById('events-form-feedback');
+    fb.className = 'feedback'; fb.style.display = 'none';
+
+    const surname = document.getElementById('events-surname').value.trim();
+    const name = document.getElementById('events-name').value.trim();
+    const phone = document.getElementById('events-phone').value.trim();
+    const email = document.getElementById('events-email').value.trim();
+    
+    if (!surname || !name || !phone) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Заполните все обязательные поля';
+        return;
+    }
+
+    // Берем ID события из текущего слайда
+    const eventId = eventsData[currentEventSlide]?.id;
+    if (!eventId) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Событие не выбрано';
+        return;
+    }
+
+    try {
+        const result = await apiPost('/api/event/booking', {
+            event_id: eventId,
+            surname,
+            name,
+            phone: normalizePhone(phone),
+            email
+        });
+        if (result.status === 'created') {
+            fb.className = 'feedback success';
+            fb.textContent = '✅ Заявка на событие принята!';
+            document.getElementById('events-form').reset();
+        } else {
+            fb.className = 'feedback error';
+            fb.textContent = '❌ ' + (result.detail || 'Ошибка');
+        }
+    } catch (err) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Ошибка сети: ' + err.message;
+    }
+});
+
+// ===== Скрытая кнопка входа в админку (долгое нажатие на заголовок) =====
 let tt;
 const ht = document.getElementById('hero-title');
 if (ht) {
@@ -676,99 +946,22 @@ if (ht) {
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
 
-// ===== Админ-панель: переключение вкладок =====
-function switchAdminTab(tab) {
-    document.querySelectorAll('.admin-tab').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.admin-tab[onclick="switchAdminTab('${tab}')"]`).classList.add('active');
-    
-    document.querySelectorAll('[id^="admin-tab-"]').forEach(el => el.style.display = 'none');
-    document.getElementById(`admin-tab-${tab}`).style.display = 'block';
-}
-
-// ===== Админ-панель: добавить дату =====
-async function addNewDate() {
-    const dateValue = document.getElementById('new-date-value').value;
-    const group = document.getElementById('new-date-group').value;
-    const timeSlot = document.getElementById('new-date-slot').value;
-    
-    if (!dateValue) {
-        alert('Выберите дату');
-        return;
-    }
-    
-    try {
-        const result = await apiPost('/api/dates', { 
-            value: dateValue, 
-            group: group, 
-            timeSlot: timeSlot 
-        });
-        if (result.status === 'created') {
-            alert('✅ Дата добавлена!');
-            loadConfig();
-        } else {
-            alert('❌ ' + (result.detail || 'Ошибка'));
-        }
-    } catch (err) {
-        alert('❌ Ошибка: ' + err.message);
-    }
-}
-
-// ===== Админ-панель: список клиентов =====
-async function renderClientsList(search = '') {
-    try {
-        const clients = await apiFetch('/api/clients' + (search ? `?search=${encodeURIComponent(search)}` : ''));
-        const list = document.getElementById('admin-clients-list');
-        if (clients.length === 0) {
-            list.innerHTML = '<p style="opacity:0.4;">Нет записей</p>';
-            return;
-        }
-        list.innerHTML = clients.map(c => `
-            <div style="display:flex;justify-content:space-between;padding:6px;border-bottom:1px solid var(--input-border);font-size:0.8rem;">
-                <span>${c.name} ${c.surname}</span>
-                <span>${c.phone}</span>
-                <span>${c.tariff}</span>
-                <span>${c.date}</span>
-            </div>
-        `).join('');
-    } catch (err) {
-        console.error('Ошибка загрузки клиентов:', err);
-    }
-}
-
-// ===== Админ-панель: рассылка =====
-async function sendMailing(channel) {
-    const message = document.getElementById('mailing-message').value.trim();
-    const resultDiv = document.getElementById('mailing-result');
-    
-    if (!message) {
-        resultDiv.textContent = '⚠️ Введите текст сообщения';
-        return;
-    }
-    
-    try {
-        const result = await apiPost('/api/mailing', { 
-            channel: channel, 
-            message: message 
-        });
-        resultDiv.textContent = result.status === 'sent' 
-            ? `✅ Рассылка через ${channel} отправлена (${result.count} получателей)` 
-            : `⚠️ ${result.detail || 'Ошибка'}`;
-    } catch (err) {
-        resultDiv.textContent = '❌ Ошибка: ' + err.message;
-    }
-}
-
-function closeAdminPanel() {
-    document.getElementById('admin-modal').classList.remove('active');
-    document.body.style.overflow = '';
-}
-
-document.addEventListener('DOMContentLoaded',()=>{
+// ===== Инициализация =====
+document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadGallery();
-    setBackgroundFromGallery();
     renderMainGallery();
+    loadEvents();
 });
+
+// Адаптивность: на телефонах карусель сверху
+if (window.innerWidth <= 900) {
+    const wrapper = document.getElementById('events-section');
+    const grid = wrapper?.querySelector('.container > div');
+    if (grid) {
+        grid.style.gridTemplateColumns = '1fr';
+    }
+}
 </script>
 </body>
 </html>

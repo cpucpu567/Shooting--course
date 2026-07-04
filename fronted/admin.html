@@ -6,7 +6,6 @@
     <title>Админ-панель | Стрелковый интенсив</title>
     <link rel="icon" type="image/jpeg" href="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-    <!-- Font Awesome для иконок -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
@@ -67,31 +66,34 @@
             <button class="tab" onclick="switchTab('clients')"><i class="fas fa-users"></i> Клиенты</button>
             <button class="tab" onclick="switchTab('prices')"><i class="fas fa-tags"></i> Цены</button>
             <button class="tab" onclick="switchTab('gallery')"><i class="fas fa-image"></i> Галерея</button>
+            <button class="tab" onclick="switchTab('events')"><i class="fas fa-calendar-star"></i> События</button>
             <button class="tab" onclick="switchTab('mailing')"><i class="fas fa-envelope"></i> Рассылка</button>
             <button class="tab" onclick="switchTab('report')"><i class="fas fa-chart-bar"></i> Отчёт</button>
             <button class="tab" onclick="switchTab('calendar')"><i class="fas fa-calendar-alt"></i> Календарь</button>
         </div>
 
-        <!-- Вкладка: Даты (с выбором времени для Практики) -->
+        <!-- Вкладка: Даты -->
         <div id="tab-dates" class="content active">
             <div class="card">
                 <h4>➕ Добавить дату занятия</h4>
                 <div class="form-row">
                     <div class="form-group"><label>Дата</label><input type="date" id="new-date" /></div>
-                    <div class="form-group"><label>Название (например, "Базовый-2")</label><input type="text" id="new-date-label" placeholder="Базовый-2" /></div>
+                    <div class="form-group"><label>Название</label><input type="text" id="new-date-label" placeholder="Базовый-2" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Минимум участников</label><input type="number" id="new-date-min" value="5" /></div>
+                    <div class="form-group"><label>Максимум участников</label><input type="number" id="new-date-max" value="10" /></div>
                 </div>
                 <div class="form-group">
-                    <label>Для какого тарифа эта дата?</label>
+                    <label>Тариф</label>
                     <select id="new-date-tariff" onchange="toggleTimeSlot()">
-                        <option value="all">Любой тариф</option>
-                        <option value="basic">Только Базовый</option>
-                        <option value="practice">Только Практика</option>
-                        <option value="pro">Только Расширенная практика</option>
+                        <option value="basic">Базовый</option>
+                        <option value="practice">Практика</option>
+                        <option value="pro">Продвинутый</option>
                     </select>
                 </div>
-                <!-- Блок выбора времени (появляется только для Практики) -->
                 <div class="form-group" id="time-slot-group" style="display:none;">
-                    <label>Время занятия</label>
+                    <label>Время</label>
                     <select id="new-date-slot">
                         <option value="10-14">10:00 – 14:00</option>
                         <option value="14-18">14:00 – 18:00</option>
@@ -139,11 +141,40 @@
         <!-- Вкладка: Галерея -->
         <div id="tab-gallery" class="content">
             <div class="card">
-                <h4>📤 Загрузить фото/видео</h4>
-                <input type="file" id="gallery-upload" accept="image/*,video/*" multiple onchange="uploadGalleryFiles(this)" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;" />
-                <p style="font-size:0.7rem;opacity:0.5;margin-top:5px;">Макс. 20 файлов</p>
+                <h4>🖼️ Добавить фото/видео по ссылке</h4>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="gallery-url" placeholder="https://... .jpg / .mp4" style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--input-border); border-radius:6px; min-width:200px;" />
+                    <button class="btn" onclick="addGalleryByUrl()" style="padding:10px 24px;">Добавить</button>
+                </div>
+                <p style="font-size:0.7rem; opacity:0.5; margin-top:5px;">Поддерживаются прямые ссылки на .jpg, .png, .mp4, .webm.</p>
             </div>
             <div id="gallery-list"></div>
+        </div>
+
+        <!-- Вкладка: События -->
+        <div id="tab-events" class="content">
+            <div class="card">
+                <h4>➕ Создать событие</h4>
+                <div class="form-row">
+                    <div class="form-group"><label>Название</label><input type="text" id="event-title" /></div>
+                    <div class="form-group"><label>Дата</label><input type="date" id="event-date" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Время</label><input type="time" id="event-time" /></div>
+                    <div class="form-group"><label>Место</label><input type="text" id="event-location" placeholder="г. Пермь, стрельбище" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Стоимость (₽)</label><input type="number" id="event-price" /></div>
+                    <div class="form-group"><label>Ссылка на постер</label><input type="text" id="event-poster" placeholder="https://... или /events/poster.jpg" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Минимум участников</label><input type="number" id="event-min" value="5" /></div>
+                    <div class="form-group"><label>Максимум участников</label><input type="number" id="event-max" value="15" /></div>
+                </div>
+                <div class="form-group"><label>Полное описание</label><textarea id="event-description" rows="4" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;"></textarea></div>
+                <button class="btn" onclick="createEvent()">Создать событие</button>
+            </div>
+            <div id="events-list"></div>
         </div>
 
         <!-- Вкладка: Рассылка -->
@@ -176,11 +207,12 @@
                                 <th style="padding:8px; text-align:left;">Телефон</th>
                                 <th style="padding:8px; text-align:left;">Тариф</th>
                                 <th style="padding:8px; text-align:left;">Время</th>
+                                <th style="padding:8px; text-align:left;">Статус</th>
                                 <th style="padding:8px; text-align:left;">Итог</th>
                             </tr>
                         </thead>
                         <tbody id="report-body">
-                            <tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5;">Загрузка...</td></tr>
+                            <tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.5;">Загрузка...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -197,8 +229,7 @@
     </div>
 
     <script>
-        // ===== НОВЫЙ СЛОЖНЫЙ ПАРОЛЬ =====
-        const ADMIN_PASS = 'ShootingAdmin2026!'; // Можете поменять на свой
+        const ADMIN_PASS = 'ShootingAdmin2026!';
         let clientsFilter = 'all';
 
         const API_BASE = 'https://shooting-course.onrender.com';
@@ -231,7 +262,6 @@
             }
         }
 
-        // ===== Вход с новым паролем =====
         function checkAuth() {
             const pw = prompt('🔐 Введите пароль администратора:');
             if (pw !== ADMIN_PASS) {
@@ -254,6 +284,7 @@
             if (tab === 'clients') renderClients();
             if (tab === 'dates') renderDates();
             if (tab === 'gallery') renderGallery();
+            if (tab === 'events') renderEvents();
             if (tab === 'report') renderReport();
             if (tab === 'calendar') renderCalendar();
         }
@@ -264,109 +295,86 @@
             }
         }
 
-        // ===== Показывать выбор времени только для "Практики" =====
         function toggleTimeSlot() {
             const tariff = document.getElementById('new-date-tariff').value;
             const timeGroup = document.getElementById('time-slot-group');
-            if (tariff === 'practice') {
-                timeGroup.style.display = 'block';
-            } else {
-                timeGroup.style.display = 'none';
-            }
+            timeGroup.style.display = (tariff === 'practice') ? 'block' : 'none';
         }
 
         // ===== Даты =====
-        let allDates = [];
         async function loadDates() {
             try {
                 const config = await apiFetch('/api/config');
-                allDates = config.dates || [];
-                renderDates();
+                renderDates(config.dates || []);
             } catch (err) {
                 document.getElementById('dates-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
             }
         }
-        function renderDates() {
+
+        function renderDates(dates) {
             const container = document.getElementById('dates-list');
-            if (!allDates.length) {
+            if (!dates || !dates.length) {
                 container.innerHTML = '<p style="opacity:0.4;">Нет добавленных дат</p>';
                 return;
             }
-            container.innerHTML = allDates.map(d => `
+            container.innerHTML = dates.map(d => `
                 <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                     <div>
                         <strong>${d.label}</strong>
                         <span style="opacity:0.4;font-size:0.85rem;">${d.value}</span>
                         <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
-                            ${d.group === 'basic' ? 'Базовый' :
-                              d.group === 'practice' ? 'Практика' :
-                              d.group === 'pro' ? 'Продвинутый' :
-                              'Любой'}
+                            ${d.group}
                         </span>
-                        <!-- Отображаем время, если оно не full -->
-                        ${d.timeSlot && d.timeSlot !== 'full' ? 
-                            `<span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
-                                ⏱ ${d.timeSlot === '10-14' ? '10:00–14:00' : '14:00–18:00'}
-                            </span>` 
-                            : ''}
                         <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
                             👥 ${d.currentCount || 0}/${d.maxPersons || 10}
+                        </span>
+                        <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
+                            ${d.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
                         </span>
                     </div>
                     <button onclick="deleteDate('${d.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
                 </div>
             `).join('');
         }
+
         async function addNewDate() {
             const value = document.getElementById('new-date').value;
-            const labelInput = document.getElementById('new-date-label').value.trim();
+            const label = document.getElementById('new-date-label').value.trim();
             const tariff = document.getElementById('new-date-tariff').value;
             const timeSlot = document.getElementById('new-date-slot').value;
+            const minPersons = parseInt(document.getElementById('new-date-min').value) || 5;
+            const maxPersons = parseInt(document.getElementById('new-date-max').value) || 10;
             
             if (!value) { alert('Выберите дату!'); return; }
             
-            let finalLabel;
-            if (labelInput) {
-                finalLabel = labelInput;
-            } else {
-                const dateObj = new Date(value + 'T00:00:00');
-                const day = dateObj.getDate();
-                const month = dateObj.toLocaleString('ru-RU', { month: 'long' });
-                const year = dateObj.getFullYear();
-                finalLabel = `${day} ${month} ${year}`;
-            }
+            const finalLabel = label || new Date(value + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            const finalSlot = (tariff === 'practice') ? timeSlot : 'full';
+            
             try {
-                // Если выбран тариф "Практика" — отправляем выбранный слот, иначе full
-                const finalSlot = (tariff === 'practice') ? timeSlot : 'full';
-                
-                const data = { 
-                    value, 
-                    label: finalLabel, 
-                    group_id: tariff, 
-                    time_slot: finalSlot 
-                };
-                await apiPost('/api/dates', data);
+                await apiPost('/api/dates', {
+                    value,
+                    label: finalLabel,
+                    group_id: tariff,
+                    time_slot: finalSlot,
+                    min_persons: minPersons,
+                    max_persons: maxPersons
+                });
                 loadDates();
                 document.getElementById('new-date').value = '';
                 document.getElementById('new-date-label').value = '';
-                document.getElementById('time-slot-group').style.display = 'none'; // скрыть после добавления
+                alert('✅ Дата добавлена!');
             } catch (err) {
-                alert('❌ Ошибка при добавлении даты: ' + err.message);
+                alert('❌ Ошибка: ' + err.message);
             }
         }
+
         async function deleteDate(id) {
             if (!confirm('Удалить это занятие?')) return;
             try {
-                const res = await fetch(API_BASE + '/api/dates/' + encodeURIComponent(id), {
-                    method: 'DELETE'
-                });
-                if (res.ok) {
-                    loadDates();
-                } else {
-                    alert('❌ Ошибка при удалении занятия');
-                }
+                await fetch(`${API_BASE}/api/dates/${id}`, { method: 'DELETE' });
+                loadDates();
             } catch (err) {
-                alert('❌ Ошибка сети: ' + err.message);
+                alert('❌ Ошибка при удалении: ' + err.message);
             }
         }
 
@@ -375,53 +383,46 @@
             const container = document.getElementById('admin-clients-list');
             try {
                 const clients = await apiFetch('/api/clients');
-                const bookings = await apiFetch('/api/bookings');
                 const q = document.getElementById('client-search').value.toLowerCase();
                 let filtered = clients;
                 if (q) filtered = filtered.filter(c => c.phone.includes(q) || c.name.toLowerCase().includes(q) || c.surname.toLowerCase().includes(q));
                 if (clientsFilter === 'experienced') filtered = filtered.filter(c => c.experienced === 'experienced');
                 if (clientsFilter === 'beginners') filtered = filtered.filter(c => c.experienced === 'newbie');
                 if (clientsFilter === 'pro') filtered = filtered.filter(c => c.experienced === 'pro');
+                
                 if (!filtered.length) {
                     container.innerHTML = '<p style="opacity:0.4;">Ничего не найдено</p>';
                     return;
                 }
-                container.innerHTML = filtered.map(c => {
-                    const userBookings = bookings.filter(b => b.phone === c.phone);
-                    return `
+                container.innerHTML = filtered.map(c => `
                     <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
                         <div>
                             <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
                             <span style="opacity:0.4;">${c.phone}</span>
                             <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
+                            <br><span style="font-size:0.7rem;opacity:0.4;">💰 Бонусы: ${c.totalDiscounts || 0} ₽</span>
                             ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
                               c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
                               ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
                             ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
-                            ${userBookings.length ? `<div style="font-size:0.7rem;opacity:0.4;margin-top:4px;">📅 ${userBookings.map(b => b.date + ' — ' + b.tariff + (b.timeSlot && b.timeSlot !== 'full' ? ' (' + (b.timeSlot === '10-14' ? '10-14' : '14-18') + ')' : '')).join('<br>')}</div>` : ''}
                         </div>
                         <div>
                             <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
                         </div>
                     </div>
-                `}).join('');
+                `).join('');
             } catch (err) {
                 container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки клиентов: ${err.message}</p>`;
             }
         }
+
         async function deleteClient(phone) {
             if (!confirm(`Удалить клиента ${phone}? Это удалит все его данные.`)) return;
             try {
-                const res = await fetch(API_BASE + '/api/clients/' + encodeURIComponent(phone), {
-                    method: 'DELETE'
-                });
-                if (res.ok) {
-                    renderClients();
-                } else {
-                    alert('❌ Ошибка при удалении клиента');
-                }
+                await fetch(`${API_BASE}/api/clients/${encodeURIComponent(phone)}`, { method: 'DELETE' });
+                renderClients();
             } catch (err) {
-                alert('❌ Ошибка сети: ' + err.message);
+                alert('❌ Ошибка при удалении клиента');
             }
         }
 
@@ -441,6 +442,7 @@
                 document.getElementById('tab-prices').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки цен: ${err.message}</p>`;
             }
         }
+
         async function savePrices() {
             const practiceBase = parseInt(document.getElementById('price-practice-base').value);
             const practiceInstructor = parseInt(document.getElementById('price-practice-instructor').value);
@@ -448,6 +450,7 @@
             const basicInstructor = parseInt(document.getElementById('price-basic-instructor').value);
             const proBase = parseInt(document.getElementById('price-pro-base').value);
             const proInstructor = parseInt(document.getElementById('price-pro-instructor').value);
+            
             if (isNaN(practiceBase) || isNaN(practiceInstructor) || 
                 isNaN(basicBase) || isNaN(basicInstructor) || 
                 isNaN(proBase) || isNaN(proInstructor)) {
@@ -461,28 +464,21 @@
                 return;
             }
             try {
-                const res = await fetch(API_BASE + '/api/prices', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        practice: { base: practiceBase, instructor: practiceInstructor },
-                        basic: { base: basicBase, instructor: basicInstructor },
-                        pro: { base: proBase, instructor: proInstructor }
-                    })
+                await apiPost('/api/prices', {
+                    practice: { base: practiceBase, instructor: practiceInstructor },
+                    basic: { base: basicBase, instructor: basicInstructor },
+                    pro: { base: proBase, instructor: proInstructor }
                 });
-                if (res.ok) {
-                    alert('✅ Цены сохранены!');
-                    loadPrices();
-                } else {
-                    alert('❌ Ошибка при сохранении');
-                }
+                alert('✅ Цены сохранены!');
+                loadPrices();
             } catch (err) {
-                alert('❌ Ошибка сети: ' + err.message);
+                alert('❌ Ошибка при сохранении');
             }
         }
 
-        // ===== Галерея =====
+        // ===== Галерея (только ссылки) =====
         let galleryFiles = [];
+
         function loadGallery() {
             try {
                 const s = localStorage.getItem('shooting_gallery');
@@ -490,6 +486,7 @@
             } catch(e) {}
             renderGallery();
         }
+
         function renderGallery() {
             const c = document.getElementById('gallery-list');
             if (!galleryFiles.length) {
@@ -498,37 +495,122 @@
             }
             c.innerHTML = galleryFiles.map((f, i) => `
                 <div style="display:flex;justify-content:space-between;padding:6px;font-size:0.7rem;border-bottom:1px solid var(--input-border);">
-                    ${f.type === 'video' ? '🎬' : '🖼️'} ${f.name || 'Файл'}
+                    ${f.type === 'video' ? '🎬' : '🖼️'} 
+                    <a href="${f.url}" target="_blank" style="color:var(--text-soft); text-decoration:underline;">${f.name || 'Файл'}</a>
                     <button onclick="deleteGalleryFile(${i})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button>
                 </div>
             `).join('');
         }
-        function uploadGalleryFiles(input) {
-            Array.from(input.files).forEach(file => {
-                if (galleryFiles.length >= 20) {
-                    alert('Достигнут лимит в 20 файлов');
-                    return;
-                }
-                const r = new FileReader();
-                r.onerror = () => alert(`Ошибка при чтении файла ${file.name}`);
-                r.onload = function(e) {
-                    galleryFiles.push({ 
-                        type: file.type.startsWith('video') ? 'video' : 'image', 
-                        data: e.target.result, 
-                        name: file.name 
-                    });
-                    localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
-                    renderGallery();
-                };
-                r.readAsDataURL(file);
-            });
-            input.value = '';
+
+        function addGalleryByUrl() {
+            const url = document.getElementById('gallery-url').value.trim();
+            if (!url) {
+                alert('Вставьте ссылку на фото или видео!');
+                return;
+            }
+            const ext = url.split('.').pop().toLowerCase();
+            const type = ['mp4', 'webm', 'mov', 'avi'].includes(ext) ? 'video' : 'image';
+            const name = url.split('/').pop() || 'Файл';
+            
+            galleryFiles.push({ type, url, name });
+            localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
+            renderGallery();
+            document.getElementById('gallery-url').value = '';
         }
+
         function deleteGalleryFile(i) {
             if (confirm('Удалить?')) {
                 galleryFiles.splice(i, 1);
                 localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
                 renderGallery();
+            }
+        }
+
+        // ===== События =====
+        async function loadEvents() {
+            try {
+                const events = await apiFetch('/api/events');
+                renderEvents(events || []);
+            } catch (err) {
+                document.getElementById('events-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
+            }
+        }
+
+        function renderEvents(events) {
+            const container = document.getElementById('events-list');
+            if (!events || !events.length) {
+                container.innerHTML = '<p style="opacity:0.4;">Нет созданных событий</p>';
+                return;
+            }
+            container.innerHTML = events.map(e => `
+                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                    <div>
+                        <strong>${e.title}</strong>
+                        <span style="opacity:0.4;font-size:0.85rem;">${e.date} ${e.time}</span>
+                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
+                            📍 ${e.location}
+                        </span>
+                        <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
+                            👥 ${e.minParticipants}-${e.maxParticipants} чел.
+                        </span>
+                        <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
+                            ${e.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
+                        </span>
+                    </div>
+                    <button onclick="deleteEvent('${e.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
+                </div>
+            `).join('');
+        }
+
+        async function createEvent() {
+            const title = document.getElementById('event-title').value.trim();
+            const date = document.getElementById('event-date').value;
+            const time = document.getElementById('event-time').value;
+            const location = document.getElementById('event-location').value.trim();
+            const price = parseInt(document.getElementById('event-price').value) || 0;
+            const posterUrl = document.getElementById('event-poster').value.trim();
+            const minParticipants = parseInt(document.getElementById('event-min').value) || 5;
+            const maxParticipants = parseInt(document.getElementById('event-max').value) || 15;
+            const description = document.getElementById('event-description').value.trim();
+
+            if (!title || !date || !time || !location || !description) {
+                alert('Заполните все обязательные поля!');
+                return;
+            }
+
+            try {
+                await apiPost('/api/events', {
+                    title,
+                    description,
+                    date,
+                    time,
+                    location,
+                    price,
+                    poster_url: posterUrl,
+                    min_participants: minParticipants,
+                    max_participants: maxParticipants
+                });
+                loadEvents();
+                document.getElementById('event-title').value = '';
+                document.getElementById('event-date').value = '';
+                document.getElementById('event-time').value = '';
+                document.getElementById('event-location').value = '';
+                document.getElementById('event-price').value = '';
+                document.getElementById('event-poster').value = '';
+                document.getElementById('event-description').value = '';
+                alert('✅ Событие создано!');
+            } catch (err) {
+                alert('❌ Ошибка: ' + err.message);
+            }
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm('Удалить это событие?')) return;
+            try {
+                await fetch(`${API_BASE}/api/events/${id}`, { method: 'DELETE' });
+                loadEvents();
+            } catch (err) {
+                alert('❌ Ошибка при удалении: ' + err.message);
             }
         }
 
@@ -573,36 +655,27 @@
             try {
                 const bookings = await apiFetch('/api/bookings');
                 if (!bookings.length) {
-                    container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5;">Нет записей</td></tr>';
+                    container.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.5;">Нет записей</td></tr>';
                     return;
                 }
-                const grouped = {};
-                bookings.forEach(b => {
-                    if (!grouped[b.date]) grouped[b.date] = [];
-                    grouped[b.date].push(b);
-                });
                 let html = '';
-                Object.keys(grouped).sort().forEach(date => {
-                    const items = grouped[date];
-                    items.forEach((b, index) => {
-                        const timeDisplay = b.timeSlot && b.timeSlot !== 'full' ? 
-                            (b.timeSlot === '10-14' ? '10:00–14:00' : '14:00–18:00') : 
-                            'Весь день';
-                        html += `
-                            <tr style="${index % 2 === 0 ? 'background:var(--input-bg);' : ''}">
-                                <td style="padding:8px;">${date}</td>
-                                <td style="padding:8px;">${b.surname} ${b.name}</td>
-                                <td style="padding:8px;">${b.phone}</td>
-                                <td style="padding:8px;">${b.tariff}</td>
-                                <td style="padding:8px;">${timeDisplay}</td>
-                                <td style="padding:8px;">${b.finalPrice} ₽</td>
-                            </tr>
-                        `;
-                    });
+                bookings.forEach(b => {
+                    const statusDisplay = b.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание';
+                    html += `
+                        <tr>
+                            <td style="padding:8px;">${b.date}</td>
+                            <td style="padding:8px;">${b.surname} ${b.name}</td>
+                            <td style="padding:8px;">${b.phone}</td>
+                            <td style="padding:8px;">${b.tariff}</td>
+                            <td style="padding:8px;">${b.timeSlot}</td>
+                            <td style="padding:8px;">${statusDisplay}</td>
+                            <td style="padding:8px;">${b.finalPrice} ₽</td>
+                        </tr>
+                    `;
                 });
                 container.innerHTML = html;
             } catch (err) {
-                container.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</td></tr>`;
+                container.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</td></tr>`;
             }
         }
 
@@ -622,7 +695,6 @@
                     dateMap[d.value] = {
                         label: d.label,
                         group: d.group,
-                        timeSlot: d.timeSlot,
                         maxPersons: d.maxPersons,
                         currentCount: d.currentCount || 0
                     };
@@ -647,15 +719,11 @@
                     const info = dateMap[dateStr];
                     if (info) {
                         const color = info.group === 'basic' ? 'var(--gold)' : info.group === 'practice' ? 'var(--purple)' : 'var(--gold)';
-                        const timeDisplay = info.timeSlot && info.timeSlot !== 'full' ? 
-                            (info.timeSlot === '10-14' ? '10–14' : '14–18') : 
-                            'Весь день';
                         html += `
                             <div style="background:var(--card-bg); border:1px solid ${color}; border-radius:6px; padding:8px; min-height:60px; position:relative;">
                                 <div style="font-size:0.7rem; opacity:0.5;">${d.getDate()}</div>
                                 <div style="font-size:0.75rem; font-weight:600; color:${color};">${info.label}</div>
-                                <div style="font-size:0.6rem; opacity:0.6; margin-top:2px;">⏱ ${timeDisplay}</div>
-                                <div style="font-size:0.6rem; opacity:0.6; margin-top:2px;">${info.currentCount}/${info.maxPersons}</div>
+                                <div style="font-size:0.6rem; opacity:0.6; margin-top:4px;">${info.currentCount}/${info.maxPersons}</div>
                             </div>
                         `;
                     } else {
@@ -676,6 +744,7 @@
         loadDates();
         loadPrices();
         loadGallery();
+        loadEvents();
         renderClients();
     </script>
 </body>
