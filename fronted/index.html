@@ -214,7 +214,16 @@
 
     <section><div class="container"><h2>Что говорят <span>участники</span></h2><div class="reviews-grid"><div class="review-card glass"><div class="review-header"><span class="review-avatar">💬</span><div class="review-name">Егор, 27 лет</div></div><div class="review-stars">★★★★★</div><p class="review-text">«Здесь я впервые выстрелил. И понял, что это моё.»</p></div><div class="review-card glass"><div class="review-header"><span class="review-avatar">💬</span><div class="review-name">Настя, 34 года</div></div><div class="review-stars">★★★★★</div><p class="review-text">«Прихожу уже пятый раз. Это не просто стрельба, это то, что меняет настроение на неделю вперёд.»</p></div><div class="review-card glass"><div class="review-header"><span class="review-avatar">💬</span><div class="review-name">Софья</div></div><div class="review-stars">★★★★★</div><p class="review-text">«Эмоции до лёгкой тахикардии. Цель стала ближе.»</p></div><div class="review-card glass"><div class="review-header"><span class="review-avatar">💬</span><div class="review-name">Наталья</div></div><div class="review-stars">★★★★★</div><p class="review-text">«Интересно и плодотворно. Терпения вам, Даниил!»</p></div></div></div></section>
 
-    <section><div class="container"><h2>Фото и видео <span>с занятий</span></h2><div class="gallery-wrapper"><div class="gallery-main" id="gallery-main"><div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div></div><button class="gallery-arrow gallery-prev" onclick="changeSlide(-1)">❮</button><button class="gallery-arrow gallery-next" onclick="changeSlide(1)">❯</button><div class="gallery-dots" id="gallery-dots"></div></div></div></section>
+    <section><div class="container"><h2>Фото и видео <span>с занятий</span></h2>
+        <div class="gallery-wrapper">
+            <div class="gallery-main" id="gallery-main">
+                <div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>
+            </div>
+            <button class="gallery-arrow gallery-prev" onclick="changeSlide(-1)">❮</button>
+            <button class="gallery-arrow gallery-next" onclick="changeSlide(1)">❯</button>
+            <div class="gallery-dots" id="gallery-dots"></div>
+        </div>
+    </section>
 
     <section id="tariff-section">
     <div class="container">
@@ -234,12 +243,10 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <!-- ===== КАРУСЕЛЬ СОБЫТИЙ ===== -->
     <section id="events-section" style="padding: 50px 0;">
         <div class="container">
             <h2>События и <span style="color: var(--purple);">акции</span></h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;">
-                <!-- СЛЕВА: форма записи на события -->
                 <div id="events-form-wrapper">
                     <div class="form-card glass" style="padding: 32px 28px;">
                         <h3 style="text-align:center; margin-bottom:20px;">Записаться на событие</h3>
@@ -256,12 +263,8 @@
                         </form>
                     </div>
                 </div>
-
-                <!-- СПРАВА: карусель постеров -->
                 <div id="events-carousel-wrapper" style="position:relative;">
-                    <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);">
-                        <!-- Слайды будут загружаться динамически -->
-                    </div>
+                    <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);"></div>
                     <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❮</button>
                     <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❯</button>
                     <div id="event-dots" style="display:flex; justify-content:center; gap:10px; padding:15px;"></div>
@@ -292,7 +295,6 @@
                 
                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
                 
-                <!-- БОНУСЫ И СТАТУС -->
                 <div id="client-info" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);">
                     <div id="client-status"></div>
                     <div id="client-bonus" style="margin-top:6px;">
@@ -319,7 +321,7 @@
                 
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="newsletter" checked>
-                    <label>Согласен на рассылку</label>
+                    <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
                 </div>
                 
                 <button type="submit" id="submit-btn" class="btn" style="width:100%; letter-spacing: 2px;">Попасть в себя</button>
@@ -346,9 +348,28 @@
     <div class="modal" style="text-align:left;">
         <h3>📜 Правила клуба «Стрелковый интенсив»</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Безопасность</strong><br>Участник обязан строго соблюдать все инструкции инструктора по обращению с оружием. Запрещено направлять оружие на людей.</p>
-            <p><strong>2. Оплата и отмена</strong><br>В случае отмены менее чем за 24 часа, оплата не возвращается.</p>
-            <p><strong>3. Фото и видео</strong><br>На занятиях ведётся съёмка для архива и соцсетей.</p>
+            <p><strong>1. Общие положения</strong><br>
+            Настоящие Правила регулируют порядок посещения занятий в рамках проекта «Стрелковый интенсив» (далее — Клуб).<br>
+            Запись на занятие означает полное и безоговорочное согласие с настоящими Правилами.</p>
+
+            <p><strong>2. Безопасность</strong><br>
+            Участник обязан строго соблюдать все инструкции инструктора по обращению с оружием.<br>
+            Запрещено направлять оружие на людей, даже если оно не заряжено.<br>
+            Запрещено касаться спускового крючка до команды инструктора.<br>
+            Нарушение правил безопасности может привести к немедленному отстранению от занятия без возврата оплаты.</p>
+
+            <p><strong>3. Оплата и отмена занятий</strong><br>
+            Оплата занятия производится перед началом.<br>
+            В случае отмены занятия менее чем за 24 часа до его начала, оплата не возвращается.<br>
+            Если занятие отменяется по инициативе Клуба, оплата возвращается в полном объёме.</p>
+
+            <p><strong>4. Ответственность</strong><br>
+            Клуб не несёт ответственности за травмы, полученные в результате несоблюдения участником правил безопасности.<br>
+            Участник обязан сообщить инструктору о любых проблемах со здоровьем до начала занятия.</p>
+
+            <p><strong>5. Фото и видео</strong><br>
+            На занятиях ведётся фото- и видеосъёмка для внутреннего архива и публикации в соцсетях.<br>
+            Если вы не хотите попадать в кадр, сообщите инструктору до начала занятия.</p>
         </div>
         <button class="btn" onclick="closeRulesModal()">Принимаю</button>
     </div>
@@ -358,10 +379,29 @@
     <div class="modal" style="text-align:left;">
         <h3>🔒 Политика конфиденциальности</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Какие данные собираем</strong><br>Имя, фамилия, номер телефона, которые вы вводите в форме.</p>
-            <p><strong>2. Как используем</strong><br>Для связи по поводу записи и отправки уведомлений.</p>
-            <p><strong>3. Как храним</strong><br>В защищённой базе данных на серверах Render.com.</p>
-            <p><strong>4. Передача третьим лицам</strong><br>Данные не передаются без вашего согласия.</p>
+            <p><strong>1. Какие данные собираем</strong><br>
+            Мы собираем ваши имя, фамилию и номер телефона, которые вы вводите в форме записи.<br>
+            Мы также можем получать эти данные через сервис VK, если вы используете авторизацию через VK.</p>
+
+            <p><strong>2. Для чего мы используем ваши данные</strong><br>
+            Для связи с вами по поводу записи на занятие.<br>
+            Для подтверждения вашей записи и отправки напоминаний.<br>
+            Для информирования о новых занятиях и акциях (только если вы дали согласие на рассылку).</p>
+
+            <p><strong>3. Как мы храним и защищаем данные</strong><br>
+            Все данные хранятся в защищённой базе данных на серверах Render.com.<br>
+            Доступ к базе данных имеют только администраторы Клуба.</p>
+
+            <p><strong>4. Передача данных третьим лицам</strong><br>
+            Мы не передаём ваши данные третьим лицам без вашего согласия.<br>
+            Единственное исключение — обезличенная статистика (общее количество записей), которая не содержит персональных данных.</p>
+
+            <p><strong>5. Ваши права</strong><br>
+            Вы имеете право запросить удаление всех ваших данных, написав нам через VK.<br>
+            Вы имеете право отписаться от рассылки в любой момент.</p>
+
+            <p><strong>6. Контакты</strong><br>
+            Для запроса на удаление данных или изменения политики пишите в сообщество VK: https://vk.com/club239743393</p>
         </div>
         <button class="btn" onclick="closePrivacyModal()">Принимаю</button>
     </div>
@@ -381,7 +421,6 @@
 </div>
 
 <script>
-// ===== Конфиг =====
 const tariffConfig = { 
     practice:{group:'practice',label:'Практика',subGroup:true}, 
     basic:{group:'basic',label:'Базовый'}, 
@@ -394,7 +433,6 @@ let tariffPrices = {
     basic: { base: 5000, instructor: 3500 }, 
     pro: { base: 10000, instructor: 3500 } 
 };
-let galleryFiles = [], currentSlide = 0;
 let selectedCourse = 'pro';
 let eventsData = [];
 let currentEventSlide = 0;
@@ -402,14 +440,12 @@ let eventsLoaded = false;
 
 const API_BASE = 'https://shooting-course.onrender.com';
 
-// ===== Инициализация VK Bridge =====
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
 }
 
-// ===== Переход в приложение VK (по кнопке) =====
 function openVKApp() {
-    const appId = '54664967'; // Новый ID мини-приложения
+    const appId = '54664967';
     const vkDeepLink = `https://vk.com/app${appId}`;
     const vkSchemeLink = `vk://vk.com/app${appId}`;
 
@@ -426,9 +462,7 @@ function openVKApp() {
     }, 2000);
 }
 
-// ===== Автоматическая авторизация внутри VK =====
 if (typeof vkBridge !== 'undefined') {
-    // Автоматически получаем данные пользователя (без телефона)
     vkBridge.send('VKWebAppGetUserInfo')
         .then(user => {
             if (user.first_name) document.getElementById('name').value = user.first_name;
@@ -438,7 +472,6 @@ if (typeof vkBridge !== 'undefined') {
             const statusEl = document.getElementById('vk-auth-status');
             if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
 
-            // Подписка через VKWebAppShowSubscriptionBox
             return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
         })
         .then(groups => {
@@ -460,7 +493,6 @@ if (typeof vkBridge !== 'undefined') {
         });
 }
 
-// ===== API функции =====
 async function apiFetch(url) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url);
@@ -475,7 +507,6 @@ async function apiPost(url, data) {
     return res.json();
 }
 
-// ===== Загрузка конфига =====
 async function loadConfig() {
     try {
         const config = await apiFetch('/api/config');
@@ -488,7 +519,6 @@ async function loadConfig() {
     }
 }
 
-// ===== Выбор тарифа =====
 function selectTariff(t) {
     selectedCourse = t;
     document.getElementById('tariff-input').value = t;
@@ -498,7 +528,6 @@ function selectTariff(t) {
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
     document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
 
-    // Обновляем индикатор выбранного курса
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
@@ -620,7 +649,6 @@ function updateDateSelect(t){
     h.textContent = `Группа от ${d[0]?.minPersons || 5} до ${d[0]?.maxPersons || 10} человек.`;
 }
 
-// ===== Проверка статуса и бонусов клиента =====
 let statusTimeout;
 document.getElementById('phone').addEventListener('input', function() {
     clearTimeout(statusTimeout);
@@ -657,7 +685,6 @@ document.getElementById('phone').addEventListener('input', function() {
             `;
             bonusEl.textContent = data.bonus || 0;
             
-            // Ограничение: максимум 30% от стоимости инструктора
             const instructorPrice = tariffPrices[selectedCourse]?.instructor || 2000;
             const maxBonus = Math.floor(instructorPrice * 0.3);
             const bonusCheckbox = document.getElementById('use-bonus');
@@ -679,7 +706,6 @@ document.getElementById('phone').addEventListener('input', function() {
     }, 800);
 });
 
-// ===== Отправка заявки на курс =====
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
     const fb=document.getElementById('form-feedback');
@@ -736,7 +762,41 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
-// ===== КАРУСЕЛЬ СОБЫТИЙ =====
+// ===== Галерея (через сервер) =====
+let galleryFiles = [];
+let currentSlide = 0;
+
+async function loadGallery() {
+    try {
+        const data = await apiFetch('/api/gallery');
+        galleryFiles = data || [];
+        renderMainGallery();
+    } catch (err) {
+        console.warn('Не удалось загрузить галерею:', err);
+    }
+}
+
+function renderMainGallery() {
+    const m = document.getElementById('gallery-main');
+    const d = document.getElementById('gallery-dots');
+    if (!m || !d) return;
+    if (!galleryFiles.length) {
+        m.innerHTML = '<div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>';
+        d.innerHTML = '';
+        return;
+    }
+    const f = galleryFiles[currentSlide];
+    m.innerHTML = f.type === 'video' ? `<video src="${f.url}" controls playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${f.url}" style="max-width:100%;max-height:100%;">`;
+    d.innerHTML = galleryFiles.map((_, i) => `<div class="gallery-dot ${i === currentSlide ? 'active' : ''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');
+}
+
+function changeSlide(dir) {
+    if (!galleryFiles.length) return;
+    currentSlide = (currentSlide + dir + galleryFiles.length) % galleryFiles.length;
+    renderMainGallery();
+}
+
+// ===== События =====
 async function loadEvents() {
     try {
         const data = await apiFetch('/api/events');
@@ -823,7 +883,6 @@ function closeEventModal() {
     document.body.style.overflow = '';
 }
 
-// Адаптивность карусели
 if (window.innerWidth <= 900) {
     const wrapper = document.getElementById('events-section');
     const grid = wrapper?.querySelector('.container > div');
@@ -832,7 +891,6 @@ if (window.innerWidth <= 900) {
     }
 }
 
-// ===== Модальные окна правил и политики =====
 function openRulesModal() {
     document.getElementById('rules-modal').classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -858,35 +916,6 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-// ===== Галерея (по ссылкам) =====
-function loadGallery() {
-    try {
-        const s = localStorage.getItem('shooting_gallery');
-        if (s) galleryFiles = JSON.parse(s);
-    } catch(e) {}
-    renderMainGallery();
-}
-
-function renderMainGallery() {
-    const m = document.getElementById('gallery-main'), d = document.getElementById('gallery-dots');
-    if (!m || !d) return;
-    if (!galleryFiles.length) {
-        m.innerHTML = '<div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>';
-        d.innerHTML = '';
-        return;
-    }
-    const f = galleryFiles[currentSlide];
-    m.innerHTML = f.type === 'video' ? `<video src="${f.url}" controls playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${f.url}" style="max-width:100%;max-height:100%;">`;
-    d.innerHTML = galleryFiles.map((_, i) => `<div class="gallery-dot ${i === currentSlide ? 'active' : ''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');
-}
-
-function changeSlide(dir) {
-    if (!galleryFiles.length) return;
-    currentSlide = (currentSlide + dir + galleryFiles.length) % galleryFiles.length;
-    renderMainGallery();
-}
-
-// ===== Запись на события =====
 document.getElementById('events-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('events-form-feedback');
@@ -903,7 +932,6 @@ document.getElementById('events-form').addEventListener('submit', async function
         return;
     }
 
-    // Берем ID события из текущего слайда
     const eventId = eventsData[currentEventSlide]?.id;
     if (!eventId) {
         fb.className = 'feedback error';
@@ -933,7 +961,6 @@ document.getElementById('events-form').addEventListener('submit', async function
     }
 });
 
-// ===== Скрытая кнопка входа в админку (долгое нажатие на заголовок) =====
 let tt;
 const ht = document.getElementById('hero-title');
 if (ht) {
@@ -946,22 +973,11 @@ if (ht) {
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
 
-// ===== Инициализация =====
 document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
     loadGallery();
-    renderMainGallery();
     loadEvents();
 });
-
-// Адаптивность: на телефонах карусель сверху
-if (window.innerWidth <= 900) {
-    const wrapper = document.getElementById('events-section');
-    const grid = wrapper?.querySelector('.container > div');
-    if (grid) {
-        grid.style.gridTemplateColumns = '1fr';
-    }
-}
 </script>
 </body>
 </html>

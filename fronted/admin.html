@@ -72,7 +72,6 @@
             <button class="tab" onclick="switchTab('calendar')"><i class="fas fa-calendar-alt"></i> Календарь</button>
         </div>
 
-        <!-- Вкладка: Даты -->
         <div id="tab-dates" class="content active">
             <div class="card">
                 <h4>➕ Добавить дату занятия</h4>
@@ -104,7 +103,6 @@
             <div id="dates-list"></div>
         </div>
 
-        <!-- Вкладка: Клиенты -->
         <div id="tab-clients" class="content">
             <div class="card">
                 <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -118,7 +116,6 @@
             <div id="admin-clients-list"></div>
         </div>
 
-        <!-- Вкладка: Цены -->
         <div id="tab-prices" class="content">
             <div class="card">
                 <h4>💰 Настройка цен</h4>
@@ -138,20 +135,18 @@
             </div>
         </div>
 
-        <!-- Вкладка: Галерея -->
         <div id="tab-gallery" class="content">
             <div class="card">
                 <h4>🖼️ Добавить фото/видео по ссылке</h4>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <input type="text" id="gallery-url" placeholder="https://... .jpg / .mp4" style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--input-border); border-radius:6px; min-width:200px;" />
-                    <button class="btn" onclick="addGalleryByUrl()" style="padding:10px 24px;">Добавить</button>
+                    <button class="btn" onclick="addGalleryToServer()" style="padding:10px 24px;">Добавить</button>
                 </div>
                 <p style="font-size:0.7rem; opacity:0.5; margin-top:5px;">Поддерживаются прямые ссылки на .jpg, .png, .mp4, .webm.</p>
             </div>
             <div id="gallery-list"></div>
         </div>
 
-        <!-- Вкладка: События -->
         <div id="tab-events" class="content">
             <div class="card">
                 <h4>➕ Создать событие</h4>
@@ -177,7 +172,6 @@
             <div id="events-list"></div>
         </div>
 
-        <!-- Вкладка: Рассылка -->
         <div id="tab-mailing" class="content">
             <div class="card">
                 <h4>📨 Рассылка</h4>
@@ -194,7 +188,6 @@
             </div>
         </div>
 
-        <!-- Вкладка: Отчёт -->
         <div id="tab-report" class="content">
             <div class="card">
                 <h4>📊 Записи по датам и клиентам</h4>
@@ -219,7 +212,6 @@
             </div>
         </div>
 
-        <!-- Вкладка: Календарь -->
         <div id="tab-calendar" class="content">
             <div class="card">
                 <h4>📅 Календарь занятий</h4>
@@ -476,33 +468,32 @@
             }
         }
 
-        // ===== Галерея (только ссылки) =====
-        let galleryFiles = [];
-
-        function loadGallery() {
+        // ===== Галерея (через сервер) =====
+        async function loadGallery() {
             try {
-                const s = localStorage.getItem('shooting_gallery');
-                if (s) galleryFiles = JSON.parse(s);
-            } catch(e) {}
-            renderGallery();
+                const items = await apiFetch('/api/gallery');
+                renderGallery(items || []);
+            } catch (err) {
+                document.getElementById('gallery-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
+            }
         }
 
-        function renderGallery() {
+        function renderGallery(items) {
             const c = document.getElementById('gallery-list');
-            if (!galleryFiles.length) {
+            if (!items || !items.length) {
                 c.innerHTML = '<p style="opacity:0.4;">Нет файлов</p>';
                 return;
             }
-            c.innerHTML = galleryFiles.map((f, i) => `
+            c.innerHTML = items.map((f, i) => `
                 <div style="display:flex;justify-content:space-between;padding:6px;font-size:0.7rem;border-bottom:1px solid var(--input-border);">
                     ${f.type === 'video' ? '🎬' : '🖼️'} 
                     <a href="${f.url}" target="_blank" style="color:var(--text-soft); text-decoration:underline;">${f.name || 'Файл'}</a>
-                    <button onclick="deleteGalleryFile(${i})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button>
+                    <button onclick="deleteGalleryItem(${f.id})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button>
                 </div>
             `).join('');
         }
 
-        function addGalleryByUrl() {
+        async function addGalleryToServer() {
             const url = document.getElementById('gallery-url').value.trim();
             if (!url) {
                 alert('Вставьте ссылку на фото или видео!');
@@ -512,17 +503,23 @@
             const type = ['mp4', 'webm', 'mov', 'avi'].includes(ext) ? 'video' : 'image';
             const name = url.split('/').pop() || 'Файл';
             
-            galleryFiles.push({ type, url, name });
-            localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
-            renderGallery();
-            document.getElementById('gallery-url').value = '';
+            try {
+                await apiPost('/api/gallery', { url, type, name });
+                loadGallery();
+                document.getElementById('gallery-url').value = '';
+                alert('✅ Файл добавлен в галерею!');
+            } catch (err) {
+                alert('❌ Ошибка: ' + err.message);
+            }
         }
 
-        function deleteGalleryFile(i) {
-            if (confirm('Удалить?')) {
-                galleryFiles.splice(i, 1);
-                localStorage.setItem('shooting_gallery', JSON.stringify(galleryFiles));
-                renderGallery();
+        async function deleteGalleryItem(id) {
+            if (!confirm('Удалить?')) return;
+            try {
+                await fetch(`${API_BASE}/api/gallery/${id}`, { method: 'DELETE' });
+                loadGallery();
+            } catch (err) {
+                alert('❌ Ошибка при удалении: ' + err.message);
             }
         }
 
@@ -740,7 +737,6 @@
             }
         }
 
-        // ===== Инициализация =====
         loadDates();
         loadPrices();
         loadGallery();
