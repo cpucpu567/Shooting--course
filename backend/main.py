@@ -305,7 +305,8 @@ def send_event_client_notification(phone, event_title, event_date, event_time, l
             logger.error(f"Ошибка Telegram клиенту (событие): {str(e)}")
 
 # ===== API: Основные тарифы =====
-@app.get("/api/config")
+@app.get("/api/config", include_in_schema=False)
+@app.head("/api/config", include_in_schema=False)
 async def get_config():
     prices = get_prices()
     conn = get_db()
@@ -637,6 +638,7 @@ async def get_events():
 
 @app.post("/api/events")
 async def create_event(event: EventItem):
+    logger.info(f"📥 Получен запрос на создание события: {event.title}")
     try:
         conn = get_db()
         c = conn.cursor()
@@ -648,7 +650,7 @@ async def create_event(event: EventItem):
         event_id = c.fetchone()['id']
         conn.commit()
         conn.close()
-        logger.info(f"✅ Событие создано: {event.title}")
+        logger.info(f"✅ Событие успешно создано: {event.title} (ID: {event_id})")
         
         vk_token = os.getenv("VK_TOKEN", "")
         telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -731,11 +733,11 @@ async def create_event(event: EventItem):
         
         return {"id": event_id, "status": "created"}
     except psycopg2.IntegrityError as e:
-        logger.error(f"Ошибка целостности данных при создании события: {str(e)}", exc_info=True)
+        logger.error(f"❌ Ошибка целостности данных при создании события: {str(e)}", exc_info=True)
         raise HTTPException(400, f"Ошибка целостности данных: {str(e)}")
     except Exception as e:
-        logger.error(f"Ошибка при создании события: {str(e)}", exc_info=True)
-        raise HTTPException(500, f"Внутренняя ошибка сервера при создании события: {str(e)}")
+        logger.error(f"❌ Внутренняя ошибка при создании события: {str(e)}", exc_info=True)
+        raise HTTPException(500, f"Внутренняя ошибка: {str(e)}")
 
 @app.delete("/api/events/{id}")
 async def delete_event(id: int):
@@ -786,59 +788,4 @@ async def create_event_booking(data: EventBookingRequest):
             c.execute('''
                 INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, total_discounts)
                 VALUES (%s, %s, %s, 0, 'newbie', FALSE, 0)
-            ''', (data.phone, data.surname, data.name))
-            logger.info(f"ℹ️ Новый клиент через событие (без подписки, 0 ₽): {data.phone}")
-    
-    conn.commit()
-    conn.close()
-
-    conn = get_db()
-    c = conn.cursor()
-    c.execute('''
-        INSERT INTO event_bookings (event_id, surname, name, phone, email, subscribed, status)
-        VALUES (%s, %s, %s, %s, %s, %s, 'pending')
-        RETURNING id
-    ''', (data.event_id, data.surname, data.name, data.phone, data.email, data.subscribed))
-    booking_id = c.fetchone()['id']
-    conn.commit()
-    conn.close()
-
-    # ✅ Отправляем уведомление администратору о бронировании события
-    send_admin_notification(booking_id, data, event['price'], 0)
-    
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM event_bookings WHERE event_id = %s", (data.event_id,))
-    count = c.fetchone()['count']
-    c.execute("SELECT min_participants FROM events WHERE id = %s", (data.event_id,))
-    min_participants = c.fetchone()['min_participants']
-    conn.close()
-    
-    if count >= min_participants:
-        conn = get_db()
-        c = conn.cursor()
-        c.execute("UPDATE event_bookings SET status = 'confirmed' WHERE event_id = %s", (data.event_id,))
-        c.execute("UPDATE events SET status = 'confirmed' WHERE id = %s", (data.event_id,))
-        conn.commit()
-        conn.close()
-        
-        conn = get_db()
-        c = conn.cursor()
-        c.execute("SELECT phone FROM event_bookings WHERE event_id = %s", (data.event_id,))
-        phones = c.fetchall()
-        conn.close()
-        
-        for row in phones:
-            send_event_client_notification(row['phone'], event['title'], event['date'], event['time'], event['location'], event['price'])
-    
-    return {"id": booking_id, "status": "created"}
-
-@app.get("/api/event/bookings/{event_id}")
-async def get_event_bookings(event_id: int):
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("SELECT * FROM event_bookings WHERE event_id = %s ORDER BY created_at DESC", (event_id,))
-    rows = c.fetchall()
-    conn.close()
-    return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "email": r['email'],
-             "subscribed": r['subscribed'], "status": r['status'], "createdAt": r['created_at']} for r in rows]
+            ''', (data.phone, data.surname, data
