@@ -36,7 +36,7 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    # === Таблицы ===
+    c.execute('DROP TABLE IF EXISTS gallery CASCADE;')
     c.execute('DROP TABLE IF EXISTS event_bookings CASCADE;')
     c.execute('DROP TABLE IF EXISTS events CASCADE;')
     c.execute('DROP TABLE IF EXISTS bookings CASCADE;')
@@ -44,7 +44,6 @@ def init_db():
     c.execute('DROP TABLE IF EXISTS dates CASCADE;')
     c.execute('DROP TABLE IF EXISTS config CASCADE;')
     
-    # Клиенты
     c.execute('''
         CREATE TABLE clients (
             phone TEXT PRIMARY KEY,
@@ -60,7 +59,6 @@ def init_db():
         );
     ''')
     
-    # Бронирования на курсы
     c.execute('''
         CREATE TABLE bookings (
             id SERIAL PRIMARY KEY,
@@ -81,7 +79,6 @@ def init_db():
         );
     ''')
     
-    # Даты курсов
     c.execute('''
         CREATE TABLE dates (
             id SERIAL PRIMARY KEY,
@@ -95,7 +92,6 @@ def init_db():
         );
     ''')
     
-    # События
     c.execute('''
         CREATE TABLE events (
             id SERIAL PRIMARY KEY,
@@ -113,7 +109,6 @@ def init_db():
         );
     ''')
     
-    # Бронирования на события
     c.execute('''
         CREATE TABLE event_bookings (
             id SERIAL PRIMARY KEY,
@@ -129,7 +124,16 @@ def init_db():
         );
     ''')
     
-    # Конфиг
+    c.execute('''
+        CREATE TABLE gallery (
+            id SERIAL PRIMARY KEY,
+            url TEXT NOT NULL,
+            type TEXT NOT NULL,
+            name TEXT,
+            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    ''')
+    
     c.execute('''
         CREATE TABLE config (
             key TEXT PRIMARY KEY,
@@ -137,7 +141,6 @@ def init_db():
         );
     ''')
     
-    # Начальные цены
     c.execute("SELECT key FROM config WHERE key = 'prices'")
     if not c.fetchone():
         c.execute("INSERT INTO config (key, value) VALUES ('prices', '{\"practice\":{\"base\":5000,\"instructor\":2000},\"basic\":{\"base\":5000,\"instructor\":3500},\"pro\":{\"base\":10000,\"instructor\":3500}}')")
@@ -193,6 +196,11 @@ class EventBookingRequest(BaseModel):
     phone: str
     email: str = ""
 
+class GalleryItem(BaseModel):
+    url: str
+    type: str
+    name: str = ""
+
 # ===== Вспомогательные функции =====
 def get_prices():
     conn = get_db()
@@ -236,7 +244,6 @@ def send_admin_notification(booking_id, data, final_price, discount):
             logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
 
 def send_client_notification(phone, tariff, date, time_slot, final_price):
-    # Поиск клиента
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT vk_id FROM clients WHERE phone = %s", (phone,))
@@ -246,7 +253,6 @@ def send_client_notification(phone, tariff, date, time_slot, final_price):
 
     msg = f"✅ Ваша запись на «Стрелковый интенсив» подтверждена!\n\n📅 Дата: {date}\n⏱ Время: {time_slot}\n🎯 Курс: {tariff}\n💰 Итог: {final_price} ₽\n\n📍 Место: стрельбище, г. Пермь\n📞 Вопросы: https://vk.com/club239743393"
 
-    # VK
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token and vk_id:
         try:
@@ -261,7 +267,6 @@ def send_client_notification(phone, tariff, date, time_slot, final_price):
         except Exception as e:
             logger.error(f"Ошибка VK клиенту: {str(e)}")
     
-    # Telegram
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
     if telegram_token and chat_id:
@@ -362,14 +367,12 @@ async def create_booking(data: BookingRequest):
     total_discount = client['total_discounts'] if client else 0
     conn.close()
     
-    # Списание бонусов
     discount = 0
     if data.use_bonus and total_discount > 0:
         max_bonus = int(instructor_price * 0.3)
         discount = min(total_discount, max_bonus)
     final_price = base_price + (instructor_price - discount)
     
-    # Регистрация клиента
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -391,7 +394,6 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # Бонус за 5-е посещение
     if not data.referral:
         conn = get_db()
         c = conn.cursor()
@@ -404,7 +406,6 @@ async def create_booking(data: BookingRequest):
             logger.info(f"Бонус 500 ₽ за {visits}-е посещение")
         conn.close()
 
-    # Списание использованных бонусов
     if discount > 0:
         conn = get_db()
         c = conn.cursor()
@@ -412,7 +413,6 @@ async def create_booking(data: BookingRequest):
         conn.commit()
         conn.close()
 
-    # Начисление скидки за приведённого друга
     if data.referral:
         try:
             conn = get_db()
@@ -425,7 +425,6 @@ async def create_booking(data: BookingRequest):
         except Exception as e:
             logger.error(f"Ошибка начисления скидки другу: {str(e)}", exc_info=True)
 
-    # Создание заявки
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -439,10 +438,8 @@ async def create_booking(data: BookingRequest):
     conn.commit()
     conn.close()
 
-    # Уведомление администратору
     send_admin_notification(booking_id, data, final_price, discount)
 
-    # Проверка порога
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM bookings WHERE date = %s AND tariff = %s", (data.date, data.tariff))
@@ -452,13 +449,11 @@ async def create_booking(data: BookingRequest):
     conn.close()
 
     if count >= min_persons:
-        # Обновляем статус всех заявок
         conn = get_db()
         c = conn.cursor()
         c.execute("UPDATE bookings SET status = 'confirmed' WHERE date = %s AND tariff = %s", (data.date, data.tariff))
         conn.commit()
         
-        # Отправляем уведомления всем участникам
         c.execute("SELECT phone FROM bookings WHERE date = %s AND tariff = %s", (data.date, data.tariff))
         phones = c.fetchall()
         conn.close()
@@ -591,7 +586,48 @@ async def check_tariff_access(phone: str, tariff: str):
             return {"allow": False, "message": "❌ Продвинутый требует минимум 4 посещения (Базовый + 3 Практики)"}
     return {"allow": False, "message": "Неизвестный тариф"}
 
-# ===== API: События =====
+# ===== API: Галерея =====
+@app.get("/api/gallery")
+async def get_gallery():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT * FROM gallery ORDER BY uploaded_at DESC")
+    rows = c.fetchall()
+    conn.close()
+    return [{"id": r['id'], "url": r['url'], "type": r['type'], "name": r['name'], "uploadedAt": r['uploaded_at']} for r in rows]
+
+@app.post("/api/gallery")
+async def add_gallery_item(item: GalleryItem):
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO gallery (url, type, name)
+            VALUES (%s, %s, %s)
+            RETURNING id
+        ''', (item.url, item.type, item.name))
+        item_id = c.fetchone()['id']
+        conn.commit()
+        conn.close()
+        return {"id": item_id, "status": "created"}
+    except Exception as e:
+        logger.error(f"Ошибка при добавлении в галерею: {str(e)}")
+        raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
+
+@app.delete("/api/gallery/{id}")
+async def delete_gallery_item(id: int):
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("DELETE FROM gallery WHERE id = %s", (id,))
+        conn.commit()
+        conn.close()
+        return {"status": "deleted"}
+    except Exception as e:
+        logger.error(f"Ошибка при удалении из галереи: {str(e)}")
+        raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
+
+# ===== API: События (с автоматической рассылкой) =====
 @app.get("/api/events")
 async def get_events():
     conn = get_db()
@@ -616,6 +652,91 @@ async def create_event(event: EventItem):
         event_id = c.fetchone()['id']
         conn.commit()
         conn.close()
+        logger.info(f"✅ Событие создано: {event.title}")
+        
+        # === АВТОМАТИЧЕСКАЯ РАССЫЛКА ===
+        vk_token = os.getenv("VK_TOKEN", "")
+        telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+        
+        # Пост на стену VK
+        if vk_token:
+            post_text = f"""🎯 НОВОЕ СОБЫТИЕ!
+
+{event.title}
+📅 {event.date} в {event.time}
+📍 {event.location}
+💰 {event.price} ₽
+👥 Участников: {event.min_participants}–{event.max_participants}
+
+{event.description}
+
+Запись в сообществе: https://vk.com/club239743393"""
+            try:
+                requests.post("https://api.vk.com/method/wall.post", params={
+                    "access_token": vk_token,
+                    "v": "5.131",
+                    "owner_id": -239743393,
+                    "message": post_text,
+                    "from_group": 1
+                })
+                logger.info("✅ Пост о событии опубликован на стене VK")
+            except Exception as e:
+                logger.error(f"❌ Ошибка публикации поста VK: {str(e)}")
+        
+        # Сообщение в Telegram-канал/чат
+        if telegram_token and chat_id:
+            tg_msg = f"""🎯 НОВОЕ СОБЫТИЕ!
+
+{event.title}
+📅 {event.date} в {event.time}
+📍 {event.location}
+💰 {event.price} ₽
+👥 {event.min_participants}–{event.max_participants} чел.
+
+{event.description}
+
+Запись: https://vk.com/club239743393"""
+            try:
+                requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={
+                    "chat_id": chat_id,
+                    "text": tg_msg,
+                    "disable_web_page_preview": False
+                })
+                logger.info("✅ Сообщение о событии отправлено в Telegram")
+            except Exception as e:
+                logger.error(f"❌ Ошибка отправки в Telegram: {str(e)}")
+        
+        # Рассылка подписанным клиентам (newsletter = TRUE)
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT phone, vk_id FROM clients WHERE newsletter = TRUE")
+        subscribers = c.fetchall()
+        conn.close()
+        
+        for sub in subscribers:
+            msg = f"""📢 У нас новое событие!
+
+{event.title}
+📅 {event.date} в {event.time}
+📍 {event.location}
+💰 {event.price} ₽
+
+{event.description}
+
+Запись: https://vk.com/club239743393"""
+            if vk_token and sub['vk_id']:
+                try:
+                    requests.post("https://api.vk.com/method/messages.send", params={
+                        "access_token": vk_token,
+                        "v": "5.131",
+                        "user_id": sub['vk_id'],
+                        "message": msg,
+                        "random_id": 0
+                    })
+                except Exception as e:
+                    logger.error(f"❌ Ошибка отправки подписчику VK: {str(e)}")
+        
         return {"id": event_id, "status": "created"}
     except Exception as e:
         logger.error(f"Ошибка при создании события: {str(e)}")
@@ -648,7 +769,6 @@ async def create_event_booking(data: EventBookingRequest):
         raise HTTPException(400, "Событие не найдено")
     conn.close()
     
-    # Регистрация клиента
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -667,7 +787,6 @@ async def create_event_booking(data: EventBookingRequest):
     conn.commit()
     conn.close()
     
-    # Создание брони
     conn = get_db()
     c = conn.cursor()
     c.execute('''
@@ -679,7 +798,6 @@ async def create_event_booking(data: EventBookingRequest):
     conn.commit()
     conn.close()
     
-    # Проверка порога
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM event_bookings WHERE event_id = %s", (data.event_id,))
@@ -696,7 +814,6 @@ async def create_event_booking(data: EventBookingRequest):
         conn.commit()
         conn.close()
         
-        # Уведомления всем участникам события
         conn = get_db()
         c = conn.cursor()
         c.execute("SELECT phone FROM event_bookings WHERE event_id = %s", (data.event_id,))
