@@ -523,7 +523,7 @@
             }
         }
 
-        // ===== События =====
+        // ===== События (исправленная версия) =====
         async function loadEvents() {
             try {
                 const events = await apiFetch('/api/events');
@@ -576,7 +576,7 @@
             }
 
             try {
-                await apiPost('/api/events', {
+                const result = await apiPost('/api/events', {
                     title,
                     description,
                     date,
@@ -587,15 +587,21 @@
                     min_participants: minParticipants,
                     max_participants: maxParticipants
                 });
-                loadEvents();
-                document.getElementById('event-title').value = '';
-                document.getElementById('event-date').value = '';
-                document.getElementById('event-time').value = '';
-                document.getElementById('event-location').value = '';
-                document.getElementById('event-price').value = '';
-                document.getElementById('event-poster').value = '';
-                document.getElementById('event-description').value = '';
-                alert('✅ Событие создано!');
+
+                // ✅ Проверяем ответ сервера и обновляем список только после успеха
+                if (result.status === 'created') {
+                    await loadEvents();
+                    document.getElementById('event-title').value = '';
+                    document.getElementById('event-date').value = '';
+                    document.getElementById('event-time').value = '';
+                    document.getElementById('event-location').value = '';
+                    document.getElementById('event-price').value = '';
+                    document.getElementById('event-poster').value = '';
+                    document.getElementById('event-description').value = '';
+                    alert('✅ Событие создано!');
+                } else {
+                    alert('❌ Ошибка при создании события: ' + (result.detail || 'Неизвестная ошибка'));
+                }
             } catch (err) {
                 alert('❌ Ошибка: ' + err.message);
             }
@@ -737,6 +743,7 @@
             }
         }
 
+        // ===== Инициализация =====
         loadDates();
         loadPrices();
         loadGallery();
