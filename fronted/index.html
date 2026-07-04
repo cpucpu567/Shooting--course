@@ -64,7 +64,7 @@
         .hero { background: rgba(40,36,32,0.7); backdrop-filter: blur(8px); padding:70px 0 55px; text-align:center; border-bottom:3px solid var(--purple); }
         .hero h1 { font-size:3rem; font-weight:900; letter-spacing:4px; text-transform:uppercase; margin-bottom:10px; color: var(--text); user-select:none; }
         .hero h1 span { color: var(--purple); }
-        .hero .sub { font-size:1.15rem; max-width:600px; margin:0 auto 20px; color: var(--text-soft); }
+        .hero .sub { font-size:1.05rem; font-weight:400; color:var(--text-soft); margin-top:-5px; }
         .hero .mission { font-size:0.9rem; max-width:600px; margin:0 auto 30px; color: var(--text-soft); opacity:0.7; }
         .btn { display:inline-block; background:var(--purple); color:#fff; padding:16px 48px; font-size:1.1rem; font-weight:700; text-transform:uppercase; border-radius:8px; text-decoration:none; transition:0.3s; border:none; cursor:pointer; letter-spacing:2px; }
         .btn:hover { background:var(--purple-hover); transform:translateY(-2px); box-shadow:0 6px 20px rgba(155,138,240,0.3); }
@@ -250,28 +250,30 @@
     <section id="events-section" style="padding: 50px 0;">
         <div class="container">
             <h2>События и <span style="color: var(--purple);">акции</span></h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start;">
-                <div id="events-form-wrapper">
-                    <div class="form-card glass" style="padding: 32px 28px;">
-                        <h3 style="text-align:center; margin-bottom:20px;">Записаться на событие</h3>
-                        <form id="events-form" novalidate>
-                            <input type="hidden" id="event-id" value="">
-                            <div class="form-row">
-                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
-                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
-                            </div>
-                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
-                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
-                            <div class="feedback" id="events-form-feedback"></div>
-                        </form>
-                    </div>
+            
+            <div id="events-carousel-wrapper" style="position:relative; margin-bottom:40px;">
+                <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);">
+                    <!-- Слайды будут загружаться динамически -->
                 </div>
-                <div id="events-carousel-wrapper" style="position:relative;">
-                    <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);"></div>
-                    <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❮</button>
-                    <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❯</button>
-                    <div id="event-dots" style="display:flex; justify-content:center; gap:10px; padding:15px;"></div>
+                <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❮</button>
+                <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❯</button>
+                <div id="event-dots" style="display:flex; justify-content:center; gap:10px; padding:15px;"></div>
+            </div>
+
+            <div id="events-form-wrapper">
+                <div class="form-card glass" style="padding: 32px 28px;">
+                    <h3 style="text-align:center; margin-bottom:20px;">Записаться на событие</h3>
+                    <form id="events-form" novalidate>
+                        <input type="hidden" id="event-id" value="">
+                        <div class="form-row">
+                            <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
+                            <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+                        </div>
+                        <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
+                        <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+                        <div class="feedback" id="events-form-feedback"></div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -417,6 +419,30 @@
         <button class="btn" onclick="closeEventModal()" style="margin-top:15px;">Закрыть</button>
     </div>
 </div>
+
+<!-- ===== ПЛАВАЮЩАЯ ПЛАШКА ДЛЯ СОБЫТИЙ ===== -->
+<a href="#events-section" id="floating-event-btn" style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--purple);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(155, 138, 240, 0.4);
+    z-index: 999;
+    transition: 0.3s;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+    <i class="fas fa-calendar-star"></i>
+    <span>События</span>
+</a>
 
 <script>
 const tariffConfig = { 
@@ -644,7 +670,7 @@ function updateDateSelect(t){
         s.appendChild(o);
     });
     
-    h.textContent = `Группа от ${d[0]?.minPersons || 5} до ${d[0]?.maxPersons || 10} человек.`;
+    h.textContent = '';
 }
 
 let statusTimeout;
