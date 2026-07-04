@@ -117,6 +117,7 @@ def init_db():
             name TEXT NOT NULL,
             phone TEXT NOT NULL,
             email TEXT,
+            subscribed BOOLEAN DEFAULT FALSE,
             status TEXT DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
@@ -195,6 +196,7 @@ class EventBookingRequest(BaseModel):
     name: str
     phone: str
     email: str = ""
+    subscribed: bool = False
 
 class GalleryItem(BaseModel):
     url: str
@@ -627,7 +629,7 @@ async def delete_gallery_item(id: int):
         logger.error(f"Ошибка при удалении из галереи: {str(e)}")
         raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
 
-# ===== API: События (с автоматической рассылкой) =====
+# ===== API: События (с новой логикой) =====
 @app.get("/api/events")
 async def get_events():
     conn = get_db()
@@ -654,12 +656,10 @@ async def create_event(event: EventItem):
         conn.close()
         logger.info(f"✅ Событие создано: {event.title}")
         
-        # === АВТОМАТИЧЕСКАЯ РАССЫЛКА ===
         vk_token = os.getenv("VK_TOKEN", "")
         telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
         chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
         
-        # Пост на стену VK
         if vk_token:
             post_text = f"""🎯 НОВОЕ СОБЫТИЕ!
 
@@ -684,7 +684,6 @@ async def create_event(event: EventItem):
             except Exception as e:
                 logger.error(f"❌ Ошибка публикации поста VK: {str(e)}")
         
-        # Сообщение в Telegram-канал/чат
         if telegram_token and chat_id:
             tg_msg = f"""🎯 НОВОЕ СОБЫТИЕ!
 
@@ -707,7 +706,6 @@ async def create_event(event: EventItem):
             except Exception as e:
                 logger.error(f"❌ Ошибка отправки в Telegram: {str(e)}")
         
-        # Рассылка подписанным клиентам (newsletter = TRUE)
         conn = get_db()
         c = conn.cursor()
         c.execute("SELECT phone, vk_id FROM clients WHERE newsletter = TRUE")
@@ -768,36 +766,55 @@ async def create_event_booking(data: EventBookingRequest):
         conn.close()
         raise HTTPException(400, "Событие не найдено")
     conn.close()
-    
+
+    # Регистрация клиента (visits НЕ увеличиваем, experienced НЕ меняем)
     conn = get_db()
     c = conn.cursor()
-    c.execute('''
-        INSERT INTO clients (phone, surname, name, visits, experienced, newsletter)
-        VALUES (%s, %s, %s, 1, 'newbie', FALSE)
-        ON CONFLICT (phone) DO UPDATE SET
-            surname = EXCLUDED.surname,
-            name = EXCLUDED.name,
-            visits = clients.visits + 1,
-            experienced = CASE 
-                WHEN clients.visits + 1 >= 4 THEN 'pro' 
-                WHEN clients.visits + 1 >= 2 THEN 'experienced' 
-                ELSE 'newbie' 
-            END
-    ''', (data.phone, data.surname, data.name))
+    
+    # Сначала проверяем, есть ли уже клиент
+    c.execute("SELECT visits, experienced, total_discounts FROM clients WHERE phone = %s", (data.phone,))
+    client = c.fetchone()
+    
+    if client:
+        # Клиент уже существует — обновляем только имя и фамилию
+        c.execute("UPDATE clients SET surname = %s, name = %s, newsletter = newsletter WHERE phone = %s",
+                  (data.surname, data.name, data.phone))
+        
+        # Если клиент уже был на основном курсе (visits > 0), даём 500 ₽ за событие
+        if client['visits'] > 0:
+            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
+            logger.info(f"✅ Действующий член клуба (+500 ₽ за событие): {data.phone}")
+    else:
+        # Новый клиент. Если подписался на соцсети — даём 500 ₽, если нет — 0 ₽
+        if data.subscribed:
+            c.execute('''
+                INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, total_discounts)
+                VALUES (%s, %s, %s, 0, 'newbie', FALSE, 500)
+            ''', (data.phone, data.surname, data.name))
+            logger.info(f"✅ Новый член клуба через событие (подписка +500 ₽): {data.phone}")
+        else:
+            c.execute('''
+                INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, total_discounts)
+                VALUES (%s, %s, %s, 0, 'newbie', FALSE, 0)
+            ''', (data.phone, data.surname, data.name))
+            logger.info(f"ℹ️ Новый клиент через событие (без подписки, 0 ₽): {data.phone}")
+    
     conn.commit()
     conn.close()
-    
+
+    # Создание брони
     conn = get_db()
     c = conn.cursor()
     c.execute('''
-        INSERT INTO event_bookings (event_id, surname, name, phone, email, status)
-        VALUES (%s, %s, %s, %s, %s, 'pending')
+        INSERT INTO event_bookings (event_id, surname, name, phone, email, subscribed, status)
+        VALUES (%s, %s, %s, %s, %s, %s, 'pending')
         RETURNING id
-    ''', (data.event_id, data.surname, data.name, data.phone, data.email))
+    ''', (data.event_id, data.surname, data.name, data.phone, data.email, data.subscribed))
     booking_id = c.fetchone()['id']
     conn.commit()
     conn.close()
     
+    # Проверка порога
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM event_bookings WHERE event_id = %s", (data.event_id,))
@@ -833,4 +850,4 @@ async def get_event_bookings(event_id: int):
     rows = c.fetchall()
     conn.close()
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "email": r['email'],
-             "status": r['status'], "createdAt": r['created_at']} for r in rows]
+             "subscribed": r['subscribed'], "status": r['status'], "createdAt": r['created_at']} for r in rows]
