@@ -189,9 +189,13 @@
 
 <header class="hero">
     <div class="container">
-        <h1 id="hero-title">Здесь попадают не только в мишень, <span>но и в себя.</span></h1>
-        <p class="sub">Стрелковый интенсив — место, где люди приходят без подготовки, а уходят с результатом. Где не оценивают, а помогают. И где всегда есть та самая атмосфера, которую чувствуешь, когда всё вокруг перестаёт существовать.</p>
-        <p class="mission">Ведём наблюдение за развитием огневой и тактической подготовки. Прививаем молодому поколению любовь к родине. Обмениваемся опытом.</p>
+        <h1 id="hero-title">Стрелковый <span>интенсив</span></h1>
+        <p class="sub" style="font-size:1.05rem; font-weight:400; color:var(--text-soft); margin-top:-5px;">
+            Здесь попадают не только в мишень, но и в себя.
+        </p>
+        <p class="mission" style="font-size:0.9rem; max-width:600px; margin:0 auto 30px; color:var(--text-soft); opacity:0.7;">
+            Стрелковый интенсив — место, где люди приходят без подготовки, а уходят с результатом. Где не оценивают, а помогают. И где всегда есть та самая атмосфера, которую чувствуешь, когда всё вокруг перестаёт существовать.
+        </p>
         <a href="#tariff-section" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
     </div>
 </header>
@@ -297,12 +301,6 @@
                 
                 <div id="client-info" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);">
                     <div id="client-status"></div>
-                    <div id="client-bonus" style="margin-top:6px;">
-                        💰 Бонусы: <span id="bonus-amount">0</span> ₽
-                        <label style="margin-left:15px; cursor:pointer;">
-                            <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
-                        </label>
-                    </div>
                 </div>
 
                 <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
@@ -662,7 +660,6 @@ document.getElementById('phone').addEventListener('input', function() {
             const data = await apiFetch(`/api/client/status/${rawPhone}`);
             const infoEl = document.getElementById('client-info');
             const statusEl = document.getElementById('client-status');
-            const bonusEl = document.getElementById('bonus-amount');
             
             const levelColors = {
                 pro: 'var(--gold)',
@@ -683,7 +680,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 </span>
                 ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
             `;
-            bonusEl.textContent = data.bonus || 0;
             
             const instructorPrice = tariffPrices[selectedCourse]?.instructor || 2000;
             const maxBonus = Math.floor(instructorPrice * 0.3);
