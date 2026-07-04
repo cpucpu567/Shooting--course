@@ -698,7 +698,9 @@ document.getElementById('phone').addEventListener('input', function() {
                 `;
             } else {
                 bonusCheckbox.disabled = true;
-                bonusCheckbox.parentElement.innerHTML = `💰 Бонусы: 0 ₽`;
+                bonusCheckbox.parentElement.innerHTML = `
+                  <span>💰 Бонусы: 0 ₽</span>
+                `;
             }
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
