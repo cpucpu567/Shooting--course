@@ -147,6 +147,8 @@
                 flex-direction: column;
                 gap: 20px;
             }
+            /* На ПК скрываем плавающую кнопку, чтобы она не перекрывала правую колонку */
+            #floating-event-btn { display: none !important; }
         }
         .booking-col h3 {
             text-align: center;
@@ -203,6 +205,9 @@
             .tariff-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.3s; cursor: pointer; }
             .tariff-dot.active { background: var(--purple); }
             .tariff-nav { display: none !important; }
+            
+            /* На телефонах снова показываем плавающую кнопку */
+            #floating-event-btn { display: flex !important; }
         }
         
         @media (min-width: 701px) {
@@ -416,6 +421,29 @@
         <button class="btn" onclick="closeEventModal()" style="margin-top:15px;">Закрыть</button>
     </div>
 </div>
+
+<!-- ===== ПЛАВАЮЩАЯ КНОПКА "СОБЫТИЯ" ===== -->
+<a href="#booking-section" id="floating-event-btn" style="
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--purple);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    display: none; /* Скрыта по умолчанию, включается в CSS на телефонах */
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(155, 138, 240, 0.4);
+    z-index: 999;
+    transition: 0.3s;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95rem;
+" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+    <span>События</span>
+</a>
 
 <script>
 const tariffConfig = { 
