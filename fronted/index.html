@@ -847,9 +847,12 @@ document.getElementById('order-form').addEventListener('submit', async function(
     try {
         const result = await apiPost('/api/booking', data);
         if (result.status === 'created') {
+            // Сначала показываем модалку
             document.getElementById('modal-message').textContent = `✅ Запись на ${dv}. Формат: ${tariffConfig[tr].label}. Итог: ${result.finalPrice} ₽`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // А потом сбрасываем форму и перезагружаем состояние
             document.getElementById('order-form').reset();
             selectTariff('pro');
             updateDateSelect('pro');
