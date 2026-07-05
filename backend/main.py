@@ -23,9 +23,8 @@ app.add_middleware(
 )
 
 # ===== ОТДАЧА ФАЙЛОВ ИЗ ПАПКИ fronted =====
-# Получаем абсолютный путь к папке, где лежит main.py (это backend/)
+# Эта логика поднимается на одну папку вверх из backend и заходит в папку fronted
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-# Поднимаемся на уровень выше (в корень проекта) и спускаемся в папку fronted
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "fronted")
 
 @app.get("/")
@@ -36,7 +35,7 @@ async def read_root():
 async def read_admin():
     return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
 
-# Если в fronted есть картинки (например KToFj.jpg), чтобы они отображались:
+# Чтобы отдавались картинки (например, KToFj.jpg)
 @app.get("/{filename}")
 async def get_frontend_file(filename: str):
     file_path = os.path.join(FRONTEND_DIR, filename)
