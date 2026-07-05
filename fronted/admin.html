@@ -764,6 +764,9 @@
         loadGallery();
         loadEvents();
         renderClients();
+        
+        // ===== ПРАВИЛЬНАЯ ПРИВЯЗКА КНОПКИ СОБЫТИЯ (БЕЗ onclick В HTML) =====
+        document.getElementById('create-event-btn').addEventListener('click', createEvent);
     </script>
 </body>
 </html>
