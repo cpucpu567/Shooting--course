@@ -147,7 +147,6 @@
                 flex-direction: column;
                 gap: 20px;
             }
-            /* На ПК скрываем плавающую кнопку, чтобы она не перекрывала контент */
             #floating-event-btn { display: none !important; }
         }
 
@@ -160,7 +159,6 @@
             .form-row { grid-template-columns: 1fr; }
             .gallery-main { height: 250px; }
             
-            /* Отключаем двухколоночность и делаем вертикальную ленту */
             .booking-double-col {
                 display: flex;
                 flex-direction: column;
@@ -194,7 +192,6 @@
             .tariff-dot.active { background: var(--purple); }
             .tariff-nav { display: none !important; }
             
-            /* На телефонах снова показываем плавающую кнопку */
             #floating-event-btn { display: flex !important; }
         }
         
@@ -202,8 +199,7 @@
             .tariff-dots, .tariff-nav { display: none !important; }
         }
 
-        /* Заголовки и общие стили блоков */
-        .section-title { text-align: center; margin-bottom: 25px; }
+        /* Общие заголовки */
         .booking-col h3 {
             text-align: center;
             color: var(--gold);
@@ -219,6 +215,36 @@
             opacity: 0.7;
             margin-bottom: 10px;
         }
+        
+        /* Стили для плашки выбранного тарифа */
+        .selected-tariff-badge {
+            display: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+        .selected-tariff-badge.active {
+            display: block;
+        }
+        .selected-tariff-badge.basic {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-soft);
+            border: 1px solid var(--text-soft);
+        }
+        .selected-tariff-badge.practice {
+            background: rgba(155, 138, 240, 0.2);
+            color: var(--purple);
+            border: 1px solid var(--purple);
+        }
+        .selected-tariff-badge.pro {
+            background: rgba(196, 160, 96, 0.2);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
     </style>
 </head>
 <body>
@@ -232,7 +258,6 @@
         <p class="mission" style="font-size:0.9rem; max-width:600px; margin:0 auto 30px; color:var(--text-soft); opacity:0.7;">
             Стрелковый интенсив — место, где люди приходят без подготовки, а уходят с результатом. Где не оценивают, а помогают. И где всегда есть та самая атмосфера, которую чувствуешь, когда всё вокруг перестаёт существовать.
         </p>
-        <!-- Ссылка ведёт прямо к блоку с тарифами -->
         <a href="#tariffs-anchor" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
     </div>
 </header>
@@ -266,12 +291,11 @@
         </div>
     </section>
 
-    <!-- ===== ЯКОРЬ ДЛЯ ТАРИФОВ (Кнопка в хедере ведёт сюда) ===== -->
     <div id="tariffs-anchor"></div>
 
     <section id="tariff-section">
         <div class="container">
-            <h2 class="section-title">Форматы <span>участия</span></h2>
+            <h2>Форматы <span>участия</span></h2>
             <div style="text-align:center; margin-bottom:15px; font-size:0.9rem; color:var(--text-soft); background:var(--card-bg); padding:10px 20px; border-radius:8px; border:1px solid var(--card-border);">
                 ⚡ В стоимость любого тарифа входит:<br>
                 <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
@@ -287,19 +311,24 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <!-- ===== ОСНОВНОЙ БЛОК ЗАПИСИ (2 колонки на ПК, 1 на телефоне) ===== -->
+    <!-- ===== БЛОК ЗАПИСИ ===== -->
     <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
-            <h2 class="section-title">Записаться</h2>
+            <h2>Записаться</h2>
             
             <div class="booking-double-col">
                 
-                <!-- ===== ЛЕВАЯ КОЛОНКА (ПК) / ВЕРХНИЙ БЛОК (ТЕЛЕФОН): ТАРИФЫ + ФОРМА ИНТЕНСИВА ===== -->
+                <!-- КОЛОНКА 1 (на ПК) или БЛОК 1 (на телефоне): ИНТЕНСИВ + ТАРИФЫ -->
                 <div class="booking-col" id="booking-intensive">
                     <h3>На <span style="color:var(--purple);">интенсив</span></h3>
                     <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
                     
                     <div class="form-card glass">
+                        <!-- Плашка выбранного тарифа -->
+                        <div id="selected-tariff-badge" class="selected-tariff-badge">
+                            Выбран тариф: <span id="selected-tariff-name">Базовый</span>
+                        </div>
+
                         <div style="margin-bottom:15px; text-align:center;">
                             <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">
                                 🔑 Войти через VK
@@ -350,12 +379,11 @@
                     </div>
                 </div>
 
-                <!-- ===== ПРАВАЯ КОЛОНКА (ПК) / НИЖНИЙ БЛОК (ТЕЛЕФОН): КАРУСЕЛЬ СОБЫТИЙ + ФОРМА СОБЫТИЙ ===== -->
+                <!-- КОЛОНКА 2 (на ПК) или БЛОК 2 (на телефоне): СОБЫТИЯ -->
                 <div class="booking-col" id="booking-events">
                     <h3>На <span style="color:var(--gold);">событие</span></h3>
                     <p class="sub-desc">Акции, мастер-классы и встречи</p>
 
-                    <!-- Якорь для плавающей кнопки -->
                     <div id="events-anchor"></div>
                     
                     <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
@@ -400,7 +428,7 @@
 
 <div class="modal-overlay" id="rules-modal">
     <div class="modal" style="text-align:left;">
-        <h3>📜 Правила клуба</h3>
+        <h3>📜 Правила клуба «Стрелковый интенсив»</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
             <p><strong>1. Общие положения</strong><br>Запись на занятие означает полное согласие с Правилами.</p>
             <p><strong>2. Безопасность</strong><br>Строго соблюдать инструкции инструктора. Нарушение — отстранение без возврата оплаты.</p>
@@ -464,9 +492,9 @@
 
 <script>
 const tariffConfig = { 
-    practice:{group:'practice',label:'Практика',subGroup:true}, 
-    basic:{group:'basic',label:'Базовый'}, 
-    pro:{group:'pro',label:'Продвинутый'} 
+    practice:{group:'practice',label:'Практика',subGroup:true, color:'var(--purple)'}, 
+    basic:{group:'basic',label:'Базовый', color:'var(--text-soft)'}, 
+    pro:{group:'pro',label:'Продвинутый', color:'var(--gold)'} 
 };
 let vkAuthDone = false;
 let allDates = [];
@@ -554,6 +582,7 @@ async function loadConfig() {
     }
 }
 
+// ===== ОБНОВЛЁННАЯ ЛОГИКА ВЫБОРА ТАРИФА =====
 function selectTariff(t) {
     selectedCourse = t;
     document.getElementById('tariff-input').value = t;
@@ -561,7 +590,8 @@ function selectTariff(t) {
     updateDateSelect(t);
     document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-    document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
+
+    // Меняем цвет кнопки отправки
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
@@ -573,6 +603,15 @@ function selectTariff(t) {
         submitBtn.style.background = course.color;
         submitBtn.style.borderColor = course.color;
     }
+
+    // Показываем красивую плашку с названием тарифа
+    const badge = document.getElementById('selected-tariff-badge');
+    const badgeName = document.getElementById('selected-tariff-name');
+    badge.className = 'selected-tariff-badge active ' + t;
+    badgeName.textContent = course.name;
+
+    // Плавно скроллим к форме записи на интенсив
+    document.getElementById('booking-intensive').scrollIntoView({ behavior: 'smooth' });
 }
 
 function renderTariffs() {
@@ -590,8 +629,11 @@ function renderTariffs() {
         <div class="t-label" style="color: var(--text-soft);">🔰 Базовый</div>
         <div class="t-sub">30 выстрелов · 10:00–18:00</div>
         <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
-            <strong>🔰 Для новичков.</strong><br>С нуля: безопасность, устройство, стойка.
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
+            <strong style="color:var(--text-soft);">🔰 Для новичков.</strong>
+            <br>С нуля: безопасность, устройство, стойка.
+            <br>Разбор каждого выстрела. Спокойный темп.
+            <br>Идеально, чтобы попробовать и понять, твоё ли это.
         </div>
         <span class="t-badge">с теорией</span>
     </div>
@@ -599,19 +641,26 @@ function renderTariffs() {
         <div class="t-label" style="color: var(--purple);">⚡ Практика</div>
         <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
         <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
-            <strong>⭐ Для опытных.</strong><br>Никакой теории — только стрельба.
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
+            <strong style="color:var(--purple);">⭐ Для опытных.</strong>
+            <br>Никакой теории — только стрельба.
+            <br>Нестандартные мишени, скоростные серии, неожиданные задания.
+            <br>Для тех, кто уже умеет держать оружие и хочет драйва.
         </div>
         <span class="t-badge warn">после Базового</span>
     </div>
     <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')" style="border: 2px solid var(--gold) !important;">
-        <div class="t-label" style="color: var(--gold);">🏆 Продвинутый</div>
-        <div class="t-sub">60 выстрелов · 10:00–18:00</div>
-        <div class="t-price" style="font-size:1.8rem;">${proTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
-            <strong>🏆 Только для Про.</strong><br>После 4-х посещений.
+        <div class="t-label" style="color: var(--gold); font-size: 1.2rem;">🏆 Продвинутый</div>
+        <div class="t-sub" style="color: var(--gold);">60 выстрелов · 10:00–18:00</div>
+        <div class="t-price" style="font-size: 2.2rem;">${proTotal.toLocaleString()} ₽</div>
+        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
+            <strong style="color:var(--gold);">🏆 Только для Про.</strong>
+            <br>После 4-х посещений (Базовый + 3 Практики).
+            <br>60 выстрелов, полный день.
+            <br>Углублённая работа над ошибками. Максимальный результат.
+            <br><span style="display:block; margin-top:10px; font-weight:600; color:var(--purple);">⏱ 10:00–18:00 · Полный день</span>
         </div>
-        <span class="t-badge rec" style="background: var(--gold); color: #1A1C20;">🔥 ТОП</span>
+        <span class="t-badge rec" style="background: var(--gold); color: #1A1C20;">🔥 ТОП-формат</span>
     </div>
 `;
 
