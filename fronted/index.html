@@ -133,7 +133,7 @@
         .modal { background:#2a2824; border:2px solid var(--purple); border-radius:8px; padding:28px; max-width:550px; width:100%; max-height:90vh; overflow-y:auto; color: var(--text); }
         footer { text-align:center; padding:30px; color: var(--text-soft); opacity:0.5; font-size:0.8rem; }
 
-        /* ===== ДВУХКОЛОНОЧНАЯ ВЁРСТКА (Экраны шире 700px) ===== */
+        /* ===== ДВУХКОЛОНОЧНАЯ ВЁРСТКА (ПК и Планшеты > 700px) ===== */
         @media (min-width: 701px) {
             .booking-double-col {
                 display: grid;
@@ -147,26 +147,11 @@
                 flex-direction: column;
                 gap: 20px;
             }
-            /* На ПК скрываем плавающую кнопку, чтобы она не перекрывала правую колонку */
+            /* На ПК скрываем плавающую кнопку, чтобы она не перекрывала контент */
             #floating-event-btn { display: none !important; }
         }
-        .booking-col h3 {
-            text-align: center;
-            color: var(--gold);
-            margin-bottom: 5px;
-            font-size: 1.4rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .booking-col .sub-desc {
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-soft);
-            opacity: 0.7;
-            margin-bottom: 10px;
-        }
 
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (Экраны меньше 700px) ===== */
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (Телефоны < 700px) ===== */
         @media (max-width: 700px) {
             .hero h1 { font-size: 2rem; }
             .grid-2 { grid-template-columns: 1fr; }
@@ -174,6 +159,8 @@
             .instructor { flex-direction: column; text-align: center; }
             .form-row { grid-template-columns: 1fr; }
             .gallery-main { height: 250px; }
+            
+            /* Отключаем двухколоночность и делаем вертикальную ленту */
             .booking-double-col {
                 display: flex;
                 flex-direction: column;
@@ -182,6 +169,7 @@
             .booking-col {
                 width: 100%;
             }
+            
             .tariff-grid {
                 display: flex;
                 overflow-x: auto;
@@ -213,6 +201,24 @@
         @media (min-width: 701px) {
             .tariff-dots, .tariff-nav { display: none !important; }
         }
+
+        /* Заголовки и общие стили блоков */
+        .section-title { text-align: center; margin-bottom: 25px; }
+        .booking-col h3 {
+            text-align: center;
+            color: var(--gold);
+            margin-bottom: 5px;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .booking-col .sub-desc {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-soft);
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -226,7 +232,8 @@
         <p class="mission" style="font-size:0.9rem; max-width:600px; margin:0 auto 30px; color:var(--text-soft); opacity:0.7;">
             Стрелковый интенсив — место, где люди приходят без подготовки, а уходят с результатом. Где не оценивают, а помогают. И где всегда есть та самая атмосфера, которую чувствуешь, когда всё вокруг перестаёт существовать.
         </p>
-        <a href="#booking-section" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
+        <!-- Ссылка ведёт прямо к блоку с тарифами -->
+        <a href="#tariffs-anchor" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
     </div>
 </header>
 
@@ -259,9 +266,12 @@
         </div>
     </section>
 
+    <!-- ===== ЯКОРЬ ДЛЯ ТАРИФОВ (Кнопка в хедере ведёт сюда) ===== -->
+    <div id="tariffs-anchor"></div>
+
     <section id="tariff-section">
         <div class="container">
-            <h2>Форматы <span>участия</span></h2>
+            <h2 class="section-title">Форматы <span>участия</span></h2>
             <div style="text-align:center; margin-bottom:15px; font-size:0.9rem; color:var(--text-soft); background:var(--card-bg); padding:10px 20px; border-radius:8px; border:1px solid var(--card-border);">
                 ⚡ В стоимость любого тарифа входит:<br>
                 <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
@@ -277,14 +287,15 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <!-- ===== БЛОК ЗАПИСИ: 2 КОЛОНКИ НА ПК, 1 НА ТЕЛЕФОНАХ ===== -->
+    <!-- ===== ОСНОВНОЙ БЛОК ЗАПИСИ (2 колонки на ПК, 1 на телефоне) ===== -->
     <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
-            <h2>Записаться</h2>
+            <h2 class="section-title">Записаться</h2>
+            
             <div class="booking-double-col">
                 
-                <!-- КОЛОНКА 1: ИНТЕНСИВ (СЛЕВА) -->
-                <div class="booking-col">
+                <!-- ===== ЛЕВАЯ КОЛОНКА (ПК) / ВЕРХНИЙ БЛОК (ТЕЛЕФОН): ТАРИФЫ + ФОРМА ИНТЕНСИВА ===== -->
+                <div class="booking-col" id="booking-intensive">
                     <h3>На <span style="color:var(--purple);">интенсив</span></h3>
                     <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
                     
@@ -321,16 +332,16 @@
                             
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="agree" required>
-                                <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами</a></label>
+                                <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
                             </div>
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="privacy" required>
-                                <label>Согласен на обработку ПД <a href="#" onclick="openPrivacyModal(); return false;">(Политика)</a></label>
+                                <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
                             </div>
                             
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="newsletter" checked>
-                                <label>Я согласен получать уведомления о новых событиях и акциях</label>
+                                <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
                             </div>
                             
                             <button type="submit" id="submit-btn" class="btn" style="width:100%;">Попасть в себя</button>
@@ -339,11 +350,14 @@
                     </div>
                 </div>
 
-                <!-- КОЛОНКА 2: СОБЫТИЯ (СПРАВА) -->
-                <div class="booking-col">
+                <!-- ===== ПРАВАЯ КОЛОНКА (ПК) / НИЖНИЙ БЛОК (ТЕЛЕФОН): КАРУСЕЛЬ СОБЫТИЙ + ФОРМА СОБЫТИЙ ===== -->
+                <div class="booking-col" id="booking-events">
                     <h3>На <span style="color:var(--gold);">событие</span></h3>
                     <p class="sub-desc">Акции, мастер-классы и встречи</p>
 
+                    <!-- Якорь для плавающей кнопки -->
+                    <div id="events-anchor"></div>
+                    
                     <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
                         <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
                         <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
@@ -401,9 +415,12 @@
     <div class="modal" style="text-align:left;">
         <h3>🔒 Политика конфиденциальности</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p>Собираем имя, фамилию и телефон для связи и записи.</p>
-            <p>Данные хранятся на защищённых серверах и не передаются третьим лицам.</p>
-            <p>Вы вправе запросить удаление данных в любой момент.</p>
+            <p><strong>1. Какие данные собираем</strong><br>Мы собираем ваши имя, фамилию и номер телефона, которые вы вводите в форме записи. Мы также можем получать эти данные через сервис VK, если вы используете авторизацию через VK.</p>
+            <p><strong>2. Для чего мы используем ваши данные</strong><br>Для связи с вами по поводу записи на занятие. Для подтверждения вашей записи и отправки напоминаний. Для информирования о новых занятиях и акциях (только если вы дали согласие на рассылку).</p>
+            <p><strong>3. Как мы храним и защищаем данные</strong><br>Все данные хранятся в защищённой базе данных на серверах Render.com. Доступ к базе данных имеют только администраторы Клуба.</p>
+            <p><strong>4. Передача данных третьим лицам</strong><br>Мы не передаём ваши данные третьим лицам без вашего согласия. Единственное исключение — обезличенная статистика (общее количество записей), которая не содержит персональных данных.</p>
+            <p><strong>5. Ваши права</strong><br>Вы имеете право запросить удаление всех ваших данных, написав нам через VK. Вы имеете право отписаться от рассылки в любой момент.</p>
+            <p><strong>6. Контакты</strong><br>Для запроса на удаление данных или изменения политики пишите в сообщество VK: https://vk.com/club239743393</p>
         </div>
         <button class="btn" onclick="closePrivacyModal()">Принимаю</button>
     </div>
@@ -422,8 +439,8 @@
     </div>
 </div>
 
-<!-- ===== ПЛАВАЮЩАЯ КНОПКА "СОБЫТИЯ" ===== -->
-<a href="#booking-section" id="floating-event-btn" style="
+<!-- ===== ПЛАВАЮЩАЯ КНОПКА "СОБЫТИЯ" (ПОЯВЛЯЕТСЯ ТОЛЬКО НА ТЕЛЕФОНАХ) ===== -->
+<a href="#events-anchor" id="floating-event-btn" style="
     position: fixed;
     bottom: 30px;
     right: 30px;
@@ -431,7 +448,7 @@
     color: #fff;
     padding: 12px 24px;
     border-radius: 30px;
-    display: none; /* Скрыта по умолчанию, включается в CSS на телефонах */
+    display: none;
     align-items: center;
     justify-content: center;
     text-decoration: none;
@@ -544,7 +561,7 @@ function selectTariff(t) {
     updateDateSelect(t);
     document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-    document.getElementById('booking-section').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
