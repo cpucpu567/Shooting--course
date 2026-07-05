@@ -318,7 +318,36 @@
             
             <div class="booking-double-col">
                 
-                <!-- КОЛОНКА 1 (на ПК) или БЛОК 1 (на телефоне): ИНТЕНСИВ + ТАРИФЫ -->
+                <!-- КОЛОНКА 1 / ВЕРХНИЙ БЛОК: СОБЫТИЯ -->
+                <div class="booking-col" id="booking-events">
+                    <h3>На <span style="color:var(--gold);">событие</span></h3>
+                    <p class="sub-desc">Акции, мастер-классы и встречи</p>
+
+                    <div id="events-anchor"></div>
+                    
+                    <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
+                        <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
+                        <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
+                        <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
+                        <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
+                    </div>
+
+                    <div class="form-card glass">
+                        <form id="events-form" novalidate>
+                            <input type="hidden" id="event-id" value="">
+                            <div class="form-row">
+                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
+                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+                            </div>
+                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
+                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+                            <div class="feedback" id="events-form-feedback"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- КОЛОНКА 2 / НИЖНИЙ БЛОК: ИНТЕНСИВ -->
                 <div class="booking-col" id="booking-intensive">
                     <h3>На <span style="color:var(--purple);">интенсив</span></h3>
                     <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
@@ -379,35 +408,6 @@
                     </div>
                 </div>
 
-                <!-- КОЛОНКА 2 (на ПК) или БЛОК 2 (на телефоне): СОБЫТИЯ -->
-                <div class="booking-col" id="booking-events">
-                    <h3>На <span style="color:var(--gold);">событие</span></h3>
-                    <p class="sub-desc">Акции, мастер-классы и встречи</p>
-
-                    <div id="events-anchor"></div>
-                    
-                    <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
-                        <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
-                        <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
-                        <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
-                        <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
-                    </div>
-
-                    <div class="form-card glass">
-                        <form id="events-form" novalidate>
-                            <input type="hidden" id="event-id" value="">
-                            <div class="form-row">
-                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
-                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
-                            </div>
-                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
-                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
-                            <div class="feedback" id="events-form-feedback"></div>
-                        </form>
-                    </div>
-                </div>
-
             </div>
         </div>
     </section>
@@ -430,10 +430,28 @@
     <div class="modal" style="text-align:left;">
         <h3>📜 Правила клуба «Стрелковый интенсив»</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Общие положения</strong><br>Запись на занятие означает полное согласие с Правилами.</p>
-            <p><strong>2. Безопасность</strong><br>Строго соблюдать инструкции инструктора. Нарушение — отстранение без возврата оплаты.</p>
-            <p><strong>3. Оплата и отмена</strong><br>Отмена менее чем за 24 часа — оплата не возвращается.</p>
-            <p><strong>4. Ответственность</strong><br>Клуб не несёт ответственности за травмы из-за несоблюдения правил.</p>
+            <p><strong>1. Общие положения</strong><br>
+            Настоящие Правила регулируют порядок посещения занятий в рамках проекта «Стрелковый интенсив» (далее — Клуб).<br>
+            Запись на занятие означает полное и безоговорочное согласие с настоящими Правилами.</p>
+
+            <p><strong>2. Безопасность</strong><br>
+            Участник обязан строго соблюдать все инструкции инструктора по обращению с оружием.<br>
+            Запрещено направлять оружие на людей, даже если оно не заряжено.<br>
+            Запрещено касаться спускового крючка до команды инструктора.<br>
+            Нарушение правил безопасности может привести к немедленному отстранению от занятия без возврата оплаты.</p>
+
+            <p><strong>3. Оплата и отмена занятий</strong><br>
+            Оплата занятия производится перед началом.<br>
+            В случае отмены занятия менее чем за 24 часа до его начала, оплата не возвращается.<br>
+            Если занятие отменяется по инициативе Клуба, оплата возвращается в полном объёме.</p>
+
+            <p><strong>4. Ответственность</strong><br>
+            Клуб не несёт ответственности за травмы, полученные в результате несоблюдения участником правил безопасности.<br>
+            Участник обязан сообщить инструктору о любых проблемах со здоровьем до начала занятия.</p>
+
+            <p><strong>5. Фото и видео</strong><br>
+            На занятиях ведётся фото- и видеосъёмка для внутреннего архива и публикации в соцсетях.<br>
+            Если вы не хотите попадать в кадр, сообщите инструктору до начала занятия.</p>
         </div>
         <button class="btn" onclick="closeRulesModal()">Принимаю</button>
     </div>
@@ -443,12 +461,29 @@
     <div class="modal" style="text-align:left;">
         <h3>🔒 Политика конфиденциальности</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Какие данные собираем</strong><br>Мы собираем ваши имя, фамилию и номер телефона, которые вы вводите в форме записи. Мы также можем получать эти данные через сервис VK, если вы используете авторизацию через VK.</p>
-            <p><strong>2. Для чего мы используем ваши данные</strong><br>Для связи с вами по поводу записи на занятие. Для подтверждения вашей записи и отправки напоминаний. Для информирования о новых занятиях и акциях (только если вы дали согласие на рассылку).</p>
-            <p><strong>3. Как мы храним и защищаем данные</strong><br>Все данные хранятся в защищённой базе данных на серверах Render.com. Доступ к базе данных имеют только администраторы Клуба.</p>
-            <p><strong>4. Передача данных третьим лицам</strong><br>Мы не передаём ваши данные третьим лицам без вашего согласия. Единственное исключение — обезличенная статистика (общее количество записей), которая не содержит персональных данных.</p>
-            <p><strong>5. Ваши права</strong><br>Вы имеете право запросить удаление всех ваших данных, написав нам через VK. Вы имеете право отписаться от рассылки в любой момент.</p>
-            <p><strong>6. Контакты</strong><br>Для запроса на удаление данных или изменения политики пишите в сообщество VK: https://vk.com/club239743393</p>
+            <p><strong>1. Какие данные собираем</strong><br>
+            Мы собираем ваши имя, фамилию и номер телефона, которые вы вводите в форме записи.<br>
+            Мы также можем получать эти данные через сервис VK, если вы используете авторизацию через VK.</p>
+
+            <p><strong>2. Для чего мы используем ваши данные</strong><br>
+            Для связи с вами по поводу записи на занятие.<br>
+            Для подтверждения вашей записи и отправки напоминаний.<br>
+            Для информирования о новых занятиях и акциях (только если вы дали согласие на рассылку).</p>
+
+            <p><strong>3. Как мы храним и защищаем данные</strong><br>
+            Все данные хранятся в защищённой базе данных на серверах Render.com.<br>
+            Доступ к базе данных имеют только администраторы Клуба.</p>
+
+            <p><strong>4. Передача данных третьим лицам</strong><br>
+            Мы не передаём ваши данные третьим лицам без вашего согласия.<br>
+            Единственное исключение — обезличенная статистика (общее количество записей), которая не содержит персональных данных.</p>
+
+            <p><strong>5. Ваши права</strong><br>
+            Вы имеете право запросить удаление всех ваших данных, написав нам через VK.<br>
+            Вы имеете право отписаться от рассылки в любой момент.</p>
+
+            <p><strong>6. Контакты</strong><br>
+            Для запроса на удаление данных или изменения политики пишите в сообщество VK: https://vk.com/club239743393</p>
         </div>
         <button class="btn" onclick="closePrivacyModal()">Принимаю</button>
     </div>
