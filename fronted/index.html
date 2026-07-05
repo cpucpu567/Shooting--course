@@ -56,7 +56,7 @@
             background-repeat: no-repeat; background-position: right bottom; background-size: contain;
             pointer-events: none; z-index: 0; opacity: 0.8;
         }
-        .container { max-width:1000px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
+        .container { max-width:1200px; margin:0 auto; padding:0 20px; position:relative; z-index:1; }
         .glass {
             background: var(--card-bg); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
             border: 1px solid var(--card-border); border-radius: 8px;
@@ -96,17 +96,17 @@
         .review-name { font-weight:600; color: var(--text); }
         .review-stars { color:var(--gold); font-size:0.85rem; letter-spacing:1px; margin-bottom:6px; }
         .review-text { font-style:italic; color: var(--text-soft); }
-        .tariff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:1000px; margin:20px auto 0; }
-        .tariff-card { padding:22px 14px; text-align:center; cursor:pointer; transition:0.3s; display:flex; flex-direction:column; border:2px solid transparent; }
+        .tariff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:100%; margin:10px auto 0; }
+        .tariff-card { padding:14px 10px; text-align:center; cursor:pointer; transition:0.3s; display:flex; flex-direction:column; border:2px solid transparent; }
         .tariff-card:hover { border-color:var(--purple); transform:translateY(-4px); }
         .tariff-card.selected { border-color:var(--purple)!important; }
-        .tariff-card .t-label { font-weight:700; text-transform:uppercase; font-size:1rem; letter-spacing:1px; color: var(--text); }
-        .tariff-card .t-price { font-size:1.9rem; font-weight:700; color: var(--gold); margin:8px 0; }
-        .tariff-card .t-sub { color: var(--text-soft); font-size:0.85rem; opacity:0.7; }
-        .tariff-card .t-badge { display:inline-block; padding:3px 8px; font-size:0.65rem; border-radius:4px; margin-top:4px; background:rgba(255,255,255,0.06); color: var(--text-soft); font-weight:600; }
+        .tariff-card .t-label { font-weight:700; text-transform:uppercase; font-size:0.95rem; letter-spacing:1px; color: var(--text); }
+        .tariff-card .t-price { font-size:1.6rem; font-weight:700; color: var(--gold); margin:6px 0; }
+        .tariff-card .t-sub { color: var(--text-soft); font-size:0.8rem; opacity:0.7; }
+        .tariff-card .t-badge { display:inline-block; padding:2px 6px; font-size:0.6rem; border-radius:4px; margin-top:4px; background:rgba(255,255,255,0.06); color: var(--text-soft); font-weight:600; }
         .tariff-card .t-badge.rec { background:var(--purple); color:#fff; }
         .tariff-card .t-badge.warn { background:rgba(200,120,120,0.2); color:#d4a0a0; }
-        .loyalty-block { padding:20px 24px; text-align:center; font-size:0.9rem; color: var(--text-soft); }
+        .loyalty-block { padding:14px 20px; text-align:center; font-size:0.9rem; color: var(--text-soft); margin-top:15px; }
         .loyalty-block strong { color: var(--gold); }
         .gallery-wrapper { position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--card-border); background:#000; max-width:800px; margin:0 auto; }
         .gallery-main { width:100%; height:400px; display:flex; align-items:center; justify-content:center; background:#000; }
@@ -117,16 +117,16 @@
         .gallery-dots { display:flex; justify-content:center; gap:6px; padding:10px; background:#111; }
         .gallery-dot { width:8px; height:8px; border-radius:50%; background:#444; cursor:pointer; }
         .gallery-dot.active { background:var(--purple); }
-        .form-card { padding:32px 28px; }
-        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-        .form-group { margin-bottom:18px; }
-        .form-group label { display:block; margin-bottom:5px; font-weight:500; color: var(--text-soft); text-transform:uppercase; font-size:0.8rem; letter-spacing:1px; }
-        .form-group input, .form-group select { width:100%; padding:12px 16px; border-radius:6px; border:1px solid var(--input-border); background:var(--input-bg); color: var(--text); font-size:0.95rem; font-family:inherit; }
+        .form-card { padding:20px 24px; }
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .form-group { margin-bottom:12px; }
+        .form-group label { display:block; margin-bottom:4px; font-weight:500; color: var(--text-soft); text-transform:uppercase; font-size:0.75rem; letter-spacing:1px; }
+        .form-group input, .form-group select { width:100%; padding:10px 14px; border-radius:6px; border:1px solid var(--input-border); background:var(--input-bg); color: var(--text); font-size:0.9rem; font-family:inherit; }
         .form-group input:focus, .form-group select:focus { outline:2px solid var(--purple); border-color:transparent; }
         .form-group select option { background:#2a2a2a; color:var(--text); }
-        .checkbox-group { display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; color: var(--text-soft); }
+        .checkbox-group { display:flex; align-items:flex-start; gap:8px; font-size:0.8rem; color: var(--text-soft); }
         .checkbox-group input { width:18px; height:18px; accent-color:var(--purple); margin-top:3px; }
-        .feedback { display:none; padding:12px; margin-top:14px; text-align:center; font-weight:600; border-radius:6px; }
+        .feedback { display:none; padding:10px; margin-top:12px; text-align:center; font-weight:600; border-radius:6px; }
         .feedback.error { display:block; background:rgba(200,50,50,0.25); color:#faa; border:1px solid rgba(200,50,50,0.3); }
         .feedback.success { display:block; background:rgba(50,200,50,0.2); color:#afa; border:1px solid rgba(50,200,50,0.3); }
         .hint { font-size:0.7rem; color: var(--text-soft); opacity:0.6; margin-top:4px; }
@@ -134,71 +134,82 @@
         .modal-overlay.active { display:flex; }
         .modal { background:#2a2824; border:2px solid var(--purple); border-radius:8px; padding:28px; max-width:550px; width:100%; max-height:90vh; overflow-y:auto; color: var(--text); }
         footer { text-align:center; padding:30px; color: var(--text-soft); opacity:0.5; font-size:0.8rem; }
-        @media (max-width:900px) { 
-            .tariff-grid { 
-                display: flex; 
-                overflow-x: auto; 
-                gap: 20px; 
-                padding: 10px 5%; 
-                scroll-snap-type: x mandatory; 
-                -webkit-overflow-scrolling: touch; 
-                scroll-behavior: smooth; 
-                flex-wrap: nowrap; 
-                width: 100%; 
-                margin: 0 auto; 
-                position: relative; 
-            } 
-            .tariff-card { 
-                flex: 0 0 85%; 
-                min-width: 280px; 
-                scroll-snap-align: start; 
-                margin-right: 10px; 
-                padding: 20px 14px; 
-            } 
-            .tariff-card:last-child { margin-right: 0; } 
-            .tariff-grid::-webkit-scrollbar { height: 6px; } 
-            .tariff-grid::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 4px; } 
-            .tariff-grid::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; } 
-            .tariff-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; } 
-            .tariff-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.3s; cursor: pointer; } 
-            .tariff-dot.active { background: var(--purple); } 
-            .tariff-nav {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-        @media (min-width: 901px) { 
+
+        /* ===== ДВУХКОЛОНОЧНАЯ ВЁРСТКА (РАБОТАЕТ НА ЭКРАНАХ ШИРЕ 700px) ===== */
+        @media (min-width: 701px) {
+            .booking-double-col {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                align-items: start;
+                margin-top: 20px;
+            }
+            .booking-col {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+        .booking-col h3 {
+            text-align: center;
+            color: var(--gold);
+            margin-bottom: 5px;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .booking-col .sub-desc {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-soft);
+            opacity: 0.7;
+            margin-bottom: 10px;
+        }
+
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (ЭКРАНЫ МЕНЬШЕ 700px) ===== */
+        @media (max-width: 700px) {
+            .hero h1 { font-size: 2rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .why-grid { grid-template-columns: 1fr !important; gap: 15px; }
+            .instructor { flex-direction: column; text-align: center; }
+            .form-row { grid-template-columns: 1fr; }
+            .gallery-main { height: 250px; }
+            .booking-double-col {
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+            }
+            .booking-col {
+                width: 100%;
+            }
+            .tariff-grid {
+                display: flex;
+                overflow-x: auto;
+                gap: 15px;
+                padding: 10px 5%;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                flex-wrap: nowrap;
+                width: 100%;
+            }
+            .tariff-card {
+                flex: 0 0 85%;
+                min-width: 260px;
+                scroll-snap-align: start;
+                padding: 16px 12px;
+            }
+            .tariff-grid::-webkit-scrollbar { height: 6px; }
+            .tariff-grid::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 4px; }
+            .tariff-grid::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+            .tariff-dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+            .tariff-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.3s; cursor: pointer; }
+            .tariff-dot.active { background: var(--purple); }
+            .tariff-nav { display: none !important; }
+        }
+        
+        @media (min-width: 701px) {
             .tariff-dots, .tariff-nav { display: none !important; }
         }
-            /* ===== Мобильная адаптация (телефоны) ===== */
-@media (max-width: 700px) {
-    .hero h1 { font-size: 2rem; }
-    .grid-2 { grid-template-columns: 1fr; }
-    .why-grid { grid-template-columns: 1fr !important; gap: 15px; }
-    .why-item { padding: 16px 20px !important; min-height: auto !important; }
-    .why-item p { font-size: 0.85rem !important; line-height: 1.5; }
-    .instructor { flex-direction: column; text-align: center; }
-    .form-row { grid-template-columns: 1fr; }
-    .gallery-main { height: 250px; }
-}
-
-/* ===== Исправление для ПК: ставим события и форму в один ряд ===== */
-@media (min-width: 701px) {
-    #events-section .container {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* Две колонки одинаковой ширины */
-        gap: 40px;
-        align-items: start;
-    }
-    
-    /* Убираем лишние отступы у заголовка внутри сетки */
-    #events-section h2 {
-        grid-column: 1 / -1; /* Заголовок занимает всю ширину над колонками */
-        margin-bottom: 30px;
-    }
-}
     </style>
 </head>
 <body>
@@ -212,7 +223,7 @@
         <p class="mission" style="font-size:0.9rem; max-width:600px; margin:0 auto 30px; color:var(--text-soft); opacity:0.7;">
             Стрелковый интенсив — место, где люди приходят без подготовки, а уходят с результатом. Где не оценивают, а помогают. И где всегда есть та самая атмосфера, которую чувствуешь, когда всё вокруг перестаёт существовать.
         </p>
-        <a href="#tariff-section" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
+        <a href="#booking-section" class="btn" style="letter-spacing: 2px;">Попасть в себя</a>
     </div>
 </header>
 
@@ -246,106 +257,116 @@
     </section>
 
     <section id="tariff-section">
-    <div class="container">
-        <h2>Форматы <span>участия</span></h2>
-        <div style="text-align:center; margin-bottom:25px; font-size:0.95rem; color:var(--text-soft); background:var(--card-bg); padding:12px 20px; border-radius:8px; border:1px solid var(--card-border);">
-            ⚡ В стоимость любого тарифа входит:<br>
-            <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
+        <div class="container">
+            <h2>Форматы <span>участия</span></h2>
+            <div style="text-align:center; margin-bottom:15px; font-size:0.9rem; color:var(--text-soft); background:var(--card-bg); padding:10px 20px; border-radius:8px; border:1px solid var(--card-border);">
+                ⚡ В стоимость любого тарифа входит:<br>
+                <strong>патроны</strong> · <strong>оружие (rifles)</strong> · <strong>аренда стрельбища</strong> · <strong>работа инструктора</strong>
+            </div>
+            <div style="position:relative;">
+                <div class="tariff-grid" id="tariff-grid"></div>
+                <button class="tariff-nav prev" id="tariff-prev">❮</button>
+                <button class="tariff-nav next" id="tariff-next">❯</button>
+            </div>
+            <div class="tariff-dots" id="tariff-dots"></div>
         </div>
-        <div style="position:relative;">
-            <div class="tariff-grid" id="tariff-grid"></div>
-            <button class="tariff-nav prev" id="tariff-prev">❮</button>
-            <button class="tariff-nav next" id="tariff-next">❯</button>
-        </div>
-        <div class="tariff-dots" id="tariff-dots"></div>
-    </div>
-</section>
+    </section>
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <section id="events-section" style="padding: 50px 0;">
+    <!-- ===== БЛОК ЗАПИСИ: 2 КОЛОНКИ НА ПК, 1 НА ТЕЛЕФОНАХ ===== -->
+    <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
-            <h2>События и <span style="color: var(--purple);">акции</span></h2>
-            
-            <div id="events-carousel-wrapper" style="position:relative; margin-bottom:40px;">
-                <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:12px; border:1px solid var(--card-border);">
-                    <!-- Слайды будут загружаться динамически -->
-                </div>
-                <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❮</button>
-                <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:10px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:40px; height:40px; font-size:1.5rem; cursor:pointer; z-index:2;">❯</button>
-                <div id="event-dots" style="display:flex; justify-content:center; gap:10px; padding:15px;"></div>
-            </div>
-
-            <div id="events-form-wrapper">
-                <div class="form-card glass" style="padding: 32px 28px;">
-                    <h3 style="text-align:center; margin-bottom:20px;">Записаться на событие</h3>
-                    <form id="events-form" novalidate>
-                        <input type="hidden" id="event-id" value="">
-                        <div class="form-row">
-                            <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
-                            <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+            <h2>Записаться</h2>
+            <div class="booking-double-col">
+                
+                <!-- КОЛОНКА 1: ИНТЕНСИВ (СЛЕВА) -->
+                <div class="booking-col">
+                    <h3>На <span style="color:var(--purple);">интенсив</span></h3>
+                    <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
+                    
+                    <div class="form-card glass">
+                        <div style="margin-bottom:15px; text-align:center;">
+                            <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">
+                                🔑 Войти через VK
+                            </button>
+                            <div id="vk-auth-status" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
                         </div>
-                        <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
-                        <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
-                        <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
-                        <div class="feedback" id="events-form-feedback"></div>
-                    </form>
+                        
+                        <form id="order-form" novalidate>
+                            <input type="hidden" id="tariff-input" value="pro">
+                            <input type="hidden" id="vk-id" value="">
+                            
+                            <div class="form-row">
+                                <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
+                                <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
+                            </div>
+                            
+                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
+                            
+                            <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
+                                <div id="client-status"></div>
+                            </div>
+
+                            <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
+                            <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
+                            
+                            <div class="form-row">
+                                <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
+                                <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="agree" required>
+                                <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами</a></label>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="privacy" required>
+                                <label>Согласен на обработку ПД <a href="#" onclick="openPrivacyModal(); return false;">(Политика)</a></label>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="newsletter" checked>
+                                <label>Я согласен получать уведомления о новых событиях и акциях</label>
+                            </div>
+                            
+                            <button type="submit" id="submit-btn" class="btn" style="width:100%;">Попасть в себя</button>
+                            <div class="feedback" id="form-feedback"></div>
+                        </form>
+                    </div>
                 </div>
+
+                <!-- КОЛОНКА 2: СОБЫТИЯ (СПРАВА) -->
+                <div class="booking-col">
+                    <h3>На <span style="color:var(--gold);">событие</span></h3>
+                    <p class="sub-desc">Акции, мастер-классы и встречи</p>
+
+                    <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
+                        <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
+                        <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
+                        <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
+                        <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
+                    </div>
+
+                    <div class="form-card glass">
+                        <form id="events-form" novalidate>
+                            <input type="hidden" id="event-id" value="">
+                            <div class="form-row">
+                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
+                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+                            </div>
+                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
+                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
+                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+                            <div class="feedback" id="events-form-feedback"></div>
+                        </form>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
 
-    <section id="form-section">
-    <div class="container">
-        <h2>Записаться <span>на интенсив</span></h2>
-        <div class="form-card glass" style="padding:32px 28px;">
-            <div style="margin-bottom:20px; text-align:center;">
-                <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:12px 30px; font-size:0.95rem;">
-                    🔑 Войти через VK
-                </button>
-                <div id="vk-auth-status" style="font-size:0.85rem; margin-top:8px; color:var(--text-soft);"></div>
-            </div>
-            
-            <form id="order-form" novalidate>
-                <input type="hidden" id="tariff-input" value="pro">
-                <input type="hidden" id="vk-id" value="">
-                
-                <div class="form-row">
-                    <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
-                    <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
-                </div>
-                
-                <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
-                
-                <div id="client-info" style="display:none; margin-bottom:18px; padding:10px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.85rem; color:var(--text-soft);">
-                    <div id="client-status"></div>
-                </div>
-
-                <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
-                <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-                <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
-                <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="agree" required>
-                    <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
-                </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="privacy" required>
-                    <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="newsletter" checked>
-                    <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
-                </div>
-                
-                <button type="submit" id="submit-btn" class="btn" style="width:100%; letter-spacing: 2px;">Попасть в себя</button>
-                <div class="feedback" id="form-feedback"></div>
-            </form>
-        </div>
-    </div>
-</section>
 </main>
 
 <footer><div class="container">Стрелковый интенсив. Пермь.</div></footer>
@@ -362,30 +383,12 @@
 
 <div class="modal-overlay" id="rules-modal">
     <div class="modal" style="text-align:left;">
-        <h3>📜 Правила клуба «Стрелковый интенсив»</h3>
+        <h3>📜 Правила клуба</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Общие положения</strong><br>
-            Настоящие Правила регулируют порядок посещения занятий в рамках проекта «Стрелковый интенсив» (далее — Клуб).<br>
-            Запись на занятие означает полное и безоговорочное согласие с настоящими Правилами.</p>
-
-            <p><strong>2. Безопасность</strong><br>
-            Участник обязан строго соблюдать все инструкции инструктора по обращению с оружием.<br>
-            Запрещено направлять оружие на людей, даже если оно не заряжено.<br>
-            Запрещено касаться спускового крючка до команды инструктора.<br>
-            Нарушение правил безопасности может привести к немедленному отстранению от занятия без возврата оплаты.</p>
-
-            <p><strong>3. Оплата и отмена занятий</strong><br>
-            Оплата занятия производится перед началом.<br>
-            В случае отмены занятия менее чем за 24 часа до его начала, оплата не возвращается.<br>
-            Если занятие отменяется по инициативе Клуба, оплата возвращается в полном объёме.</p>
-
-            <p><strong>4. Ответственность</strong><br>
-            Клуб не несёт ответственности за травмы, полученные в результате несоблюдения участником правил безопасности.<br>
-            Участник обязан сообщить инструктору о любых проблемах со здоровьем до начала занятия.</p>
-
-            <p><strong>5. Фото и видео</strong><br>
-            На занятиях ведётся фото- и видеосъёмка для внутреннего архива и публикации в соцсетях.<br>
-            Если вы не хотите попадать в кадр, сообщите инструктору до начала занятия.</p>
+            <p><strong>1. Общие положения</strong><br>Запись на занятие означает полное согласие с Правилами.</p>
+            <p><strong>2. Безопасность</strong><br>Строго соблюдать инструкции инструктора. Нарушение — отстранение без возврата оплаты.</p>
+            <p><strong>3. Оплата и отмена</strong><br>Отмена менее чем за 24 часа — оплата не возвращается.</p>
+            <p><strong>4. Ответственность</strong><br>Клуб не несёт ответственности за травмы из-за несоблюдения правил.</p>
         </div>
         <button class="btn" onclick="closeRulesModal()">Принимаю</button>
     </div>
@@ -395,29 +398,9 @@
     <div class="modal" style="text-align:left;">
         <h3>🔒 Политика конфиденциальности</h3>
         <div style="margin:14px 0; font-size:0.9rem; color:var(--text-soft); line-height:1.8;">
-            <p><strong>1. Какие данные собираем</strong><br>
-            Мы собираем ваши имя, фамилию и номер телефона, которые вы вводите в форме записи.<br>
-            Мы также можем получать эти данные через сервис VK, если вы используете авторизацию через VK.</p>
-
-            <p><strong>2. Для чего мы используем ваши данные</strong><br>
-            Для связи с вами по поводу записи на занятие.<br>
-            Для подтверждения вашей записи и отправки напоминаний.<br>
-            Для информирования о новых занятиях и акциях (только если вы дали согласие на рассылку).</p>
-
-            <p><strong>3. Как мы храним и защищаем данные</strong><br>
-            Все данные хранятся в защищённой базе данных на серверах Render.com.<br>
-            Доступ к базе данных имеют только администраторы Клуба.</p>
-
-            <p><strong>4. Передача данных третьим лицам</strong><br>
-            Мы не передаём ваши данные третьим лицам без вашего согласия.<br>
-            Единственное исключение — обезличенная статистика (общее количество записей), которая не содержит персональных данных.</p>
-
-            <p><strong>5. Ваши права</strong><br>
-            Вы имеете право запросить удаление всех ваших данных, написав нам через VK.<br>
-            Вы имеете право отписаться от рассылки в любой момент.</p>
-
-            <p><strong>6. Контакты</strong><br>
-            Для запроса на удаление данных или изменения политики пишите в сообщество VK: https://vk.com/club239743393</p>
+            <p>Собираем имя, фамилию и телефон для связи и записи.</p>
+            <p>Данные хранятся на защищённых серверах и не передаются третьим лицам.</p>
+            <p>Вы вправе запросить удаление данных в любой момент.</p>
         </div>
         <button class="btn" onclick="closePrivacyModal()">Принимаю</button>
     </div>
@@ -435,29 +418,6 @@
         <button class="btn" onclick="closeEventModal()" style="margin-top:15px;">Закрыть</button>
     </div>
 </div>
-
-<!-- ===== ПЛАВАЮЩАЯ ПЛАШКА ДЛЯ СОБЫТИЙ (без иконки) ===== -->
-<a href="#events-section" id="floating-event-btn" style="
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: var(--purple);
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    box-shadow: 0 4px 15px rgba(155, 138, 240, 0.4);
-    z-index: 999;
-    transition: 0.3s;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 0.95rem;
-" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-    <span>События</span>
-</a>
 
 <script>
 const tariffConfig = { 
@@ -487,14 +447,11 @@ function openVKApp() {
     const appId = '54664967';
     const vkDeepLink = `https://vk.com/app${appId}`;
     const vkSchemeLink = `vk://vk.com/app${appId}`;
-
     document.getElementById('vk-auth-status').textContent = '⏳ Открываем VK...';
-
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = vkSchemeLink;
     document.body.appendChild(iframe);
-    
     setTimeout(() => {
         document.body.removeChild(iframe);
         window.location.href = vkDeepLink;
@@ -507,10 +464,8 @@ if (typeof vkBridge !== 'undefined') {
             if (user.first_name) document.getElementById('name').value = user.first_name;
             if (user.last_name) document.getElementById('surname').value = user.last_name;
             if (user.id) document.getElementById('vk-id').value = user.id;
-            
             const statusEl = document.getElementById('vk-auth-status');
             if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
-
             return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
         })
         .then(groups => {
@@ -521,9 +476,7 @@ if (typeof vkBridge !== 'undefined') {
                     buttonText: 'Подписаться',
                     skipButtonText: 'Позже'
                 }).then(result => {
-                    if (result.is_subscribed) {
-                        console.log('✅ Пользователь подписался!');
-                    }
+                    if (result.is_subscribed) console.log('✅ Пользователь подписался!');
                 });
             }
         })
@@ -565,8 +518,7 @@ function selectTariff(t) {
     updateDateSelect(t);
     document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
-    document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-
+    document.getElementById('booking-section').scrollIntoView({ behavior: 'smooth' });
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
@@ -595,11 +547,8 @@ function renderTariffs() {
         <div class="t-label" style="color: var(--text-soft);">🔰 Базовый</div>
         <div class="t-sub">30 выстрелов · 10:00–18:00</div>
         <div class="t-price">${basicTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-            <strong style="color:var(--text-soft);">🔰 Для новичков.</strong>
-            <br>С нуля: безопасность, устройство, стойка.
-            <br>Разбор каждого выстрела. Спокойный темп.
-            <br>Идеально, чтобы попробовать и понять, твоё ли это.
+        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
+            <strong>🔰 Для новичков.</strong><br>С нуля: безопасность, устройство, стойка.
         </div>
         <span class="t-badge">с теорией</span>
     </div>
@@ -607,30 +556,23 @@ function renderTariffs() {
         <div class="t-label" style="color: var(--purple);">⚡ Практика</div>
         <div class="t-sub">30 выстрелов · 10–14 / 14–18</div>
         <div class="t-price">${practiceTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-            <strong style="color:var(--purple);">⭐ Для опытных.</strong>
-            <br>Никакой теории — только стрельба.
-            <br>Нестандартные мишени, скоростные серии, неожиданные задания.
-            <br>Для тех, кто уже умеет держать оружие и хочет драйва.
+        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
+            <strong>⭐ Для опытных.</strong><br>Никакой теории — только стрельба.
         </div>
         <span class="t-badge warn">после Базового</span>
     </div>
     <div class="tariff-card glass selected" data-tariff="pro" onclick="selectTariff('pro')" style="border: 2px solid var(--gold) !important;">
-        <div class="t-label" style="color: var(--gold); font-size: 1.2rem;">🏆 Продвинутый</div>
-        <div class="t-sub" style="color: var(--gold);">60 выстрелов · 10:00–18:00</div>
-        <div class="t-price" style="font-size: 2.2rem;">${proTotal.toLocaleString()} ₽</div>
-        <div style="font-size:0.85rem; color:var(--text-soft); margin:10px 0; text-align:center; line-height:1.5;">
-            <strong style="color:var(--gold);">🏆 Только для Про.</strong>
-            <br>После 4-х посещений (Базовый + 3 Практики).
-            <br>60 выстрелов, полный день.
-            <br>Углублённая работа над ошибками. Максимальный результат.
-            <br><span style="display:block; margin-top:10px; font-weight:600; color:var(--purple);">⏱ 10:00–18:00 · Полный день</span>
+        <div class="t-label" style="color: var(--gold);">🏆 Продвинутый</div>
+        <div class="t-sub">60 выстрелов · 10:00–18:00</div>
+        <div class="t-price" style="font-size:1.8rem;">${proTotal.toLocaleString()} ₽</div>
+        <div style="font-size:0.75rem; color:var(--text-soft); margin:6px 0; text-align:center; line-height:1.4;">
+            <strong>🏆 Только для Про.</strong><br>После 4-х посещений.
         </div>
-        <span class="t-badge rec" style="background: var(--gold); color: #1A1C20;">🔥 ТОП-формат</span>
+        <span class="t-badge rec" style="background: var(--gold); color: #1A1C20;">🔥 ТОП</span>
     </div>
 `;
 
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 700) {
         const cards = grid.querySelectorAll('.tariff-card');
         const total = cards.length;
         dotsContainer.innerHTML = '';
@@ -646,7 +588,7 @@ function renderTariffs() {
         const updateDots = () => {
             const scrollLeft = grid.scrollLeft;
             const cardWidth = cards[0]?.offsetWidth || 0;
-            const gap = 20;
+            const gap = 15;
             const index = Math.round(scrollLeft / (cardWidth + gap));
             const dots = dotsContainer.querySelectorAll('.tariff-dot');
             dots.forEach((d, i) => d.classList.toggle('active', i === index));
@@ -668,9 +610,7 @@ function updateDateSelect(t){
     const h = document.getElementById('date-hint');
     const g = tariffConfig[t].group;
     const d = allDates.filter(d => d.group === g);
-    
     s.innerHTML = '<option value="">Выберите дату...</option>';
-    
     d.forEach(d => {
         const ts = d.timeSlot || 'full';
         const c = d.currentCount || 0;
@@ -684,7 +624,6 @@ function updateDateSelect(t){
         o.disabled = !a;
         s.appendChild(o);
     });
-    
     h.textContent = '';
 }
 
@@ -701,7 +640,6 @@ document.getElementById('phone').addEventListener('input', function() {
             const data = await apiFetch(`/api/client/status/${rawPhone}`);
             const infoEl = document.getElementById('client-info');
             const statusEl = document.getElementById('client-status');
-            
             const levelColors = {
                 pro: 'var(--gold)',
                 experienced: 'var(--purple)',
@@ -712,7 +650,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 experienced: '⭐ Опытный',
                 newbie: '🔰 Новичок'
             };
-            
             infoEl.style.display = 'block';
             statusEl.innerHTML = `
                 <strong>Ваш статус:</strong> 
@@ -721,7 +658,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 </span>
                 ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
             `;
-            
             const instructorPrice = tariffPrices[selectedCourse]?.instructor || 2000;
             const maxBonus = Math.floor(instructorPrice * 0.3);
             const bonusCheckbox = document.getElementById('use-bonus');
@@ -735,9 +671,7 @@ document.getElementById('phone').addEventListener('input', function() {
                 `;
             } else {
                 bonusCheckbox.disabled = true;
-                bonusCheckbox.parentElement.innerHTML = `
-                  <span>💰 Бонусы: 0 ₽</span>
-                `;
+                bonusCheckbox.parentElement.innerHTML = `<span>💰 Бонусы: 0 ₽</span>`;
             }
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
@@ -801,7 +735,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
-// ===== Галерея (через сервер) =====
+// ===== Галерея =====
 let galleryFiles = [];
 let currentSlide = 0;
 
@@ -852,7 +786,7 @@ function renderEventsCarousel() {
     
     if (!eventsData || eventsData.length === 0) {
         container.innerHTML = `
-            <div class="event-slide" style="min-width:100%; padding:40px; background:var(--card-bg); text-align:center;">
+            <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center;">
                 <p style="color:var(--text-soft);">Событий пока нет. Загляните позже!</p>
             </div>
         `;
@@ -861,18 +795,18 @@ function renderEventsCarousel() {
     }
     
     container.innerHTML = eventsData.map((e, i) => `
-        <div class="event-slide" style="min-width:100%; padding:40px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
-            ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:20px;">` : ''}
-            <h3>${e.title}</h3>
-            <p style="color:var(--text-soft);">${e.description.substring(0, 100)}${e.description.length > 100 ? '...' : ''}</p>
-            <p><strong>Дата:</strong> ${e.date}</p>
-            <p><strong>Цена:</strong> ${e.price.toLocaleString()} ₽</p>
-            <button class="btn" onclick="openEventDetails(${i})" style="padding:10px 24px; font-size:0.9rem;">Подробнее</button>
+        <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
+            ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:15px; max-height:200px; object-fit:cover;">` : ''}
+            <h3 style="font-size:1.2rem;">${e.title}</h3>
+            <p style="color:var(--text-soft); font-size:0.85rem;">${e.description.substring(0, 80)}${e.description.length > 80 ? '...' : ''}</p>
+            <p style="font-size:0.85rem;"><strong>Дата:</strong> ${e.date}</p>
+            <p style="font-size:0.85rem;"><strong>Цена:</strong> ${e.price.toLocaleString()} ₽</p>
+            <button class="btn" onclick="openEventDetails(${i})" style="padding:8px 18px; font-size:0.8rem; margin-top:5px;">Подробнее</button>
         </div>
     `).join('');
     
     dotsContainer.innerHTML = eventsData.map((_, i) => `
-        <div class="event-dot" style="width:10px; height:10px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="goToEventSlide(${i})"></div>
+        <div class="event-dot" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="goToEventSlide(${i})"></div>
     `).join('');
     
     currentEventSlide = 0;
@@ -920,14 +854,6 @@ function openEventDetails(index) {
 function closeEventModal() {
     document.getElementById('event-modal').classList.remove('active');
     document.body.style.overflow = '';
-}
-
-if (window.innerWidth <= 900) {
-    const wrapper = document.getElementById('events-section');
-    const grid = wrapper?.querySelector('.container > div');
-    if (grid) {
-        grid.style.gridTemplateColumns = '1fr';
-    }
 }
 
 function openRulesModal() {
