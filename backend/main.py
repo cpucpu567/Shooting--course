@@ -23,7 +23,6 @@ app.add_middleware(
 )
 
 # ===== ОТДАЧА ФАЙЛОВ ИЗ ПАПКИ fronted =====
-# Эта логика поднимается на одну папку вверх из backend и заходит в папку fronted
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "fronted")
 
@@ -35,7 +34,6 @@ async def read_root():
 async def read_admin():
     return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
 
-# Чтобы отдавались картинки (например, KToFj.jpg)
 @app.get("/{filename}")
 async def get_frontend_file(filename: str):
     file_path = os.path.join(FRONTEND_DIR, filename)
@@ -166,7 +164,7 @@ def init_db():
 
 init_db()
 
-# ===== Модели Pydantic =====
+# ===== Модели =====
 class BookingRequest(BaseModel):
     surname: str
     name: str
@@ -327,7 +325,9 @@ def send_event_client_notification(phone, event_title, event_date, event_time, l
             logger.error(f"Ошибка Telegram клиенту (событие): {str(e)}")
 
 # ===== API: Основные тарифы =====
-@app.get("/api/config")
+# ===== ИСПРАВЛЕНИЕ 405: Добавлен @app.head =====
+@app.get("/api/config", include_in_schema=False)
+@app.head("/api/config", include_in_schema=False)
 async def get_config():
     prices = get_prices()
     conn = get_db()
