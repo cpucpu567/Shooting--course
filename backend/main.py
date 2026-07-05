@@ -632,13 +632,14 @@ async def get_events():
     conn.close()
     return [{"id": r['id'], "title": r['title'], "description": r['description'], "date": r['date'],
              "time": r['time'], "location": r['location'], "price": r['price'], 
-             "posterUrl": r['poster_url'],  # ✅ camelCase
+             "posterUrl": r['poster_url'], 
              "minParticipants": r['min_participants'], "maxParticipants": r['max_participants'], 
              "status": r['status']} for r in rows]
 
 @app.post("/api/events")
 async def create_event(event: EventItem):
     logger.info(f"📥 Получен запрос на создание события: {event.title}")
+    logger.info(f"📦 Данные: {event.dict()}")
     try:
         conn = get_db()
         c = conn.cursor()
@@ -788,4 +789,59 @@ async def create_event_booking(data: EventBookingRequest):
             c.execute('''
                 INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, total_discounts)
                 VALUES (%s, %s, %s, 0, 'newbie', FALSE, 0)
-            ''', (data.phone, data.surname, data
+            ''', (data.phone, data.surname, data.name))
+            logger.info(f"ℹ️ Новый клиент через событие (без подписки, 0 ₽): {data.phone}")
+    
+    conn.commit()
+    conn.close()
+
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('''
+        INSERT INTO event_bookings (event_id, surname, name, phone, email, subscribed, status)
+        VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+        RETURNING id
+    ''', (data.event_id, data.surname, data.name, data.phone, data.email, data.subscribed))
+    booking_id = c.fetchone()['id']
+    conn.commit()
+    conn.close()
+
+    # ✅ Отправляем уведомление администратору о бронировании события
+    send_admin_notification(booking_id, data, event['price'], 0)
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM event_bookings WHERE event_id = %s", (data.event_id,))
+    count = c.fetchone()['count']
+    c.execute("SELECT min_participants FROM events WHERE id = %s", (data.event_id,))
+    min_participants = c.fetchone()['min_participants']
+    conn.close()
+    
+    if count >= min_participants:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("UPDATE event_bookings SET status = 'confirmed' WHERE event_id = %s", (data.event_id,))
+        c.execute("UPDATE events SET status = 'confirmed' WHERE id = %s", (data.event_id,))
+        conn.commit()
+        conn.close()
+        
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("SELECT phone FROM event_bookings WHERE event_id = %s", (data.event_id,))
+        phones = c.fetchall()
+        conn.close()
+        
+        for row in phones:
+            send_event_client_notification(row['phone'], event['title'], event['date'], event['time'], event['location'], event['price'])
+    
+    return {"id": booking_id, "status": "created"}
+
+@app.get("/api/event/bookings/{event_id}")
+async def get_event_bookings(event_id: int):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT * FROM event_bookings WHERE event_id = %s ORDER BY created_at DESC", (event_id,))
+    rows = c.fetchall()
+    conn.close()
+    return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "email": r['email'],
+             "subscribed": r['subscribed'], "status": r['status'], "createdAt": r['created_at']} for r in rows]
