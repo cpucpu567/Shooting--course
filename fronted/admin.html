@@ -224,8 +224,8 @@
         const ADMIN_PASS = 'ShootingAdmin2026!';
         let clientsFilter = 'all';
 
-        // ===== ВАЖНО: Для Vercel оставляем пустой API_BASE =====
-        const API_BASE = ''; 
+        // Возвращаем прямую ссылку на ваш работающий бэкенд
+        const API_BASE = 'https://shooting-course.onrender.com';
 
         async function apiFetch(url) {
             try {
@@ -570,7 +570,7 @@
             `).join('');
         }
 
-        // ===== Восстановленная полная функция createEvent =====
+        // ===== Полная и работающая функция createEvent =====
         async function createEvent() {
             console.log('📌 Начинаем создание события...');
             const title = document.getElementById('event-title').value.trim();
