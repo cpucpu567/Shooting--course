@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import os
 import psycopg2
@@ -9,17 +11,33 @@ import logging
 import json
 from datetime import datetime
 
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
+# Настройка CORS (разрешаем всем)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ===== ОТДАЧА СТАТИЧЕСКИХ ФАЙЛОВ (HTML) =====
+# Это исправляет ошибку 404 при заходе на главную страницу
+@app.get("/")
+async def read_root():
+    return FileResponse('index.html')
+
+@app.get("/admin.html")
+async def read_admin():
+    return FileResponse('admin.html')
+
+# Если нужно отдавать картинки или другие файлы из папки, 
+# можно использовать этот метод (но для простоты оставляем как есть):
+# app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 # ===== Подключение к PostgreSQL =====
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -144,7 +162,7 @@ def init_db():
 
 init_db()
 
-# ===== Модели =====
+# ===== Модели Pydantic =====
 class BookingRequest(BaseModel):
     surname: str
     name: str
@@ -305,8 +323,7 @@ def send_event_client_notification(phone, event_title, event_date, event_time, l
             logger.error(f"Ошибка Telegram клиенту (событие): {str(e)}")
 
 # ===== API: Основные тарифы =====
-@app.get("/api/config", include_in_schema=False)
-@app.head("/api/config", include_in_schema=False)
+@app.get("/api/config")
 async def get_config():
     prices = get_prices()
     conn = get_db()
@@ -622,7 +639,7 @@ async def delete_gallery_item(id: int):
         logger.error(f"Ошибка при удалении из галереи: {str(e)}")
         raise HTTPException(500, f"Ошибка базы данных: {str(e)}")
 
-# ===== API: События (с полной обработкой ошибок) =====
+# ===== API: События =====
 @app.get("/api/events")
 async def get_events():
     conn = get_db()
@@ -640,6 +657,7 @@ async def get_events():
 async def create_event(event: EventItem):
     logger.info(f"📥 Получен запрос на создание события: {event.title}")
     logger.info(f"📦 Данные: {event.dict()}")
+    
     try:
         conn = get_db()
         c = conn.cursor()
@@ -651,14 +669,17 @@ async def create_event(event: EventItem):
         event_id = c.fetchone()['id']
         conn.commit()
         conn.close()
+        
         logger.info(f"✅ Событие успешно создано: {event.title} (ID: {event_id})")
         
-        vk_token = os.getenv("VK_TOKEN", "")
-        telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-        chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
-        
-        if vk_token:
-            post_text = f"""🎯 НОВОЕ СОБЫТИЕ!
+        # Второстепенные действия (не ломают создание события)
+        try:
+            vk_token = os.getenv("VK_TOKEN", "")
+            telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+            chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+            
+            if vk_token:
+                post_text = f"""🎯 НОВОЕ СОБЫТИЕ!
 
 {event.title}
 📅 {event.date} в {event.time}
@@ -669,20 +690,20 @@ async def create_event(event: EventItem):
 {event.description}
 
 Запись в сообществе: https://vk.com/club239743393"""
-            try:
-                requests.post("https://api.vk.com/method/wall.post", params={
-                    "access_token": vk_token,
-                    "v": "5.131",
-                    "owner_id": -239743393,
-                    "message": post_text,
-                    "from_group": 1
-                })
-                logger.info("✅ Пост о событии опубликован на стене VK")
-            except Exception as e:
-                logger.error(f"❌ Ошибка публикации поста VK: {str(e)}")
-        
-        if telegram_token and chat_id:
-            tg_msg = f"""🎯 НОВОЕ СОБЫТИЕ!
+                try:
+                    requests.post("https://api.vk.com/method/wall.post", params={
+                        "access_token": vk_token,
+                        "v": "5.131",
+                        "owner_id": -239743393,
+                        "message": post_text,
+                        "from_group": 1
+                    })
+                    logger.info("✅ Пост о событии опубликован на стене VK")
+                except Exception as e:
+                    logger.error(f"❌ Ошибка публикации поста VK: {str(e)}")
+            
+            if telegram_token and chat_id:
+                tg_msg = f"""🎯 НОВОЕ СОБЫТИЕ!
 
 {event.title}
 📅 {event.date} в {event.time}
@@ -693,24 +714,24 @@ async def create_event(event: EventItem):
 {event.description}
 
 Запись: https://vk.com/club239743393"""
-            try:
-                requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={
-                    "chat_id": chat_id,
-                    "text": tg_msg,
-                    "disable_web_page_preview": False
-                })
-                logger.info("✅ Сообщение о событии отправлено в Telegram")
-            except Exception as e:
-                logger.error(f"❌ Ошибка отправки в Telegram: {str(e)}")
-        
-        conn = get_db()
-        c = conn.cursor()
-        c.execute("SELECT phone, vk_id FROM clients WHERE newsletter = TRUE")
-        subscribers = c.fetchall()
-        conn.close()
-        
-        for sub in subscribers:
-            msg = f"""📢 У нас новое событие!
+                try:
+                    requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={
+                        "chat_id": chat_id,
+                        "text": tg_msg,
+                        "disable_web_page_preview": False
+                    })
+                    logger.info("✅ Сообщение о событии отправлено в Telegram")
+                except Exception as e:
+                    logger.error(f"❌ Ошибка отправки в Telegram: {str(e)}")
+            
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT phone, vk_id FROM clients WHERE newsletter = TRUE")
+            subscribers = c.fetchall()
+            conn.close()
+            
+            for sub in subscribers:
+                msg = f"""📢 У нас новое событие!
 
 {event.title}
 📅 {event.date} в {event.time}
@@ -720,17 +741,19 @@ async def create_event(event: EventItem):
 {event.description}
 
 Запись: https://vk.com/club239743393"""
-            if vk_token and sub['vk_id']:
-                try:
-                    requests.post("https://api.vk.com/method/messages.send", params={
-                        "access_token": vk_token,
-                        "v": "5.131",
-                        "user_id": sub['vk_id'],
-                        "message": msg,
-                        "random_id": 0
-                    })
-                except Exception as e:
-                    logger.error(f"❌ Ошибка отправки подписчику VK: {str(e)}")
+                if vk_token and sub['vk_id']:
+                    try:
+                        requests.post("https://api.vk.com/method/messages.send", params={
+                            "access_token": vk_token,
+                            "v": "5.131",
+                            "user_id": sub['vk_id'],
+                            "message": msg,
+                            "random_id": 0
+                        })
+                    except Exception as e:
+                        logger.error(f"❌ Ошибка отправки подписчику VK: {str(e)}")
+        except Exception as e:
+            logger.error(f"⚠️ Ошибка при отправке уведомлений (не критично): {str(e)}")
         
         return {"id": event_id, "status": "created"}
     except psycopg2.IntegrityError as e:
@@ -806,7 +829,7 @@ async def create_event_booking(data: EventBookingRequest):
     conn.commit()
     conn.close()
 
-    # ✅ Отправляем уведомление администратору о бронировании события
+    # Отправляем уведомление администратору о бронировании события
     send_admin_notification(booking_id, data, event['price'], 0)
     
     conn = get_db()
