@@ -226,14 +226,20 @@
 
         const API_BASE = 'https://shooting-course.onrender.com';
 
+        // ===== Улучшенный API с логированием =====
         async function apiFetch(url) {
             if (!API_BASE) throw new Error('API_BASE не задана');
             try {
+                console.log(`📤 GET: ${API_BASE + url}`);
                 const res = await fetch(API_BASE + url);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error(`❌ HTTP ${res.status}:`, errText);
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
                 return res.json();
             } catch (err) {
-                console.error('Ошибка API:', err);
+                console.error('❌ Ошибка API (GET):', err);
                 throw err;
             }
         }
@@ -241,15 +247,22 @@
         async function apiPost(url, data) {
             if (!API_BASE) throw new Error('API_BASE не задана');
             try {
+                console.log(`📤 POST: ${API_BASE + url}`, data);
                 const res = await fetch(API_BASE + url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error(`❌ HTTP ${res.status}:`, errText);
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
+                const json = await res.json();
+                console.log(`📥 Ответ:`, json);
+                return json;
             } catch (err) {
-                console.error('Ошибка API:', err);
+                console.error('❌ Ошибка API (POST):', err);
                 throw err;
             }
         }
@@ -263,6 +276,7 @@
             }
             return true;
         }
+        // Запускаем проверку при загрузке
         if (!checkAuth()) {}
 
         function switchTab(tab) {
@@ -523,7 +537,7 @@
             }
         }
 
-        // ===== События (исправленная версия) =====
+        // ===== События (исправленная версия с полной диагностикой) =====
         async function loadEvents() {
             try {
                 const events = await apiFetch('/api/events');
@@ -570,6 +584,8 @@
             const maxParticipants = parseInt(document.getElementById('event-max').value) || 15;
             const description = document.getElementById('event-description').value.trim();
 
+            console.log('📌 Начинаем создание события...');
+
             if (!title || !date || !time || !location || !description) {
                 alert('Заполните все обязательные поля!');
                 return;
@@ -588,7 +604,6 @@
                     max_participants: maxParticipants
                 });
 
-                // ✅ Проверяем ответ сервера и обновляем список только после успеха
                 if (result.status === 'created') {
                     await loadEvents();
                     document.getElementById('event-title').value = '';
@@ -604,6 +619,7 @@
                 }
             } catch (err) {
                 alert('❌ Ошибка: ' + err.message);
+                console.error('Детали ошибки:', err);
             }
         }
 
