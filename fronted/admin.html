@@ -167,7 +167,7 @@
                     <div class="form-group"><label>Максимум участников</label><input type="number" id="event-max" value="15" /></div>
                 </div>
                 <div class="form-group"><label>Полное описание</label><textarea id="event-description" rows="4" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;"></textarea></div>
-                <button class="btn" onclick="createEvent()">Создать событие</button>
+                <button class="btn" id="create-event-btn">Создать событие</button>
             </div>
             <div id="events-list"></div>
         </div>
@@ -573,7 +573,9 @@
             `).join('');
         }
 
+        // ===== Восстановленная функция createEvent =====
         async function createEvent() {
+            console.log('📌 Начинаем создание события...');
             const title = document.getElementById('event-title').value.trim();
             const date = document.getElementById('event-date').value;
             const time = document.getElementById('event-time').value;
@@ -583,8 +585,6 @@
             const minParticipants = parseInt(document.getElementById('event-min').value) || 5;
             const maxParticipants = parseInt(document.getElementById('event-max').value) || 15;
             const description = document.getElementById('event-description').value.trim();
-
-            console.log('📌 Начинаем создание события...');
 
             if (!title || !date || !time || !location || !description) {
                 alert('Заполните все обязательные поля!');
@@ -619,7 +619,6 @@
                 }
             } catch (err) {
                 alert('❌ Ошибка: ' + err.message);
-                console.error('Детали ошибки:', err);
             }
         }
 
