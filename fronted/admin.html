@@ -224,11 +224,10 @@
         const ADMIN_PASS = 'ShootingAdmin2026!';
         let clientsFilter = 'all';
 
-        const API_BASE = 'https://shooting-course.onrender.com';
+        // ===== ВАЖНО: Для Vercel оставляем пустой API_BASE =====
+        const API_BASE = ''; 
 
-        // ===== Улучшенный API с логированием =====
         async function apiFetch(url) {
-            if (!API_BASE) throw new Error('API_BASE не задана');
             try {
                 console.log(`📤 GET: ${API_BASE + url}`);
                 const res = await fetch(API_BASE + url);
@@ -245,7 +244,6 @@
         }
 
         async function apiPost(url, data) {
-            if (!API_BASE) throw new Error('API_BASE не задана');
             try {
                 console.log(`📤 POST: ${API_BASE + url}`, data);
                 const res = await fetch(API_BASE + url, {
@@ -276,7 +274,6 @@
             }
             return true;
         }
-        // Запускаем проверку при загрузке
         if (!checkAuth()) {}
 
         function switchTab(tab) {
@@ -537,7 +534,7 @@
             }
         }
 
-        // ===== События (исправленная версия с полной диагностикой) =====
+        // ===== События =====
         async function loadEvents() {
             try {
                 const events = await apiFetch('/api/events');
@@ -573,7 +570,7 @@
             `).join('');
         }
 
-        // ===== Восстановленная функция createEvent =====
+        // ===== Восстановленная полная функция createEvent =====
         async function createEvent() {
             console.log('📌 Начинаем создание события...');
             const title = document.getElementById('event-title').value.trim();
@@ -764,8 +761,8 @@
         loadGallery();
         loadEvents();
         renderClients();
-        
-        // ===== ПРАВИЛЬНАЯ ПРИВЯЗКА КНОПКИ СОБЫТИЯ (БЕЗ onclick В HTML) =====
+
+        // ===== Правильная привязка кнопки =====
         document.getElementById('create-event-btn').addEventListener('click', createEvent);
     </script>
 </body>
