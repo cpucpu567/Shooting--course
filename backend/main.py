@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import os
@@ -11,13 +10,11 @@ import logging
 import json
 from datetime import datetime
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
-# Настройка CORS (разрешаем всем)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,19 +22,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===== ОТДАЧА СТАТИЧЕСКИХ ФАЙЛОВ (HTML) =====
-# Это исправляет ошибку 404 при заходе на главную страницу
+# ===== ОТДАЧА ФАЙЛОВ ИЗ ПАПКИ fronted =====
+# Получаем абсолютный путь к папке, где лежит main.py (это backend/)
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+# Поднимаемся на уровень выше (в корень проекта) и спускаемся в папку fronted
+FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "fronted")
+
 @app.get("/")
 async def read_root():
-    return FileResponse('index.html')
+    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
 @app.get("/admin.html")
 async def read_admin():
-    return FileResponse('admin.html')
+    return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
 
-# Если нужно отдавать картинки или другие файлы из папки, 
-# можно использовать этот метод (но для простоты оставляем как есть):
-# app.mount("/", StaticFiles(directory=".", html=True), name="static")
+# Если в fronted есть картинки (например KToFj.jpg), чтобы они отображались:
+@app.get("/{filename}")
+async def get_frontend_file(filename: str):
+    file_path = os.path.join(FRONTEND_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="Файл не найден")
 
 # ===== Подключение к PostgreSQL =====
 DATABASE_URL = os.getenv("DATABASE_URL")
