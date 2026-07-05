@@ -182,7 +182,23 @@
     .instructor { flex-direction: column; text-align: center; }
     .form-row { grid-template-columns: 1fr; }
     .gallery-main { height: 250px; }
-        }
+}
+
+/* ===== Исправление для ПК: ставим события и форму в один ряд ===== */
+@media (min-width: 701px) {
+    #events-section .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* Две колонки одинаковой ширины */
+        gap: 40px;
+        align-items: start;
+    }
+    
+    /* Убираем лишние отступы у заголовка внутри сетки */
+    #events-section h2 {
+        grid-column: 1 / -1; /* Заголовок занимает всю ширину над колонками */
+        margin-bottom: 30px;
+    }
+}
     </style>
 </head>
 <body>
