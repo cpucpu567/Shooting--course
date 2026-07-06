@@ -556,8 +556,8 @@ let eventsData = [];
 let currentEventSlide = 0;
 let eventsLoaded = false;
 
-// ===== ВАЖНО: Пустой API_BASE, чтобы запросы шли через Vercel =====
-const API_BASE = '';
+// ===== ПРАВИЛЬНЫЙ ПРЯМОЙ API_BASE =====
+const API_BASE = 'https://shooting-course.onrender.com';
 
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
