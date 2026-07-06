@@ -556,7 +556,8 @@ let eventsData = [];
 let currentEventSlide = 0;
 let eventsLoaded = false;
 
-const API_BASE = 'https://shooting-course.onrender.com';
+// ===== ВАЖНО: Пустой API_BASE, чтобы запросы шли через Vercel =====
+const API_BASE = '';
 
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
@@ -615,7 +616,9 @@ async function apiPost(url, data) {
     if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
+    const json = await res.json();
+    console.log('📥 Ответ сервера:', json); // ✅ ВАЖНО: выводим ответ в консоль
+    return json;
 }
 
 async function loadConfig() {
