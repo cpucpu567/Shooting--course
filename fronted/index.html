@@ -374,6 +374,12 @@
                         </div>
                         
                         <form id="order-form" novalidate>
+                            <!-- ✅ СКРЫТЫЙ ЧЕКБОКС ПЕРЕНЕСЁН В САМОЕ НАЧАЛО ФОРМЫ -->
+                            <div class="form-group checkbox-group" style="display:none;">
+                                <input type="checkbox" id="use-bonus">
+                                <label>Списать бонусы (если есть)</label>
+                            </div>
+
                             <input type="hidden" id="tariff-input" value="pro">
                             <input type="hidden" id="vk-id" value="">
                             
@@ -405,12 +411,6 @@
                                 <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
                             </div>
                             
-                            <!-- ✅ СКРЫТЫЙ ЧЕКБОКС ДЛЯ БОНУСОВ (чтобы не было ошибок JS) -->
-                            <div class="form-group checkbox-group" style="display:none;">
-                                <input type="checkbox" id="use-bonus">
-                                <label>Списать бонусы (если есть)</label>
-                            </div>
-
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="newsletter" checked>
                                 <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
