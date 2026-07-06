@@ -325,7 +325,6 @@ def send_event_client_notification(phone, event_title, event_date, event_time, l
             logger.error(f"Ошибка Telegram клиенту (событие): {str(e)}")
 
 # ===== API: Основные тарифы =====
-# ===== ИСПРАВЛЕНИЕ 405: Добавлен @app.head =====
 @app.get("/api/config", include_in_schema=False)
 @app.head("/api/config", include_in_schema=False)
 async def get_config():
@@ -483,13 +482,42 @@ async def create_booking(data: BookingRequest):
 async def get_client_status(phone: str):
     conn = get_db()
     c = conn.cursor()
+    
+    # 1. Проверяем, есть ли у клиента записи на ИНТЕНСИВ со статусом pending
+    c.execute("SELECT COUNT(*) FROM bookings WHERE phone = %s AND status = 'pending'", (phone,))
+    pending_bookings = c.fetchone()['count']
+    
+    # 2. Проверяем, есть ли у клиента записи на СОБЫТИЯ со статусом pending
+    c.execute("SELECT COUNT(*) FROM event_bookings WHERE phone = %s AND status = 'pending'", (phone,))
+    pending_events = c.fetchone()['count']
+    
+    # 3. Получаем данные клиента (визиты, опыт, бонусы)
     c.execute("SELECT visits, experienced, total_discounts FROM clients WHERE phone = %s", (phone,))
     row = c.fetchone()
     conn.close()
     
+    # Если клиента вообще нет в базе (новый номер, никогда не записывался)
     if not row:
         return {"level": "newbie", "visits": 0, "bonus": 0, "message": "Вы ещё не были у нас. Записывайтесь!"}
     
+    # Специальные сообщения, если человек уже записан, но группа не набралась
+    if pending_bookings > 0:
+        return {
+            "level": row['experienced'],
+            "visits": row['visits'],
+            "bonus": row['total_discounts'],
+            "message": "✅ Вы уже записаны на интенсив, ждём набора группы!"
+        }
+    
+    if pending_events > 0:
+        return {
+            "level": row['experienced'],
+            "visits": row['visits'],
+            "bonus": row['total_discounts'],
+            "message": "✅ Вы уже записаны на событие, ждём подтверждения!"
+        }
+    
+    # Стандартные сообщения для активных пользователей
     messages = {
         "newbie": "🔰 Отлично! Вы начнёте с основ.",
         "experienced": "⭐ С возвращением! Готовы к скорости?",
