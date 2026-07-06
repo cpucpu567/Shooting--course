@@ -606,18 +606,16 @@ if (typeof vkBridge !== 'undefined') {
 }
 
 async function apiFetch(url) {
-    if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
 }
 
 async function apiPost(url, data) {
-    if (!API_BASE) throw new Error('API_BASE не задана');
     const res = await fetch(API_BASE + url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
-    console.log('📥 Ответ сервера:', json); // ✅ ВАЖНО: выводим ответ в консоль
+    console.log('📥 Ответ сервера:', json);
     return json;
 }
 
