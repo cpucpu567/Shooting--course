@@ -374,12 +374,8 @@
                         </div>
                         
                         <form id="order-form" novalidate>
-                            <!-- ✅ СКРЫТЫЙ ЧЕКБОКС ПЕРЕНЕСЁН В САМОЕ НАЧАЛО ФОРМЫ -->
-                            <div class="form-group checkbox-group" style="display:none;">
-                                <input type="checkbox" id="use-bonus">
-                                <label>Списать бонусы (если есть)</label>
-                            </div>
-
+                            <!-- ✅ ИСПРАВЛЕНИЕ: используем скрытый INPUT вместо чекбокса, чтобы 100% избежать ошибки null -->
+                            <input type="hidden" id="use-bonus" value="false">
                             <input type="hidden" id="tariff-input" value="pro">
                             <input type="hidden" id="vk-id" value="">
                             
@@ -557,7 +553,6 @@ let eventsData = [];
 let currentEventSlide = 0;
 let eventsLoaded = false;
 
-// ===== ПРАВИЛЬНЫЙ ПРЯМОЙ API_BASE =====
 const API_BASE = 'https://shooting-course.onrender.com';
 
 if (typeof vkBridge !== 'undefined') {
