@@ -342,11 +342,12 @@
                             <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
                             <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
                             
+                            <!-- ✅ ЧЕКБОКС ПОДПИСКИ (теперь отображается и на ПК) -->
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="events-newsletter">
-                                <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
+                                <label>Я подписан(а) на сообщество и согласен получать уведомления о новых событиях, акциях и занятиях</label>
                             </div>
-                            
+
                             <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
                             <div class="feedback" id="events-form-feedback"></div>
                         </form>
@@ -388,14 +389,6 @@
 
                             <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
                             <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-
-                            <!-- Блок для бонусов (чекбокс появляется динамически через JS) -->
-                            <div class="form-group" id="bonus-row" style="display:block;">
-                                <label>Бонусы</label>
-                                <div id="bonus-container">
-                                    <span>💰 Бонусы: 0 ₽</span>
-                                </div>
-                            </div>
                             
                             <div class="form-row">
                                 <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
@@ -411,6 +404,12 @@
                                 <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
                             </div>
                             
+                            <!-- ✅ СКРЫТЫЙ ЧЕКБОКС ДЛЯ БОНУСОВ (чтобы не было ошибок JS) -->
+                            <div class="form-group checkbox-group" style="display:none;">
+                                <input type="checkbox" id="use-bonus">
+                                <label>Списать бонусы (если есть)</label>
+                            </div>
+
                             <div class="form-group checkbox-group">
                                 <input type="checkbox" id="newsletter" checked>
                                 <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
@@ -631,6 +630,7 @@ async function loadConfig() {
     }
 }
 
+// ===== ОБНОВЛЁННАЯ ЛОГИКА ВЫБОРА ТАРИФА =====
 function selectTariff(t) {
     selectedCourse = t;
     document.getElementById('tariff-input').value = t;
@@ -639,6 +639,7 @@ function selectTariff(t) {
     document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
 
+    // Меняем цвет кнопки отправки
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
@@ -651,11 +652,13 @@ function selectTariff(t) {
         submitBtn.style.borderColor = course.color;
     }
 
+    // Показываем красивую плашку с названием тарифа
     const badge = document.getElementById('selected-tariff-badge');
     const badgeName = document.getElementById('selected-tariff-name');
     badge.className = 'selected-tariff-badge active ' + t;
     badgeName.textContent = course.name;
 
+    // Плавно скроллим к форме записи на интенсив
     document.getElementById('booking-intensive').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -795,18 +798,20 @@ document.getElementById('phone').addEventListener('input', function() {
                 </span>
                 ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
             `;
-
-            const bonusContainer = document.getElementById('bonus-container');
+            const instructorPrice = tariffPrices[selectedCourse]?.instructor || 2000;
+            const maxBonus = Math.floor(instructorPrice * 0.3);
+            const bonusCheckbox = document.getElementById('use-bonus');
             if (data.bonus > 0) {
-                const maxBonus = Math.floor(tariffPrices[selectedCourse]?.instructor * 0.3);
-                bonusContainer.innerHTML = `
+                bonusCheckbox.disabled = false;
+                bonusCheckbox.parentElement.innerHTML = `
                     💰 Бонусы: <span id="bonus-amount">${data.bonus}</span> ₽ (макс. списание ${maxBonus} ₽)
                     <label style="margin-left:15px; cursor:pointer;">
                         <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
                     </label>
                 `;
             } else {
-                bonusContainer.innerHTML = `<span>💰 Бонусы: 0 ₽</span>`;
+                bonusCheckbox.disabled = true;
+                bonusCheckbox.parentElement.innerHTML = `<span>💰 Бонусы: 0 ₽</span>`;
             }
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
@@ -830,6 +835,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const pr=document.getElementById('privacy').checked;
     const nl=document.getElementById('newsletter').checked;
     const tr=document.getElementById('tariff-input').value;
+    const useBonus = document.getElementById('use-bonus').checked;
     const vkId = document.getElementById('vk-id').value;
 
     const er=[];
@@ -837,7 +843,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
     if(er.length){ fb.className='feedback error'; fb.textContent='❌ '+er.join(', '); return; }
 
     const [dv, timeSlot] = dr.split('|');
-    const useBonus = document.getElementById('use-bonus')?.checked || false;
     const data = { 
         surname: sn, 
         name: nm, 
@@ -855,10 +860,12 @@ document.getElementById('order-form').addEventListener('submit', async function(
     try {
         const result = await apiPost('/api/booking', data);
         if (result.status === 'created') {
+            // Сначала показываем модалку
             document.getElementById('modal-message').textContent = `✅ Запись на ${dv}. Формат: ${tariffConfig[tr].label}. Итог: ${result.finalPrice} ₽`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
+            // А потом сбрасываем форму и перезагружаем состояние
             document.getElementById('order-form').reset();
             selectTariff('pro');
             updateDateSelect('pro');
@@ -1017,6 +1024,7 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
+// ✅ ОБНОВЛЁННЫЙ ОБРАБОТЧИК ФОРМЫ СОБЫТИЙ (с учётом чекбокса подписки)
 document.getElementById('events-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('events-form-feedback');
@@ -1026,7 +1034,7 @@ document.getElementById('events-form').addEventListener('submit', async function
     const name = document.getElementById('events-name').value.trim();
     const phone = document.getElementById('events-phone').value.trim();
     const email = document.getElementById('events-email').value.trim();
-    const subscribed = document.getElementById('events-newsletter').checked;
+    const subscribed = document.getElementById('events-newsletter').checked; // ✅ Читаем чекбокс
     
     if (!surname || !name || !phone) {
         fb.className = 'feedback error';
@@ -1048,7 +1056,7 @@ document.getElementById('events-form').addEventListener('submit', async function
             name,
             phone: normalizePhone(phone),
             email,
-            subscribed
+            subscribed // ✅ Отправляем значение на сервер
         });
         if (result.status === 'created') {
             fb.className = 'feedback success';
