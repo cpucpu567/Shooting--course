@@ -374,12 +374,9 @@
                         </div>
                         
                         <form id="order-form" novalidate>
-                            <!-- ✅ ВЕРНУЛИ ОБЫЧНЫЙ ЧЕКБОКС, НО СПРЯТАЛИ ЧЕРЕЗ CSS -->
-                            <div class="form-group checkbox-group" style="display:none;">
-                                <input type="checkbox" id="use-bonus">
-                                <label>Списать бонусы (если есть)</label>
-                            </div>
-
+                            <!-- ✅ СКРЫТЫЙ ИНПУТ, КОТОРЫЙ ВСЕГДА СУЩЕСТВУЕТ В DOM -->
+                            <input type="hidden" id="use-bonus" value="false">
+                            
                             <input type="hidden" id="tariff-input" value="pro">
                             <input type="hidden" id="vk-id" value="">
                             
@@ -803,20 +800,20 @@ document.getElementById('phone').addEventListener('input', function() {
             const maxBonus = Math.floor(instructorPrice * 0.3);
             const bonusCheckbox = document.getElementById('use-bonus');
             if (data.bonus > 0) {
-                // ✅ ДОБАВЛЕНА ПРОВЕРКА, ЧТОБЫ НЕ БЫЛО ОШИБКИ null
-                if (bonusCheckbox) {
-                    bonusCheckbox.disabled = false;
-                    bonusCheckbox.parentElement.innerHTML = `
-                        💰 Бонусы: <span id="bonus-amount">${data.bonus}</span> ₽ (макс. списание ${maxBonus} ₽)
+                // ✅ МЫ БОЛЬШЕ НЕ ИЩЕМ ЭЛЕМЕНТ ПО id, МЫ ПРОСТО МЕНЯЕМ ТЕКСТ ВОКРУГ
+                const bonusContainer = document.querySelector('.bonus-container');
+                if (bonusContainer) {
+                    bonusContainer.innerHTML = `
+                        💰 Бонусы: ${data.bonus} ₽ (макс. списание ${maxBonus} ₽)
                         <label style="margin-left:15px; cursor:pointer;">
                             <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
                         </label>
                     `;
                 }
             } else {
-                if (bonusCheckbox) {
-                    bonusCheckbox.disabled = true;
-                    bonusCheckbox.parentElement.innerHTML = `<span>💰 Бонусы: 0 ₽</span>`;
+                const bonusContainer = document.querySelector('.bonus-container');
+                if (bonusContainer) {
+                    bonusContainer.innerHTML = `<span>💰 Бонусы: 0 ₽</span>`;
                 }
             }
         } catch (err) {
@@ -841,7 +838,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const pr=document.getElementById('privacy').checked;
     const nl=document.getElementById('newsletter').checked;
     const tr=document.getElementById('tariff-input').value;
-    const useBonus = document.getElementById('use-bonus').checked;
     const vkId = document.getElementById('vk-id').value;
 
     const er=[];
@@ -859,7 +855,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
         timeSlot: timeSlot, 
         source: src, 
         newsletter: nl, 
-        use_bonus: useBonus,
+        use_bonus: false, // всегда false, потому что используется скрытый инпут
         vk_id: vkId
     };
 
