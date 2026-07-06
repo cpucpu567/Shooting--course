@@ -812,7 +812,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
                     ${levelLabels[data.level] || data.level}
                 </span>
-                ${data.message ? `<div style="font-size:0.75rem; opacity:0.7; margin-top:4px;">${data.message}</div>` : ''}
                 ${bonusHtml}
             `;
         } catch (err) {
