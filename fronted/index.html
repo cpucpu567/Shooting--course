@@ -149,6 +149,7 @@
                 gap: 20px;
             }
             #floating-event-btn { display: none !important; }
+            .mobile-unified-form { display: none !important; }
         }
 
         /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (Телефоны < 700px) ===== */
@@ -160,14 +161,8 @@
             .form-row { grid-template-columns: 1fr; }
             .gallery-main { height: 250px; }
             
-            .booking-double-col {
-                display: flex;
-                flex-direction: column;
-                gap: 40px;
-            }
-            .booking-col {
-                width: 100%;
-            }
+            .booking-double-col { display: none !important; }
+            .mobile-unified-form { display: block !important; }
             
             .tariff-grid {
                 display: flex;
@@ -312,7 +307,7 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <!-- ===== БЛОК ЗАПИСИ ===== -->
+    <!-- ===== СТАРЫЙ БЛОК ЗАПИСИ (ДВЕ КОЛОНКИ) — ОСТАЁТСЯ ДЛЯ ПК ===== -->
     <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
             <h2>Записаться</h2>
@@ -420,6 +415,82 @@
             </div>
         </div>
     </section>
+
+    <!-- ===== МОБИЛЬНАЯ УНИВЕРСАЛЬНАЯ ФОРМА (ТОЛЬКО ДЛЯ ТЕЛЕФОНОВ) ===== -->
+    <div class="mobile-unified-form" style="display:none; padding:20px 0;">
+        <div class="container">
+            <h2>Записаться</h2>
+            
+            <!-- Переключатель вкладок (только для мобильных) -->
+            <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
+                <button id="mobile-mode-intensive" class="btn" onclick="mobileSetMode('intensive')" style="background:var(--purple); padding:10px 20px; font-size:0.9rem;">🎯 Интенсив</button>
+                <button id="mobile-mode-event" class="btn secondary" onclick="mobileSetMode('event')" style="background:transparent; border:1px solid var(--card-border); padding:10px 20px; font-size:0.9rem;">📅 Событие</button>
+            </div>
+
+            <div class="form-card glass" style="max-width:100%; margin:0 auto;">
+                <!-- Плашка выбранного тарифа (Интенсив) -->
+                <div id="mobile-selected-tariff-badge" class="selected-tariff-badge" style="display:none;">
+                    Выбран тариф: <strong id="mobile-selected-tariff-name">Продвинутый</strong>
+                </div>
+
+                <!-- Плашка выбранного события -->
+                <div id="mobile-selected-event-badge" style="display:none; padding:10px; border-radius:6px; background:rgba(196,160,96,0.15); border:1px solid var(--gold); color:var(--text-soft); margin-bottom:15px; text-align:center;">
+                    📅 Вы записываетесь на событие: <strong id="mobile-selected-event-name" style="color:var(--gold);">Название события</strong>
+                </div>
+
+                <form id="mobile-universal-form" novalidate>
+                    <input type="hidden" id="mobile-form-mode" value="intensive">
+                    <input type="hidden" id="mobile-vk-id" value="">
+                    <input type="hidden" id="mobile-selected-event-id" value="">
+                    <input type="hidden" id="mobile-tariff-input" value="pro">
+
+                    <div class="form-row">
+                        <div class="form-group"><label>Фамилия *</label><input type="text" id="mobile-surname" placeholder="Иванов" required></div>
+                        <div class="form-group"><label>Имя *</label><input type="text" id="mobile-name" placeholder="Иван" required></div>
+                    </div>
+
+                    <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
+
+                    <!-- Блок статуса клиента -->
+                    <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
+                        <div id="mobile-client-status"></div>
+                    </div>
+
+                    <!-- ===== ПОЛЯ ДЛЯ ИНТЕНСИВА ===== -->
+                    <div id="mobile-intensive-fields">
+                        <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
+                        <div class="form-group"><label>Откуда узнали?</label><select id="mobile-source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Дата *</label><select id="mobile-date" required></select><p class="hint" id="mobile-date-hint"></p></div>
+                            <div class="form-group" id="mobile-subgroup-row" style="display:none;"><label>Время</label><select id="mobile-time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                        </div>
+                    </div>
+
+                    <!-- ===== ПОЛЯ ДЛЯ СОБЫТИЯ ===== -->
+                    <div id="mobile-event-fields" style="display:none;">
+                        <div class="form-group"><label>Email (необязательно)</label><input type="email" id="mobile-email" placeholder="mail@example.com"></div>
+                    </div>
+
+                    <!-- Чекбоксы -->
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="mobile-agree" required>
+                        <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="mobile-privacy" required>
+                        <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="mobile-newsletter" checked>
+                        <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
+                    </div>
+
+                    <button type="submit" id="mobile-submit-btn" class="btn" style="width:100%; background:var(--purple);">Записаться</button>
+                    <div class="feedback" id="mobile-form-feedback"></div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 </main>
 
@@ -789,36 +860,24 @@ document.getElementById('phone').addEventListener('input', function() {
             infoEl.style.display = 'block';
             
             let bonusHtml = '';
-
-// 1. Если сервер вернул специальное сообщение (например, "Вы уже записаны")
-if (data.message && data.message.includes('Вы уже записаны')) {
-    bonusHtml = `
-        <div style="margin-top:10px; padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155, 138, 240, 0.1); color:var(--purple);">
-            <strong>ℹ️ ${data.message}</strong>
-        </div>
-    `;
-} 
-// 2. Если у клиента есть бонусы и он НЕ в очереди
-else if (data.bonus > 0) {
-    const maxBonus = Math.floor((tariffPrices[selectedCourse]?.instructor || 2000) * 0.3);
-    bonusHtml = `
-        <div style="margin-top:10px; padding:10px; border:1px solid var(--gold); border-radius:6px; background:rgba(196, 160, 96, 0.1);">
-            <strong>Приветствую!</strong> У вас накоплено <strong>${data.bonus} ₽</strong> бонусов.
-            <br><small>Можно списать до ${maxBonus} ₽ за это занятие.</small>
-            <label style="margin-left:15px; cursor:pointer; display:inline-block; margin-top:5px;">
-                <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
-            </label>
-        </div>
-    `;
-} 
-// 3. Если это действительно новый клиент без записей и без бонусов
-else {
-    bonusHtml = `
-        <div style="margin-top:10px; padding:10px; border:1px solid var(--card-border); border-radius:6px; background:rgba(255,255,255,0.03); color:var(--text-soft);">
-            <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
-        </div>
-    `;
-}
+            if (data.bonus > 0) {
+                const maxBonus = Math.floor((tariffPrices[selectedCourse]?.instructor || 2000) * 0.3);
+                bonusHtml = `
+                    <div style="margin-top:10px; padding:10px; border:1px solid var(--gold); border-radius:6px; background:rgba(196, 160, 96, 0.1);">
+                        <strong>Приветствую!</strong> У вас накоплено <strong>${data.bonus} ₽</strong> бонусов.
+                        <br><small>Можно списать до ${maxBonus} ₽ за это занятие.</small>
+                        <label style="margin-left:15px; cursor:pointer; display:inline-block; margin-top:5px;">
+                            <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
+                        </label>
+                    </div>
+                `;
+            } else {
+                bonusHtml = `
+                    <div style="margin-top:10px; padding:10px; border:1px solid var(--card-border); border-radius:6px; background:rgba(255,255,255,0.03); color:var(--text-soft);">
+                        <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
+                    </div>
+                `;
+            }
             statusEl.innerHTML = `
                 <strong>Ваш статус:</strong> 
                 <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
@@ -1099,6 +1158,235 @@ if (ht) {
     ht.addEventListener('touchend', () => clearTimeout(tt));
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
+
+// ================================================================
+// ===== ДОБАВЛЕННЫЙ КОД ДЛЯ МОБИЛЬНОГО ПЕРЕКЛЮЧЕНИЯ =====
+// ================================================================
+
+// ===== МОБИЛЬНОЕ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ =====
+function mobileSetMode(mode) {
+    const intensiveFields = document.getElementById('mobile-intensive-fields');
+    const eventFields = document.getElementById('mobile-event-fields');
+    const tariffBadge = document.getElementById('mobile-selected-tariff-badge');
+    const eventBadge = document.getElementById('mobile-selected-event-badge');
+    const submitBtn = document.getElementById('mobile-submit-btn');
+    const modeInput = document.getElementById('mobile-form-mode');
+
+    // Сброс стилей кнопок
+    document.getElementById('mobile-mode-intensive').className = 'btn secondary';
+    document.getElementById('mobile-mode-intensive').style.background = 'transparent';
+    document.getElementById('mobile-mode-event').className = 'btn secondary';
+    document.getElementById('mobile-mode-event').style.background = 'transparent';
+
+    if (mode === 'intensive') {
+        modeInput.value = 'intensive';
+        intensiveFields.style.display = 'block';
+        eventFields.style.display = 'none';
+        tariffBadge.style.display = 'block';
+        eventBadge.style.display = 'none';
+        submitBtn.textContent = 'Записаться на интенсив';
+        submitBtn.style.background = 'var(--purple)';
+        submitBtn.style.color = '#fff';
+        document.getElementById('mobile-mode-intensive').className = 'btn';
+        document.getElementById('mobile-mode-intensive').style.background = 'var(--purple)';
+        
+        // Загружаем даты для интенсива
+        mobileUpdateDateSelect(document.getElementById('mobile-tariff-input').value);
+    } else {
+        modeInput.value = 'event';
+        intensiveFields.style.display = 'none';
+        eventFields.style.display = 'block';
+        tariffBadge.style.display = 'none';
+        eventBadge.style.display = 'block';
+        submitBtn.textContent = 'Записаться на событие';
+        submitBtn.style.background = 'var(--gold)';
+        submitBtn.style.color = '#1A1C20';
+        document.getElementById('mobile-mode-event').className = 'btn';
+        document.getElementById('mobile-mode-event').style.background = 'var(--gold)';
+        document.getElementById('mobile-mode-event').style.color = '#1A1C20';
+    }
+}
+
+// ===== МОБИЛЬНАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАТ =====
+function mobileUpdateDateSelect(tariff) {
+    const select = document.getElementById('mobile-date');
+    const hint = document.getElementById('mobile-date-hint');
+    const tariffConfig = { basic: 'basic', practice: 'practice', pro: 'pro' };
+    const group = tariffConfig[tariff] || 'pro';
+    
+    const dates = allDates.filter(d => d.group === group);
+    select.innerHTML = '<option value="">Выберите дату...</option>';
+    dates.forEach(d => {
+        const ts = d.timeSlot || 'full';
+        const c = d.currentCount || 0;
+        const mx = d.maxPersons || 10;
+        const a = c < mx;
+        const dateStr = d.label || d.value;
+        const option = document.createElement('option');
+        option.value = d.value + '|' + ts;
+        option.textContent = `${dateStr} ${ts !== 'full' ? '(' + (ts === '10-14' ? '10–14' : '14–18') + ')' : '(10–18)'} — ${c}/${mx}${a ? '' : ' (НЕТ МЕСТ)'}`;
+        option.disabled = !a;
+        select.appendChild(option);
+    });
+    hint.textContent = '';
+}
+
+// ===== МОБИЛЬНАЯ ФУНКЦИЯ ВЫБОРА ТАРИФА =====
+function mobileSelectTariff(tariffId) {
+    const names = { basic: 'Базовый', practice: 'Практика', pro: 'Продвинутый' };
+    document.getElementById('mobile-tariff-input').value = tariffId;
+    document.getElementById('mobile-selected-tariff-name').textContent = names[tariffId] || 'Продвинутый';
+    document.getElementById('mobile-selected-tariff-badge').style.display = 'block';
+    mobileSetMode('intensive');
+    mobileUpdateDateSelect(tariffId);
+    document.getElementById('mobile-subgroup-row').style.display = tariffId === 'practice' ? 'block' : 'none';
+}
+
+// ===== МОБИЛЬНАЯ ФУНКЦИЯ ВЫБОРА СОБЫТИЯ =====
+function mobileSelectEvent(eventId) {
+    const event = eventsData.find(e => e.id === eventId);
+    if (event) {
+        document.getElementById('mobile-selected-event-name').textContent = event.title;
+        document.getElementById('mobile-selected-event-id').value = event.id;
+        document.getElementById('mobile-selected-event-badge').style.display = 'block';
+        mobileSetMode('event');
+    }
+}
+
+// ===== МОБИЛЬНЫЙ ОБРАБОТЧИК ОТПРАВКИ ФОРМЫ =====
+document.getElementById('mobile-universal-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fb = document.getElementById('mobile-form-feedback');
+    fb.className = 'feedback'; fb.style.display = 'none';
+
+    const mode = document.getElementById('mobile-form-mode').value;
+    const surname = document.getElementById('mobile-surname').value.trim();
+    const name = document.getElementById('mobile-name').value.trim();
+    const phone = document.getElementById('mobile-phone').value.trim();
+    const agree = document.getElementById('mobile-agree').checked;
+    const privacy = document.getElementById('mobile-privacy').checked;
+    const newsletter = document.getElementById('mobile-newsletter').checked;
+
+    if (!surname || !name || !phone || !agree || !privacy) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Заполните все обязательные поля';
+        return;
+    }
+
+    try {
+        let result;
+        if (mode === 'intensive') {
+            const tariff = document.getElementById('mobile-tariff-input').value;
+            const dateRaw = document.getElementById('mobile-date').value;
+            const timeSlot = document.getElementById('mobile-time-slot').value;
+            const referral = document.getElementById('mobile-referral').value.trim();
+            const source = document.getElementById('mobile-source').value;
+            
+            if (!dateRaw) {
+                fb.className = 'feedback error';
+                fb.textContent = '❌ Выберите дату';
+                return;
+            }
+            const [date, ts] = dateRaw.split('|');
+
+            result = await apiPost('/api/booking', {
+                surname, name, phone: normalizePhone(phone),
+                referral: referral ? normalizePhone(referral) : '',
+                tariff, date, timeSlot: ts || 'full',
+                source, newsletter, use_bonus: false, vk_id: ''
+            });
+        } else {
+            const eventId = document.getElementById('mobile-selected-event-id').value;
+            const email = document.getElementById('mobile-email').value.trim();
+
+            if (!eventId) {
+                fb.className = 'feedback error';
+                fb.textContent = '❌ Выберите событие в карусели';
+                return;
+            }
+
+            result = await apiPost('/api/event/booking', {
+                event_id: parseInt(eventId),
+                surname, name, phone: normalizePhone(phone),
+                email, subscribed: newsletter
+            });
+        }
+
+        if (result.status === 'created') {
+            document.getElementById('modal-message').textContent = `✅ Заявка принята! Мы свяжемся с вами.`;
+            document.getElementById('success-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('mobile-universal-form').reset();
+            document.getElementById('mobile-client-info').style.display = 'none';
+        } else {
+            fb.className = 'feedback error';
+            fb.textContent = '❌ ' + (result.detail || 'Ошибка');
+        }
+    } catch (err) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Ошибка сети: ' + err.message;
+    }
+});
+
+// ===== ПОДКЛЮЧАЕМ КЛИКИ ПО ТАРИФАМ И СОБЫТИЯМ К МОБИЛЬНОЙ ВЕРСИИ =====
+// Переопределяем selectTariff и selectEvent для мобильных
+const originalSelectTariff = window.selectTariff;
+window.selectTariff = function(tariffId) {
+    if (window.innerWidth <= 700) {
+        mobileSelectTariff(tariffId);
+    } else {
+        originalSelectTariff(tariffId);
+    }
+};
+
+const originalSelectEvent = window.selectEvent;
+window.selectEvent = function(eventId) {
+    if (window.innerWidth <= 700) {
+        mobileSelectEvent(eventId);
+    } else {
+        originalSelectEvent(eventId);
+    }
+};
+
+// ===== МОБИЛЬНЫЙ ОБРАБОТЧИК ВВОДА ТЕЛЕФОНА (для статуса) =====
+document.getElementById('mobile-phone').addEventListener('input', function() {
+    clearTimeout(window.mobileStatusTimeout);
+    const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
+    if (rawPhone.length < 10) return;
+
+    window.mobileStatusTimeout = setTimeout(async () => {
+        try {
+            const data = await apiFetch(`/api/client/status/${rawPhone}`);
+            const infoEl = document.getElementById('mobile-client-info');
+            const statusEl = document.getElementById('mobile-client-status');
+            infoEl.style.display = 'block';
+
+            if (data.message && data.message.includes('Вы уже записаны')) {
+                statusEl.innerHTML = `
+                    <div style="padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155,138,240,0.1); color:var(--purple);">
+                        <strong>ℹ️ ${data.message}</strong>
+                    </div>
+                `;
+            } else {
+                const levelLabels = { pro: '🏆 Про', experienced: '⭐ Опытный', newbie: '🔰 Новичок' };
+                const levelColors = { pro: 'var(--gold)', experienced: 'var(--purple)', newbie: 'var(--text-soft)' };
+                statusEl.innerHTML = `
+                    <strong>Ваш статус:</strong> 
+                    <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
+                        ${levelLabels[data.level] || data.level}
+                    </span>
+                    ${data.bonus > 0 ? ` <span style="color:var(--gold);">💰 ${data.bonus} ₽</span>` : ''}
+                `;
+            }
+        } catch (err) {
+            console.warn('Ошибка статуса:', err);
+        }
+    }, 800);
+});
+
+// ================================================================
+// ===== КОНЕЦ ДОБАВЛЕННОГО КОДА =====
+// ================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
