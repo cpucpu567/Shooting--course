@@ -861,6 +861,8 @@ document.getElementById('phone').addEventListener('input', function() {
             const data = await apiFetch(`/api/client/status/${rawPhone}`);
             const infoEl = document.getElementById('client-info');
             const statusEl = document.getElementById('client-status');
+
+            // ✅ ДОБАВЛЕНО: определения для отрисовки статуса
             const levelColors = {
                 pro: 'var(--gold)',
                 experienced: 'var(--purple)',
@@ -871,9 +873,10 @@ document.getElementById('phone').addEventListener('input', function() {
                 experienced: '⭐ Опытный',
                 newbie: '🔰 Новичок'
             };
+
             infoEl.style.display = 'block';
 
-            // Сначала проверяем, есть ли сообщение "Вы уже записаны"
+            // Проверяем, есть ли сообщение "Вы уже записаны"
             if (data.message && data.message.includes('Вы уже записаны')) {
                 statusEl.innerHTML = `
                     <div style="padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155,138,240,0.1); color:var(--purple);">
@@ -1406,9 +1409,22 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
             const data = await apiFetch(`/api/client/status/${rawPhone}`);
             const infoEl = document.getElementById('mobile-client-info');
             const statusEl = document.getElementById('mobile-client-status');
+
+            // ✅ ДОБАВЛЕНО: определения для отрисовки статуса
+            const levelColors = {
+                pro: 'var(--gold)',
+                experienced: 'var(--purple)',
+                newbie: 'var(--text-soft)'
+            };
+            const levelLabels = {
+                pro: '🏆 Про',
+                experienced: '⭐ Опытный',
+                newbie: '🔰 Новичок'
+            };
+
             infoEl.style.display = 'block';
 
-            // Сначала проверяем, есть ли сообщение "Вы уже записаны"
+            // Проверяем, есть ли сообщение "Вы уже записаны"
             if (data.message && data.message.includes('Вы уже записаны')) {
                 statusEl.innerHTML = `
                     <div style="padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155,138,240,0.1); color:var(--purple);">
