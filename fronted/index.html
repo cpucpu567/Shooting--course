@@ -26,7 +26,7 @@
         body {
             font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
             background-color: #1A1C20;
-            background-image: url('https://raw.githubusercontent.com/cpucpu567/Shooting--course/refs/heads/main/fronted/KToFj.jpg?raw=true');
+            background-image: url('https://sun9-35.userapi.com/s/v1/ig2/8hi63F5CGUnY5U_9On9brq7Jm_RCf3OI7sZPz-3UnD-vypG16VZWhzGkiQjyB1DtEkdUDBLVuJ41E31Jwk5Ygx4k.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x536,480x715,540x804,640x953,720x1073,784x1168&from=bu&cs=784x0');
             background-size: cover;
             background-attachment: fixed;
             background-position: center center;
@@ -298,16 +298,14 @@
         </div>
     </section>
 
-    <section><div class="container">
-    <div class="loyalty-block glass" style="text-align:left; padding:16px 20px; line-height:1.8;">
+    <section><div class="container"><div class="loyalty-block glass">
         <div style="font-size:1.2rem; font-weight:700; color:var(--gold); margin-bottom:8px;">💰 500 ₽</div>
         <div style="color:var(--text-soft); font-size:0.95rem;">
             — за приглашение друга<br>
             — за каждое 5-е занятие<br>
             — за посещение события
         </div>
-    </div>
-</div></section>
+    </div></div></section>
 
     <!-- ===== БЛОК ЗАПИСИ (УНИВЕРСАЛЬНЫЙ) ===== -->
     <section id="booking-section" style="padding: 50px 0;">
@@ -334,6 +332,12 @@
                         </div>
 
                         <div class="form-card glass">
+                            <!-- VK-кнопка для событий -->
+                            <div style="margin-bottom:15px; text-align:center;">
+                                <button id="vk-auth-btn-events" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">🔑 Войти через VK</button>
+                                <div id="vk-auth-status-events" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
+                            </div>
+
                             <form id="events-form" novalidate>
                                 <input type="hidden" id="event-id" value="">
                                 <div class="form-row">
@@ -360,15 +364,16 @@
                         <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
                         
                         <div class="form-card glass">
-                            <div id="selected-tariff-badge" class="selected-tariff-badge">
-                                Выбран тариф: <span id="selected-tariff-name">Базовый</span>
-                            </div>
-
+                            <!-- VK-кнопка для интенсива -->
                             <div style="margin-bottom:15px; text-align:center;">
                                 <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">🔑 Войти через VK</button>
                                 <div id="vk-auth-status" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
                             </div>
                             
+                            <div id="selected-tariff-badge" class="selected-tariff-badge">
+                                Выбран тариф: <span id="selected-tariff-name">Базовый</span>
+                            </div>
+
                             <form id="order-form" novalidate>
                                 <input type="hidden" id="tariff-input" value="pro">
                                 <input type="hidden" id="vk-id" value="">
@@ -427,6 +432,12 @@
                 </div>
 
                 <div class="form-card glass" style="max-width:100%; margin:0 auto;">
+                    <!-- VK-кнопка в мобильной версии -->
+                    <div style="margin-bottom:15px; text-align:center;">
+                        <button id="vk-auth-btn-mobile" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">🔑 Войти через VK</button>
+                        <div id="vk-auth-status-mobile" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
+                    </div>
+
                     <!-- Плашка выбранного тарифа -->
                     <div id="mobile-selected-tariff-badge" class="selected-tariff-badge" style="display:none;">
                         Выбран тариф: <strong id="mobile-selected-tariff-name">Продвинутый</strong>
