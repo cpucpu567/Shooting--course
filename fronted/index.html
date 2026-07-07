@@ -136,20 +136,10 @@
 
         /* ===== ДВУХКОЛОНОЧНАЯ ВЁРСТКА (ПК и Планшеты > 700px) ===== */
         @media (min-width: 701px) {
-            .booking-double-col {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 30px;
-                align-items: start;
-                margin-top: 20px;
-            }
-            .booking-col {
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-            }
+            .pc-version { display: block; }
+            .mobile-version { display: none !important; }
+            .booking-double-col { display: grid !important; }
             #floating-event-btn { display: none !important; }
-            .mobile-unified-form { display: none !important; }
         }
 
         /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (Телефоны < 700px) ===== */
@@ -161,8 +151,10 @@
             .form-row { grid-template-columns: 1fr; }
             .gallery-main { height: 250px; }
             
+            .pc-version { display: none !important; }
+            .mobile-version { display: block !important; }
             .booking-double-col { display: none !important; }
-            .mobile-unified-form { display: block !important; }
+            #floating-event-btn { display: flex !important; }
             
             .tariff-grid {
                 display: flex;
@@ -307,190 +299,196 @@
 
     <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
-    <!-- ===== СТАРЫЙ БЛОК ЗАПИСИ (ДВЕ КОЛОНКИ) — ОСТАЁТСЯ ДЛЯ ПК ===== -->
+    <!-- ===== БЛОК ЗАПИСИ (УНИВЕРСАЛЬНЫЙ) ===== -->
     <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
-            <h2>Записаться</h2>
             
-            <div class="booking-double-col">
+            <!-- ===== ПК-ВЕРСИЯ (ДВЕ КОЛОНКИ) ===== -->
+            <div class="pc-version">
+                <h2>Записаться</h2>
                 
-                <!-- КОЛОНКА 1 / ВЕРХНИЙ БЛОК: СОБЫТИЯ -->
-                <div class="booking-col" id="booking-events">
-                    <h3>На <span style="color:var(--gold);">событие</span></h3>
-                    <p class="sub-desc">Акции, мастер-классы и встречи</p>
-
-                    <div id="events-anchor"></div>
+                <div class="booking-double-col">
                     
-                    <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
-                        <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
-                        <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
-                        <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
-                        <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
-                    </div>
+                    <!-- КОЛОНКА 1: СОБЫТИЯ -->
+                    <div class="booking-col" id="booking-events">
+                        <h3>На <span style="color:var(--gold);">событие</span></h3>
+                        <p class="sub-desc">Акции, мастер-классы и встречи</p>
 
-                    <div class="form-card glass">
-                        <form id="events-form" novalidate>
-                            <input type="hidden" id="event-id" value="">
-                            <div class="form-row">
-                                <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
-                                <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
-                            </div>
-                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
-                            
-                            <!-- ✅ ЧЕКБОКС ПОДПИСКИ (теперь отображается и на ПК) -->
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="events-newsletter">
-                                <label>Я подписан(а) на сообщество и согласен получать уведомления о новых событиях, акциях и занятиях</label>
-                            </div>
-
-                            <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
-                            <div class="feedback" id="events-form-feedback"></div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- КОЛОНКА 2 / НИЖНИЙ БЛОК: ИНТЕНСИВ -->
-                <div class="booking-col" id="booking-intensive">
-                    <h3>На <span style="color:var(--purple);">интенсив</span></h3>
-                    <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
-                    
-                    <div class="form-card glass">
-                        <!-- Плашка выбранного тарифа -->
-                        <div id="selected-tariff-badge" class="selected-tariff-badge">
-                            Выбран тариф: <span id="selected-tariff-name">Базовый</span>
-                        </div>
-
-                        <div style="margin-bottom:15px; text-align:center;">
-                            <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">
-                                🔑 Войти через VK
-                            </button>
-                            <div id="vk-auth-status" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
-                        </div>
+                        <div id="events-anchor"></div>
                         
-                        <form id="order-form" novalidate>
-                            
-                            <input type="hidden" id="tariff-input" value="pro">
-                            <input type="hidden" id="vk-id" value="">
-                            
-                            <div class="form-row">
-                                <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
-                                <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
-                            </div>
-                            
-                            <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
-                            
-                            <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
-                                <div id="client-status"></div>
+                        <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
+                            <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
+                            <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
+                            <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
+                            <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
+                        </div>
+
+                        <div class="form-card glass">
+                            <form id="events-form" novalidate>
+                                <input type="hidden" id="event-id" value="">
+                                <div class="form-row">
+                                    <div class="form-group"><label>Фамилия *</label><input type="text" id="events-surname" placeholder="Иванов" required></div>
+                                    <div class="form-group"><label>Имя *</label><input type="text" id="events-name" placeholder="Иван" required></div>
+                                </div>
+                                <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
+                                <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
+                                
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="events-newsletter">
+                                    <label>Я подписан(а) на сообщество и согласен получать уведомления о новых событиях, акциях и занятиях</label>
+                                </div>
+
+                                <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
+                                <div class="feedback" id="events-form-feedback"></div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- КОЛОНКА 2: ИНТЕНСИВ -->
+                    <div class="booking-col" id="booking-intensive">
+                        <h3>На <span style="color:var(--purple);">интенсив</span></h3>
+                        <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
+                        
+                        <div class="form-card glass">
+                            <div id="selected-tariff-badge" class="selected-tariff-badge">
+                                Выбран тариф: <span id="selected-tariff-name">Базовый</span>
                             </div>
 
-                            <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
-                            <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-                            
-                            <div class="form-row">
-                                <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
-                                <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                            <div style="margin-bottom:15px; text-align:center;">
+                                <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">🔑 Войти через VK</button>
+                                <div id="vk-auth-status" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
                             </div>
                             
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="agree" required>
-                                <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
-                            </div>
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="privacy" required>
-                                <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
-                            </div>
-                            
-                            <div class="form-group checkbox-group">
-                                <input type="checkbox" id="newsletter" checked>
-                                <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
-                            </div>
-                            
-                            <button type="submit" id="submit-btn" class="btn" style="width:100%;">Попасть в себя</button>
-                            <div class="feedback" id="form-feedback"></div>
-                        </form>
+                            <form id="order-form" novalidate>
+                                <input type="hidden" id="tariff-input" value="pro">
+                                <input type="hidden" id="vk-id" value="">
+                                
+                                <div class="form-row">
+                                    <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
+                                    <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
+                                </div>
+                                
+                                <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
+                                
+                                <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
+                                    <div id="client-status"></div>
+                                </div>
+
+                                <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
+                                <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
+                                    <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                                </div>
+                                
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="agree" required>
+                                    <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
+                                </div>
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="privacy" required>
+                                    <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
+                                </div>
+                                
+                                <div class="form-group checkbox-group">
+                                    <input type="checkbox" id="newsletter" checked>
+                                    <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
+                                </div>
+                                
+                                <button type="submit" id="submit-btn" class="btn" style="width:100%;">Попасть в себя</button>
+                                <div class="feedback" id="form-feedback"></div>
+                            </form>
+                        </div>
                     </div>
+
+                </div>
+            </div>
+
+            <!-- ===== МОБИЛЬНАЯ ВЕРСИЯ (одна форма + карусель событий внутри) ===== -->
+            <div class="mobile-version" style="display:none;">
+                <h2>Записаться</h2>
+                
+                <!-- Переключатель вкладок -->
+                <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
+                    <button id="mobile-mode-intensive" class="btn" onclick="mobileSetMode('intensive')" style="background:var(--purple); padding:10px 20px; font-size:0.9rem;">🎯 Интенсив</button>
+                    <button id="mobile-mode-event" class="btn secondary" onclick="mobileSetMode('event')" style="background:transparent; border:1px solid var(--card-border); padding:10px 20px; font-size:0.9rem;">📅 Событие</button>
                 </div>
 
+                <div class="form-card glass" style="max-width:100%; margin:0 auto;">
+                    <!-- Плашка выбранного тарифа -->
+                    <div id="mobile-selected-tariff-badge" class="selected-tariff-badge" style="display:none;">
+                        Выбран тариф: <strong id="mobile-selected-tariff-name">Продвинутый</strong>
+                    </div>
+
+                    <!-- Плашка выбранного события -->
+                    <div id="mobile-selected-event-badge" style="display:none; padding:10px; border-radius:6px; background:rgba(196,160,96,0.15); border:1px solid var(--gold); color:var(--text-soft); margin-bottom:15px; text-align:center;">
+                        📅 Вы записываетесь на событие: <strong id="mobile-selected-event-name" style="color:var(--gold);">Название события</strong>
+                    </div>
+
+                    <!-- КАРУСЕЛЬ СОБЫТИЙ (только для мобильных) -->
+                    <div id="mobile-events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
+                        <div id="mobile-events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
+                        <button onclick="mobileChangeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
+                        <button onclick="mobileChangeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
+                        <div id="mobile-event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
+                    </div>
+
+                    <form id="mobile-universal-form" novalidate>
+                        <input type="hidden" id="mobile-form-mode" value="intensive">
+                        <input type="hidden" id="mobile-vk-id" value="">
+                        <input type="hidden" id="mobile-selected-event-id" value="">
+                        <input type="hidden" id="mobile-tariff-input" value="pro">
+
+                        <div class="form-row">
+                            <div class="form-group"><label>Фамилия *</label><input type="text" id="mobile-surname" placeholder="Иванов" required></div>
+                            <div class="form-group"><label>Имя *</label><input type="text" id="mobile-name" placeholder="Иван" required></div>
+                        </div>
+
+                        <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
+
+                        <!-- Блок статуса клиента -->
+                        <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
+                            <div id="mobile-client-status"></div>
+                        </div>
+
+                        <!-- ===== ПОЛЯ ДЛЯ ИНТЕНСИВА ===== -->
+                        <div id="mobile-intensive-fields">
+                            <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
+                            <div class="form-group"><label>Откуда узнали?</label><select id="mobile-source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
+                            <div class="form-row">
+                                <div class="form-group"><label>Дата *</label><select id="mobile-date" required></select><p class="hint" id="mobile-date-hint"></p></div>
+                                <div class="form-group" id="mobile-subgroup-row" style="display:none;"><label>Время</label><select id="mobile-time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
+                            </div>
+                        </div>
+
+                        <!-- ===== ПОЛЯ ДЛЯ СОБЫТИЯ ===== -->
+                        <div id="mobile-event-fields" style="display:none;">
+                            <div class="form-group"><label>Email (необязательно)</label><input type="email" id="mobile-email" placeholder="mail@example.com"></div>
+                        </div>
+
+                        <!-- Чекбоксы -->
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="mobile-agree" required>
+                            <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="mobile-privacy" required>
+                            <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="mobile-newsletter" checked>
+                            <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
+                        </div>
+
+                        <button type="submit" id="mobile-submit-btn" class="btn" style="width:100%; background:var(--purple);">Записаться</button>
+                        <div class="feedback" id="mobile-form-feedback"></div>
+                    </form>
+                </div>
             </div>
+
         </div>
     </section>
-
-    <!-- ===== МОБИЛЬНАЯ УНИВЕРСАЛЬНАЯ ФОРМА (ТОЛЬКО ДЛЯ ТЕЛЕФОНОВ) ===== -->
-    <div class="mobile-unified-form" style="display:none; padding:20px 0;">
-        <div class="container">
-            <h2>Записаться</h2>
-            
-            <!-- Переключатель вкладок (только для мобильных) -->
-            <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
-                <button id="mobile-mode-intensive" class="btn" onclick="mobileSetMode('intensive')" style="background:var(--purple); padding:10px 20px; font-size:0.9rem;">🎯 Интенсив</button>
-                <button id="mobile-mode-event" class="btn secondary" onclick="mobileSetMode('event')" style="background:transparent; border:1px solid var(--card-border); padding:10px 20px; font-size:0.9rem;">📅 Событие</button>
-            </div>
-
-            <div class="form-card glass" style="max-width:100%; margin:0 auto;">
-                <!-- Плашка выбранного тарифа (Интенсив) -->
-                <div id="mobile-selected-tariff-badge" class="selected-tariff-badge" style="display:none;">
-                    Выбран тариф: <strong id="mobile-selected-tariff-name">Продвинутый</strong>
-                </div>
-
-                <!-- Плашка выбранного события -->
-                <div id="mobile-selected-event-badge" style="display:none; padding:10px; border-radius:6px; background:rgba(196,160,96,0.15); border:1px solid var(--gold); color:var(--text-soft); margin-bottom:15px; text-align:center;">
-                    📅 Вы записываетесь на событие: <strong id="mobile-selected-event-name" style="color:var(--gold);">Название события</strong>
-                </div>
-
-                <form id="mobile-universal-form" novalidate>
-                    <input type="hidden" id="mobile-form-mode" value="intensive">
-                    <input type="hidden" id="mobile-vk-id" value="">
-                    <input type="hidden" id="mobile-selected-event-id" value="">
-                    <input type="hidden" id="mobile-tariff-input" value="pro">
-
-                    <div class="form-row">
-                        <div class="form-group"><label>Фамилия *</label><input type="text" id="mobile-surname" placeholder="Иванов" required></div>
-                        <div class="form-group"><label>Имя *</label><input type="text" id="mobile-name" placeholder="Иван" required></div>
-                    </div>
-
-                    <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
-
-                    <!-- Блок статуса клиента -->
-                    <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
-                        <div id="mobile-client-status"></div>
-                    </div>
-
-                    <!-- ===== ПОЛЯ ДЛЯ ИНТЕНСИВА ===== -->
-                    <div id="mobile-intensive-fields">
-                        <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
-                        <div class="form-group"><label>Откуда узнали?</label><select id="mobile-source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-                        <div class="form-row">
-                            <div class="form-group"><label>Дата *</label><select id="mobile-date" required></select><p class="hint" id="mobile-date-hint"></p></div>
-                            <div class="form-group" id="mobile-subgroup-row" style="display:none;"><label>Время</label><select id="mobile-time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
-                        </div>
-                    </div>
-
-                    <!-- ===== ПОЛЯ ДЛЯ СОБЫТИЯ ===== -->
-                    <div id="mobile-event-fields" style="display:none;">
-                        <div class="form-group"><label>Email (необязательно)</label><input type="email" id="mobile-email" placeholder="mail@example.com"></div>
-                    </div>
-
-                    <!-- Чекбоксы -->
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="mobile-agree" required>
-                        <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
-                    </div>
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="mobile-privacy" required>
-                        <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
-                    </div>
-                    <div class="form-group checkbox-group">
-                        <input type="checkbox" id="mobile-newsletter" checked>
-                        <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
-                    </div>
-
-                    <button type="submit" id="mobile-submit-btn" class="btn" style="width:100%; background:var(--purple);">Записаться</button>
-                    <div class="feedback" id="mobile-form-feedback"></div>
-                </form>
-            </div>
-        </div>
-    </div>
 
 </main>
 
@@ -839,7 +837,12 @@ document.getElementById('phone').addEventListener('input', function() {
     clearTimeout(statusTimeout);
     const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
     if (rawPhone.length < 10) {
-        document.getElementById('client-info').style.display = 'none';
+        const infoEl = document.getElementById('client-info');
+        if (infoEl) {
+            infoEl.style.display = 'none';
+            const statusEl = document.getElementById('client-status');
+            if (statusEl) statusEl.innerHTML = '';
+        }
         return;
     }
     statusTimeout = setTimeout(async () => {
@@ -1352,7 +1355,15 @@ window.selectEvent = function(eventId) {
 document.getElementById('mobile-phone').addEventListener('input', function() {
     clearTimeout(window.mobileStatusTimeout);
     const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
-    if (rawPhone.length < 10) return;
+    if (rawPhone.length < 10) {
+        const infoEl = document.getElementById('mobile-client-info');
+        if (infoEl) {
+            infoEl.style.display = 'none';
+            const statusEl = document.getElementById('mobile-client-status');
+            if (statusEl) statusEl.innerHTML = '';
+        }
+        return;
+    }
 
     window.mobileStatusTimeout = setTimeout(async () => {
         try {
@@ -1383,6 +1394,80 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
         }
     }, 800);
 });
+
+// ===== МОБИЛЬНАЯ КАРУСЕЛЬ СОБЫТИЙ =====
+function mobileRenderEventsCarousel() {
+    const container = document.getElementById('mobile-events-carousel');
+    const dotsContainer = document.getElementById('mobile-event-dots');
+    
+    if (!eventsData || eventsData.length === 0) {
+        container.innerHTML = `
+            <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center;">
+                <p style="color:var(--text-soft);">Событий пока нет. Загляните позже!</p>
+            </div>
+        `;
+        dotsContainer.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = eventsData.map((e, i) => `
+        <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
+            ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:15px; max-height:200px; object-fit:cover;">` : ''}
+            <h3 style="font-size:1.2rem;">${e.title}</h3>
+            <p style="color:var(--text-soft); font-size:0.85rem;">${e.description.substring(0, 80)}${e.description.length > 80 ? '...' : ''}</p>
+            <p style="font-size:0.85rem;"><strong>Дата:</strong> ${e.date}</p>
+            <p style="font-size:0.85rem;"><strong>Цена:</strong> ${e.price.toLocaleString()} ₽</p>
+            <button class="btn" onclick="openEventDetails(${i})" style="padding:8px 18px; font-size:0.8rem; margin-top:5px;">Подробнее</button>
+            <button class="btn secondary" onclick="mobileSelectEvent(${e.id})" style="padding:8px 18px; font-size:0.8rem; margin-top:5px; background:var(--gold); color:#1A1C20;">Записаться</button>
+        </div>
+    `).join('');
+    
+    dotsContainer.innerHTML = eventsData.map((_, i) => `
+        <div class="event-dot" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="mobileGoToEventSlide(${i})"></div>
+    `).join('');
+    
+    window.mobileCurrentEventSlide = 0;
+}
+
+function mobileChangeEventSlide(dir) {
+    if (!eventsData.length) return;
+    const slides = document.querySelectorAll('#mobile-events-carousel .event-slide');
+    if (!slides.length) return;
+    const current = window.mobileCurrentEventSlide || 0;
+    slides[current].style.display = 'none';
+    window.mobileCurrentEventSlide = (current + dir + slides.length) % slides.length;
+    slides[window.mobileCurrentEventSlide].style.display = 'block';
+    mobileUpdateEventDots();
+}
+
+function mobileGoToEventSlide(index) {
+    if (!eventsData.length) return;
+    const slides = document.querySelectorAll('#mobile-events-carousel .event-slide');
+    if (!slides.length) return;
+    const current = window.mobileCurrentEventSlide || 0;
+    slides[current].style.display = 'none';
+    window.mobileCurrentEventSlide = index;
+    slides[window.mobileCurrentEventSlide].style.display = 'block';
+    mobileUpdateEventDots();
+}
+
+function mobileUpdateEventDots() {
+    const dots = document.querySelectorAll('#mobile-event-dots .event-dot');
+    dots.forEach((dot, i) => {
+        dot.style.background = i === window.mobileCurrentEventSlide ? 'var(--purple)' : '#444';
+    });
+}
+
+// Переопределяем функцию загрузки событий для мобильной версии
+const originalLoadEvents = window.loadEvents;
+window.loadEvents = function() {
+    originalLoadEvents();
+    setTimeout(() => {
+        if (window.innerWidth <= 700) {
+            mobileRenderEventsCarousel();
+        }
+    }, 500);
+};
 
 // ================================================================
 // ===== КОНЕЦ ДОБАВЛЕННОГО КОДА =====
