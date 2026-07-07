@@ -789,24 +789,36 @@ document.getElementById('phone').addEventListener('input', function() {
             infoEl.style.display = 'block';
             
             let bonusHtml = '';
-            if (data.bonus > 0) {
-                const maxBonus = Math.floor((tariffPrices[selectedCourse]?.instructor || 2000) * 0.3);
-                bonusHtml = `
-                    <div style="margin-top:10px; padding:10px; border:1px solid var(--gold); border-radius:6px; background:rgba(196, 160, 96, 0.1);">
-                        <strong>Приветствую!</strong> У вас накоплено <strong>${data.bonus} ₽</strong> бонусов.
-                        <br><small>Можно списать до ${maxBonus} ₽ за это занятие.</small>
-                        <label style="margin-left:15px; cursor:pointer; display:inline-block; margin-top:5px;">
-                            <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
-                        </label>
-                    </div>
-                `;
-            } else {
-                bonusHtml = `
-                    <div style="margin-top:10px; padding:10px; border:1px solid var(--card-border); border-radius:6px; background:rgba(255,255,255,0.03); color:var(--text-soft);">
-                        <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
-                    </div>
-                `;
-            }
+
+// 1. Если сервер вернул специальное сообщение (например, "Вы уже записаны")
+if (data.message && data.message.includes('Вы уже записаны')) {
+    bonusHtml = `
+        <div style="margin-top:10px; padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155, 138, 240, 0.1); color:var(--purple);">
+            <strong>ℹ️ ${data.message}</strong>
+        </div>
+    `;
+} 
+// 2. Если у клиента есть бонусы и он НЕ в очереди
+else if (data.bonus > 0) {
+    const maxBonus = Math.floor((tariffPrices[selectedCourse]?.instructor || 2000) * 0.3);
+    bonusHtml = `
+        <div style="margin-top:10px; padding:10px; border:1px solid var(--gold); border-radius:6px; background:rgba(196, 160, 96, 0.1);">
+            <strong>Приветствую!</strong> У вас накоплено <strong>${data.bonus} ₽</strong> бонусов.
+            <br><small>Можно списать до ${maxBonus} ₽ за это занятие.</small>
+            <label style="margin-left:15px; cursor:pointer; display:inline-block; margin-top:5px;">
+                <input type="checkbox" id="use-bonus" style="accent-color:var(--purple);"> Списать бонусы
+            </label>
+        </div>
+    `;
+} 
+// 3. Если это действительно новый клиент без записей и без бонусов
+else {
+    bonusHtml = `
+        <div style="margin-top:10px; padding:10px; border:1px solid var(--card-border); border-radius:6px; background:rgba(255,255,255,0.03); color:var(--text-soft);">
+            <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
+        </div>
+    `;
+}
             statusEl.innerHTML = `
                 <strong>Ваш статус:</strong> 
                 <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
