@@ -392,6 +392,12 @@
                                     <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
                                 </div>
                                 
+                                <!-- ✅ ЧЕКБОКС СПИСАНИЯ БОНУСА (ПК) -->
+                                <div class="form-group checkbox-group" id="bonus-checkbox-wrapper" style="display:none;">
+                                    <input type="checkbox" id="use-bonus">
+                                    <label>Списать бонус <span id="bonus-amount" style="color:var(--gold); font-weight:600;"></span></label>
+                                </div>
+                                
                                 <div class="form-group checkbox-group">
                                     <input type="checkbox" id="agree" required>
                                     <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
@@ -476,6 +482,12 @@
                         <!-- ===== ПОЛЯ ДЛЯ СОБЫТИЯ ===== -->
                         <div id="mobile-event-fields" style="display:none;">
                             <div class="form-group"><label>Email (необязательно)</label><input type="email" id="mobile-email" placeholder="mail@example.com"></div>
+                        </div>
+
+                        <!-- ✅ ЧЕКБОКС СПИСАНИЯ БОНУСА (МОБИЛЬНАЯ) -->
+                        <div class="form-group checkbox-group" id="mobile-bonus-checkbox-wrapper" style="display:none;">
+                            <input type="checkbox" id="mobile-use-bonus">
+                            <label>Списать бонус <span id="mobile-bonus-amount" style="color:var(--gold); font-weight:600;"></span></label>
                         </div>
 
                         <!-- Чекбоксы -->
@@ -883,10 +895,13 @@ document.getElementById('phone').addEventListener('input', function() {
                         <strong>ℹ️ ${data.message}</strong>
                     </div>
                 `;
+                // Скрываем чекбокс бонуса, если есть сообщение о записи
+                const wrapper = document.getElementById('bonus-checkbox-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            // Если бонусы есть и они больше 0 — показываем их
+            // Если бонусы есть и они больше 0 — показываем их и чекбокс
             const hasBonus = data.bonus && typeof data.bonus === 'number' && data.bonus > 0;
             if (hasBonus) {
                 statusEl.innerHTML = `
@@ -896,6 +911,12 @@ document.getElementById('phone').addEventListener('input', function() {
                     </span>
                     <span style="color:var(--gold); margin-left:8px;">💰 ${data.bonus} ₽</span>
                 `;
+                // ✅ Показываем чекбокс списания бонуса
+                const wrapper = document.getElementById('bonus-checkbox-wrapper');
+                if (wrapper) {
+                    wrapper.style.display = 'flex';
+                    document.getElementById('bonus-amount').textContent = `(${data.bonus} ₽)`;
+                }
             } else {
                 // В любом другом случае (0, null, undefined) — показываем приветствие
                 statusEl.innerHTML = `
@@ -907,6 +928,9 @@ document.getElementById('phone').addEventListener('input', function() {
                         <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
                     </div>
                 `;
+                // Скрываем чекбокс
+                const wrapper = document.getElementById('bonus-checkbox-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
             }
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
@@ -932,7 +956,7 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const tr=document.getElementById('tariff-input').value;
     const vkId = document.getElementById('vk-id').value;
 
-    // ✅ ЧЕКБОКС МОЖЕТ НЕ СУЩЕСТВОВАТЬ. ПРОВЕРЯЕМ!
+    // ✅ Чекбокс списания бонуса
     const bonusCheckbox = document.getElementById('use-bonus');
     const useBonus = bonusCheckbox ? bonusCheckbox.checked : false;
 
@@ -968,6 +992,9 @@ document.getElementById('order-form').addEventListener('submit', async function(
             selectTariff('pro');
             updateDateSelect('pro');
             document.getElementById('client-info').style.display = 'none';
+            // Скрываем чекбокс после сброса
+            const wrapper = document.getElementById('bonus-checkbox-wrapper');
+            if (wrapper) wrapper.style.display = 'none';
         } else {
             fb.className='feedback error'; fb.textContent='❌ ' + (result.detail || 'Ошибка');
         }
@@ -1312,11 +1339,15 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             }
             const [date, ts] = dateRaw.split('|');
 
+            // ✅ Чекбокс списания бонуса (мобильная)
+            const bonusCheckbox = document.getElementById('mobile-use-bonus');
+            const useBonus = bonusCheckbox ? bonusCheckbox.checked : false;
+
             result = await apiPost('/api/booking', {
                 surname, name, phone: normalizePhone(phone),
                 referral: referral ? normalizePhone(referral) : '',
                 tariff, date, timeSlot: ts || 'full',
-                source, newsletter, use_bonus: false, vk_id: ''
+                source, newsletter, use_bonus: useBonus, vk_id: ''
             });
         } else {
             const eventId = document.getElementById('mobile-selected-event-id').value;
@@ -1341,6 +1372,9 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.body.style.overflow = 'hidden';
             document.getElementById('mobile-universal-form').reset();
             document.getElementById('mobile-client-info').style.display = 'none';
+            // Скрываем чекбокс после сброса
+            const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
+            if (wrapper) wrapper.style.display = 'none';
         } else {
             fb.className = 'feedback error';
             fb.textContent = '❌ ' + (result.detail || 'Ошибка');
@@ -1431,10 +1465,13 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                         <strong>ℹ️ ${data.message}</strong>
                     </div>
                 `;
+                // Скрываем чекбокс бонуса
+                const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            // Если бонусы есть и они больше 0 — показываем их
+            // Если бонусы есть и они больше 0 — показываем их и чекбокс
             const hasBonus = data.bonus && typeof data.bonus === 'number' && data.bonus > 0;
             if (hasBonus) {
                 statusEl.innerHTML = `
@@ -1444,6 +1481,12 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                     </span>
                     <span style="color:var(--gold); margin-left:8px;">💰 ${data.bonus} ₽</span>
                 `;
+                // ✅ Показываем чекбокс списания бонуса
+                const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
+                if (wrapper) {
+                    wrapper.style.display = 'flex';
+                    document.getElementById('mobile-bonus-amount').textContent = `(${data.bonus} ₽)`;
+                }
             } else {
                 // В любом другом случае (0, null, undefined) — показываем приветствие
                 statusEl.innerHTML = `
@@ -1455,6 +1498,9 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                         <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
                     </div>
                 `;
+                // Скрываем чекбокс
+                const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
             }
         } catch (err) {
             console.warn('Ошибка статуса:', err);
