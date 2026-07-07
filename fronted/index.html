@@ -653,7 +653,10 @@ function openVKApp() {
     const appId = '54664967';
     const vkDeepLink = `https://vk.com/app${appId}`;
     const vkSchemeLink = `vk://vk.com/app${appId}`;
-    document.getElementById('vk-auth-status').textContent = '⏳ Открываем VK...';
+    
+    const statusEl = document.getElementById('vk-auth-status');
+    if (statusEl) statusEl.textContent = '⏳ Открываем VK...';
+
     const iframe = document.createElement('iframe');
     iframe.style.display = 'none';
     iframe.src = vkSchemeLink;
@@ -1525,6 +1528,110 @@ window.apiPost = async function(url, data) {
     }
     return result;
 };
+
+// ================================================================
+// ===== ЗАПРОС ИМЕНИ И ФАМИЛИИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ =====
+if (typeof vkBridge !== 'undefined') {
+    vkBridge.send('VKWebAppGetUserInfo')
+        .then(user => {
+            const nameInput = document.getElementById('name');
+            const surnameInput = document.getElementById('surname');
+            const vkIdInput = document.getElementById('vk-id');
+
+            if (user.first_name && nameInput && !nameInput.value) {
+                nameInput.value = user.first_name;
+            }
+            if (user.last_name && surnameInput && !surnameInput.value) {
+                surnameInput.value = user.last_name;
+            }
+            if (user.id && vkIdInput && !vkIdInput.value) {
+                vkIdInput.value = user.id;
+            }
+
+            const statusEl = document.getElementById('vk-auth-status');
+            if (statusEl) statusEl.textContent = '✅ Имя и фамилия подтянуты из VK';
+        })
+        .catch(err => {
+            console.warn('⚠️ Имя и фамилия не подтянулись:', err.message);
+            const statusEl = document.getElementById('vk-auth-status');
+            if (statusEl) statusEl.textContent = '🔑 Войдите через VK, чтобы подтянуть данные';
+        });
+}
+
+// ===== ФУНКЦИЯ ЗАПРОСА ТЕЛЕФОНА (с проверкой на ПК) =====
+function requestVKPhone(inputElement, statusElementId) {
+    // Если поле уже заполнено — ничего не делаем
+    if (inputElement && inputElement.value.trim() !== '') return;
+
+    // Если VK Bridge доступен (внутри VK) — запрашиваем телефон
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send('VKWebAppGetPhoneNumber')
+            .then(data => {
+                if (data.phone_number && inputElement) {
+                    const rawPhone = data.phone_number.replace(/\D/g, '');
+                    if (rawPhone.length >= 10) {
+                        inputElement.value = '+' + rawPhone;
+                        const statusEl = document.getElementById(statusElementId);
+                        if (statusEl) statusEl.textContent = '✅ Телефон подтянут из VK';
+                    }
+                }
+            })
+            .catch(err => {
+                console.warn('⚠️ Пользователь не разрешил доступ к телефону:', err.message);
+            });
+    } else {
+        // Если на ПК — переносим на страницу авторизации VK
+        const appId = '54664967';
+        const vkDeepLink = `https://vk.com/app${appId}`;
+        window.location.href = vkDeepLink;
+    }
+}
+
+// ===== НАВЕШИВАЕМ ОБРАБОТЧИКИ НА ВСЕ ПОЛЯ ТЕЛЕФОНА =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Для ПК-формы интенсива
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('focus', function() {
+            requestVKPhone(this, 'vk-auth-status');
+        });
+    }
+
+    // Для ПК-формы событий
+    const eventsPhoneInput = document.getElementById('events-phone');
+    if (eventsPhoneInput) {
+        eventsPhoneInput.addEventListener('focus', function() {
+            requestVKPhone(this, 'vk-auth-status-events');
+        });
+    }
+
+    // Для мобильной универсальной формы
+    const mobilePhoneInput = document.getElementById('mobile-phone');
+    if (mobilePhoneInput) {
+        mobilePhoneInput.addEventListener('focus', function() {
+            requestVKPhone(this, 'vk-auth-status-mobile');
+        });
+    }
+});
+
+// ===== КНОПКА "ВОЙТИ ЧЕРЕЗ VK" ТЕПЕРЬ ПРОСТО ОТКРЫВАЕТ ПРИЛОЖЕНИЕ =====
+function openVKApp() {
+    const appId = '54664967';
+    const vkDeepLink = `https://vk.com/app${appId}`;
+    const vkSchemeLink = `vk://vk.com/app${appId}`;
+    
+    const statusEl = document.getElementById('vk-auth-status');
+    if (statusEl) statusEl.textContent = '⏳ Открываем VK...';
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = vkSchemeLink;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.location.href = vkDeepLink;
+    }, 2000);
+}
 
 // ================================================================
 // ===== КОНЕЦ ДОБАВЛЕННОГО КОДА =====
