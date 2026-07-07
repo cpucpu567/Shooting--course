@@ -1338,10 +1338,25 @@ const heroBtn = document.querySelector('.hero .btn');
 if (heroBtn) {
     heroBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        // Всегда скроллим к #tariffs-anchor (он перед тарифами)
         document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
     });
 }
+
+// ===== ВОЗВРАЩАЕМ СКРОЛЛ ПРИ ВЫБОРЕ ТАРИФА (ТОЛЬКО ДЛЯ ТЕЛЕФОНОВ) =====
+const originalSelectTariff = window.selectTariff;
+window.selectTariff = function(tariffId) {
+    if (window.innerWidth <= 700) {
+        // Вызываем мобильную логику выбора тарифа
+        mobileSelectTariff(tariffId);
+        // Через небольшую задержку скроллим к форме записи
+        setTimeout(() => {
+            document.getElementById('booking-section').scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        // На ПК оставляем стандартную логику
+        originalSelectTariff(tariffId);
+    }
+};
 
 // ===== ПЕРЕОПРЕДЕЛЯЕМ ПЛАВАЮЩУЮ КНОПКУ "СОБЫТИЯ" =====
 const floatingEventBtn = document.getElementById('floating-event-btn');
@@ -1473,6 +1488,22 @@ window.loadEvents = function() {
             mobileRenderEventsCarousel();
         }
     }, 500);
+};
+
+// ===== АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ КАРУСЕЛИ СОБЫТИЙ ПРИ СОЗДАНИИ НОВОГО =====
+// Перехватываем создание события через API и принудительно перезагружаем карусель
+const originalApiPost = window.apiPost;
+window.apiPost = async function(url, data) {
+    const result = await originalApiPost(url, data);
+    // Если это создание события и оно успешно
+    if (url === '/api/events' && result.status === 'created') {
+        // Обновляем события и перерисовываем обе карусели (ПК и мобильную)
+        await loadEvents();
+        if (window.innerWidth <= 700) {
+            setTimeout(mobileRenderEventsCarousel, 300);
+        }
+    }
+    return result;
 };
 
 // ================================================================
