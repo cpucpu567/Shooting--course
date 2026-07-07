@@ -1359,32 +1359,40 @@ window.selectEvent = function(eventId) {
     }
 };
 
-// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" =====
+// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" (ТОЛЬКО СКРОЛЛ К ТАРИФАМ) =====
 const heroBtn = document.querySelector('.hero .btn');
 if (heroBtn) {
     heroBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        if (window.innerWidth <= 700) {
-            // Скроллим к карусели тарифов, НО НЕ переключаем вкладку
-            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
-        } else {
-            document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
-        }
+        // ВСЕГДА скроллим к секции тарифов (и на ПК, и на телефоне)
+        document.getElementById('tariff-section').scrollIntoView({ behavior: 'smooth' });
     });
 }
+
+// ===== ПЕРЕОПРЕДЕЛЯЕМ КЛИК ПО ТАРИФУ (СКРОЛЛ К ФОРМЕ + ПЕРЕКЛЮЧЕНИЕ) =====
+const originalSelectTariff = window.selectTariff;
+window.selectTariff = function(tariffId) {
+    if (window.innerWidth <= 700) {
+        // Сначала переключаем вкладку
+        mobileSelectTariff(tariffId);
+        // Потом скроллим к мобильной форме (она чуть ниже)
+        setTimeout(() => {
+            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        originalSelectTariff(tariffId);
+    }
+};
 
 // ===== ПЕРЕОПРЕДЕЛЯЕМ ПЛАВАЮЩУЮ КНОПКУ "СОБЫТИЯ" =====
 const floatingEventBtn = document.getElementById('floating-event-btn');
 if (floatingEventBtn) {
-    // Убираем стандартное поведение ссылки
     floatingEventBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (window.innerWidth <= 700) {
-            // На телефонах: скроллим к мобильной карусели и переключаем на событие
             document.getElementById('mobile-events-anchor').scrollIntoView({ behavior: 'smooth' });
             mobileSetMode('event');
         } else {
-            // На ПК: скроллим к карусели событий
             document.getElementById('events-anchor').scrollIntoView({ behavior: 'smooth' });
         }
     });
