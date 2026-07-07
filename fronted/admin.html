@@ -311,39 +311,36 @@
         }
 
         // ===== Даты =====
-        async function loadDates() {
+        async function renderDates() {
+            const container = document.getElementById('dates-list');
             try {
                 const config = await apiFetch('/api/config');
-                renderDates(config.dates || []);
-            } catch (err) {
-                document.getElementById('dates-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
-            }
-        }
-
-        function renderDates(dates) {
-            const container = document.getElementById('dates-list');
-            if (!dates || !dates.length) {
-                container.innerHTML = '<p style="opacity:0.4;">Нет добавленных дат</p>';
-                return;
-            }
-            container.innerHTML = dates.map(d => `
-                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                    <div>
-                        <strong>${d.label}</strong>
-                        <span style="opacity:0.4;font-size:0.85rem;">${d.value}</span>
-                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
-                            ${d.group}
-                        </span>
-                        <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
-                            👥 ${d.currentCount || 0}/${d.maxPersons || 10}
-                        </span>
-                        <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
-                            ${d.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
-                        </span>
+                const dates = config.dates || [];
+                if (!dates || !dates.length) {
+                    container.innerHTML = '<p style="opacity:0.4;">Нет добавленных дат</p>';
+                    return;
+                }
+                container.innerHTML = dates.map(d => `
+                    <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <div>
+                            <strong>${d.label}</strong>
+                            <span style="opacity:0.4;font-size:0.85rem;">${d.value}</span>
+                            <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
+                                ${d.group}
+                            </span>
+                            <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
+                                👥 ${d.currentCount || 0}/${d.maxPersons || 10}
+                            </span>
+                            <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
+                                ${d.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
+                            </span>
+                        </div>
+                        <button onclick="deleteDate('${d.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
                     </div>
-                    <button onclick="deleteDate('${d.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
+            }
         }
 
         async function addNewDate() {
@@ -368,7 +365,7 @@
                     min_persons: minPersons,
                     max_persons: maxPersons
                 });
-                await loadDates(); // Принудительно обновляем список дат
+                await renderDates(); // Принудительно обновляем список дат
                 document.getElementById('new-date').value = '';
                 document.getElementById('new-date-label').value = '';
                 alert('✅ Дата добавлена!');
@@ -381,7 +378,7 @@
             if (!confirm('Удалить это занятие?')) return;
             try {
                 await fetch(`${API_BASE}/api/dates/${id}`, { method: 'DELETE' });
-                await loadDates(); // Принудительно обновляем список дат
+                await renderDates(); // Принудительно обновляем список дат
             } catch (err) {
                 alert('❌ Ошибка при удалении: ' + err.message);
             }
@@ -430,7 +427,7 @@
             try {
                 await fetch(`${API_BASE}/api/clients/${encodeURIComponent(phone)}`, { method: 'DELETE' });
                 await renderClients(); // Обновляем список клиентов
-                await loadDates(); // Принудительно обновляем даты
+                await renderDates(); // Принудительно обновляем даты
             } catch (err) {
                 alert('❌ Ошибка при удалении клиента');
             }
@@ -542,39 +539,35 @@
         }
 
         // ===== События =====
-        async function loadEvents() {
+        async function renderEvents() {
+            const container = document.getElementById('events-list');
             try {
                 const events = await apiFetch('/api/events');
-                renderEvents(events || []);
-            } catch (err) {
-                document.getElementById('events-list').innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
-            }
-        }
-
-        function renderEvents(events) {
-            const container = document.getElementById('events-list');
-            if (!events || !events.length) {
-                container.innerHTML = '<p style="opacity:0.4;">Нет созданных событий</p>';
-                return;
-            }
-            container.innerHTML = events.map(e => `
-                <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                    <div>
-                        <strong>${e.title}</strong>
-                        <span style="opacity:0.4;font-size:0.85rem;">${e.date} ${e.time}</span>
-                        <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
-                            📍 ${e.location}
-                        </span>
-                        <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
-                            👥 ${e.minParticipants}-${e.maxParticipants} чел.
-                        </span>
-                        <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
-                            ${e.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
-                        </span>
+                if (!events || !events.length) {
+                    container.innerHTML = '<p style="opacity:0.4;">Нет созданных событий</p>';
+                    return;
+                }
+                container.innerHTML = events.map(e => `
+                    <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                        <div>
+                            <strong>${e.title}</strong>
+                            <span style="opacity:0.4;font-size:0.85rem;">${e.date} ${e.time}</span>
+                            <span style="background:var(--card-border);padding:2px 10px;border-radius:4px;font-size:0.7rem;margin-left:8px;">
+                                📍 ${e.location}
+                            </span>
+                            <span style="margin-left:8px; font-size:0.7rem; color:var(--gold);">
+                                👥 ${e.minParticipants}-${e.maxParticipants} чел.
+                            </span>
+                            <span style="margin-left:8px; font-size:0.7rem; color:var(--purple);">
+                                ${e.status === 'confirmed' ? '✅ Подтверждено' : '⏳ Ожидание'}
+                            </span>
+                        </div>
+                        <button onclick="deleteEvent('${e.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
                     </div>
-                    <button onclick="deleteEvent('${e.id}')" class="btn secondary" style="padding:4px 12px;font-size:0.7rem;">🗑 Удалить</button>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (err) {
+                container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки: ${err.message}</p>`;
+            }
         }
 
         // ===== Полная и работающая функция createEvent =====
@@ -609,7 +602,7 @@
                 });
 
                 if (result.status === 'created') {
-                    await loadEvents();
+                    await renderEvents();
                     document.getElementById('event-title').value = '';
                     document.getElementById('event-date').value = '';
                     document.getElementById('event-time').value = '';
@@ -630,7 +623,7 @@
             if (!confirm('Удалить это событие?')) return;
             try {
                 await fetch(`${API_BASE}/api/events/${id}`, { method: 'DELETE' });
-                loadEvents();
+                renderEvents();
             } catch (err) {
                 alert('❌ Ошибка при удалении: ' + err.message);
             }
@@ -763,10 +756,10 @@
         }
 
         // ===== Инициализация =====
-        loadDates();
+        renderDates();
         loadPrices();
         loadGallery();
-        loadEvents();
+        renderEvents();
         renderClients();
 
         // ===== Правильная привязка кнопки =====
