@@ -26,6 +26,7 @@
         body {
             font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
             background-color: #1A1C20;
+            /* ФОН ЗАМЕНЁН НА ССЫЛКУ ИЗ ВК */
             background-image: url('https://sun9-35.userapi.com/s/v1/ig2/8hi63F5CGUnY5U_9On9brq7Jm_RCf3OI7sZPz-3UnD-vypG16VZWhzGkiQjyB1DtEkdUDBLVuJ41E31Jwk5Ygx4k.jpg?quality=95&as=32x48,48x72,72x107,108x161,160x238,240x358,360x536,480x715,540x804,640x953,720x1073,784x1168&from=bu&cs=784x0');
             background-size: cover;
             background-attachment: fixed;
@@ -298,14 +299,7 @@
         </div>
     </section>
 
-    <section><div class="container"><div class="loyalty-block glass">
-        <div style="font-size:1.2rem; font-weight:700; color:var(--gold); margin-bottom:8px;">💰 500 ₽</div>
-        <div style="color:var(--text-soft); font-size:0.95rem;">
-            — за приглашение друга<br>
-            — за каждое 5-е занятие<br>
-            — за посещение события
-        </div>
-    </div></div></section>
+    <section><div class="container"><div class="loyalty-block glass"><strong>Приведи друга</strong> — скидка 500 ₽ &nbsp;|&nbsp; <strong>Постоянство</strong> — каждое 5-е занятие со скидкой 500 ₽</div></div></section>
 
     <!-- ===== БЛОК ЗАПИСИ (УНИВЕРСАЛЬНЫЙ) ===== -->
     <section id="booking-section" style="padding: 50px 0;">
@@ -362,6 +356,11 @@
                                 Выбран тариф: <span id="selected-tariff-name">Базовый</span>
                             </div>
 
+                            <div style="margin-bottom:15px; text-align:center;">
+                                <button id="vk-auth-btn" class="btn" onclick="openVKApp()" style="padding:10px 24px; font-size:0.85rem;">🔑 Войти через VK</button>
+                                <div id="vk-auth-status" style="font-size:0.8rem; margin-top:6px; color:var(--text-soft);"></div>
+                            </div>
+                            
                             <form id="order-form" novalidate>
                                 <input type="hidden" id="tariff-input" value="pro">
                                 <input type="hidden" id="vk-id" value="">
@@ -440,6 +439,7 @@
 
                     <form id="mobile-universal-form" novalidate>
                         <input type="hidden" id="mobile-form-mode" value="intensive">
+                        <input type="hidden" id="mobile-vk-id" value="">
                         <input type="hidden" id="mobile-selected-event-id" value="">
                         <input type="hidden" id="mobile-tariff-input" value="pro">
 
@@ -628,6 +628,48 @@ const API_BASE = 'https://shooting-course.onrender.com';
 
 if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
+}
+
+function openVKApp() {
+    const appId = '54664967';
+    const vkDeepLink = `https://vk.com/app${appId}`;
+    const vkSchemeLink = `vk://vk.com/app${appId}`;
+    document.getElementById('vk-auth-status').textContent = '⏳ Открываем VK...';
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = vkSchemeLink;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+        document.body.removeChild(iframe);
+        window.location.href = vkDeepLink;
+    }, 2000);
+}
+
+if (typeof vkBridge !== 'undefined') {
+    vkBridge.send('VKWebAppGetUserInfo')
+        .then(user => {
+            if (user.first_name) document.getElementById('name').value = user.first_name;
+            if (user.last_name) document.getElementById('surname').value = user.last_name;
+            if (user.id) document.getElementById('vk-id').value = user.id;
+            const statusEl = document.getElementById('vk-auth-status');
+            if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
+            return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
+        })
+        .then(groups => {
+            if (!groups.is_member) {
+                return vkBridge.send('VKWebAppShowSubscriptionBox', {
+                    subscribe: true,
+                    message: 'Подпишитесь на сообщество «Стрелковый интенсив», чтобы получать анонсы и новости.',
+                    buttonText: 'Подписаться',
+                    skipButtonText: 'Позже'
+                }).then(result => {
+                    if (result.is_subscribed) console.log('✅ Пользователь подписался!');
+                });
+            }
+        })
+        .catch(err => {
+            console.warn('⚠️ VK авторизация не сработала:', err.message);
+        });
 }
 
 async function apiFetch(url) {
