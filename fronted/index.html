@@ -407,6 +407,8 @@
 
             <!-- ===== МОБИЛЬНАЯ ВЕРСИЯ (одна форма + карусель событий внутри) ===== -->
             <div class="mobile-version" style="display:none;">
+                <div id="mobile-tariffs-anchor"></div>
+                <div id="mobile-events-anchor"></div>
                 <h2>Записаться</h2>
                 
                 <!-- Переключатель вкладок -->
@@ -1163,7 +1165,7 @@ if (ht) {
 }
 
 // ================================================================
-// ===== ДОБАВЛЕННЫЙ КОД ДЛЯ МОБИЛЬНОГО ПЕРЕКЛЮЧЕНИЯ =====
+// ===== ДОБАВЛЕННЫЙ КОД ДЛЯ МОБИЛЬНОГО ПЕРЕКЛЮЧЕНИЯ И НАВИГАЦИИ =====
 // ================================================================
 
 // ===== МОБИЛЬНОЕ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ =====
@@ -1337,6 +1339,9 @@ const originalSelectTariff = window.selectTariff;
 window.selectTariff = function(tariffId) {
     if (window.innerWidth <= 700) {
         mobileSelectTariff(tariffId);
+        setTimeout(() => {
+            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     } else {
         originalSelectTariff(tariffId);
     }
@@ -1346,10 +1351,47 @@ const originalSelectEvent = window.selectEvent;
 window.selectEvent = function(eventId) {
     if (window.innerWidth <= 700) {
         mobileSelectEvent(eventId);
+        setTimeout(() => {
+            document.getElementById('mobile-events-anchor').scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     } else {
         originalSelectEvent(eventId);
     }
 };
+
+// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" =====
+const heroBtn = document.querySelector('.hero .btn');
+if (heroBtn) {
+    // Убираем стандартное поведение ссылки
+    heroBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (window.innerWidth <= 700) {
+            // На телефонах: скроллим к мобильной форме и переключаем на интенсив
+            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
+            mobileSetMode('intensive');
+        } else {
+            // На ПК: скроллим к тарифам
+            document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+}
+
+// ===== ПЕРЕОПРЕДЕЛЯЕМ ПЛАВАЮЩУЮ КНОПКУ "СОБЫТИЯ" =====
+const floatingEventBtn = document.getElementById('floating-event-btn');
+if (floatingEventBtn) {
+    // Убираем стандартное поведение ссылки
+    floatingEventBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (window.innerWidth <= 700) {
+            // На телефонах: скроллим к мобильной карусели и переключаем на событие
+            document.getElementById('mobile-events-anchor').scrollIntoView({ behavior: 'smooth' });
+            mobileSetMode('event');
+        } else {
+            // На ПК: скроллим к карусели событий
+            document.getElementById('events-anchor').scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+}
 
 // ===== МОБИЛЬНЫЙ ОБРАБОТЧИК ВВОДА ТЕЛЕФОНА (для статуса) =====
 document.getElementById('mobile-phone').addEventListener('input', function() {
