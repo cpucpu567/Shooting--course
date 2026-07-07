@@ -224,13 +224,19 @@
         const ADMIN_PASS = 'ShootingAdmin2026!';
         let clientsFilter = 'all';
 
-        // Возвращаем прямую ссылку на ваш работающий бэкенд
+        // ===== Прямая ссылка на бэкенд (без кеширования) =====
         const API_BASE = 'https://shooting-course.onrender.com';
+
+        // ===== Функция генерации случайного параметра для сброса кеша =====
+        function noCacheUrl(url) {
+            return url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+        }
 
         async function apiFetch(url) {
             try {
-                console.log(`📤 GET: ${API_BASE + url}`);
-                const res = await fetch(API_BASE + url);
+                const cacheBustedUrl = noCacheUrl(API_BASE + url);
+                console.log(`📤 GET: ${cacheBustedUrl}`);
+                const res = await fetch(cacheBustedUrl);
                 if (!res.ok) {
                     const errText = await res.text();
                     console.error(`❌ HTTP ${res.status}:`, errText);
@@ -362,7 +368,7 @@
                     min_persons: minPersons,
                     max_persons: maxPersons
                 });
-                loadDates();
+                await loadDates(); // Принудительно обновляем список дат
                 document.getElementById('new-date').value = '';
                 document.getElementById('new-date-label').value = '';
                 alert('✅ Дата добавлена!');
@@ -375,7 +381,7 @@
             if (!confirm('Удалить это занятие?')) return;
             try {
                 await fetch(`${API_BASE}/api/dates/${id}`, { method: 'DELETE' });
-                loadDates();
+                await loadDates(); // Принудительно обновляем список дат
             } catch (err) {
                 alert('❌ Ошибка при удалении: ' + err.message);
             }
@@ -423,7 +429,8 @@
             if (!confirm(`Удалить клиента ${phone}? Это удалит все его данные.`)) return;
             try {
                 await fetch(`${API_BASE}/api/clients/${encodeURIComponent(phone)}`, { method: 'DELETE' });
-                renderClients();
+                await renderClients(); // Обновляем список клиентов
+                await loadDates(); // Принудительно обновляем даты
             } catch (err) {
                 alert('❌ Ошибка при удалении клиента');
             }
