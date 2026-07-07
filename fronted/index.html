@@ -1362,15 +1362,12 @@ window.selectEvent = function(eventId) {
 // ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" =====
 const heroBtn = document.querySelector('.hero .btn');
 if (heroBtn) {
-    // Убираем стандартное поведение ссылки
     heroBtn.addEventListener('click', function(e) {
         e.preventDefault();
         if (window.innerWidth <= 700) {
-            // На телефонах: скроллим к мобильной форме и переключаем на интенсив
+            // Скроллим к карусели тарифов, НО НЕ переключаем вкладку
             document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
-            mobileSetMode('intensive');
         } else {
-            // На ПК: скроллим к тарифам
             document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
         }
     });
