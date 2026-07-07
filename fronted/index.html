@@ -281,6 +281,7 @@
 
     <div id="tariffs-anchor"></div>
 
+    <!-- ===== БЛОК ТАРИФОВ (ПЕРЕД БЛОКОМ ЛОЯЛЬНОСТИ) ===== -->
     <section id="tariff-section">
         <div class="container">
             <h2>Форматы <span>участия</span></h2>
@@ -407,7 +408,6 @@
 
             <!-- ===== МОБИЛЬНАЯ ВЕРСИЯ (одна форма + карусель событий внутри) ===== -->
             <div class="mobile-version" style="display:none;">
-                <div id="mobile-tariffs-anchor"></div>
                 <div id="mobile-events-anchor"></div>
                 <h2>Записаться</h2>
                 
@@ -1333,56 +1333,15 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
     }
 });
 
-// ===== ПОДКЛЮЧАЕМ КЛИКИ ПО ТАРИФАМ И СОБЫТИЯМ К МОБИЛЬНОЙ ВЕРСИИ =====
-// Переопределяем selectTariff и selectEvent для мобильных
-const originalSelectTariff = window.selectTariff;
-window.selectTariff = function(tariffId) {
-    if (window.innerWidth <= 700) {
-        mobileSelectTariff(tariffId);
-        setTimeout(() => {
-            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    } else {
-        originalSelectTariff(tariffId);
-    }
-};
-
-const originalSelectEvent = window.selectEvent;
-window.selectEvent = function(eventId) {
-    if (window.innerWidth <= 700) {
-        mobileSelectEvent(eventId);
-        setTimeout(() => {
-            document.getElementById('mobile-events-anchor').scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-    } else {
-        originalSelectEvent(eventId);
-    }
-};
-
-// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" (ТОЛЬКО СКРОЛЛ К ТАРИФАМ) =====
+// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" =====
 const heroBtn = document.querySelector('.hero .btn');
 if (heroBtn) {
     heroBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        // ВСЕГДА скроллим к секции тарифов (и на ПК, и на телефоне)
-        document.getElementById('tariff-section').scrollIntoView({ behavior: 'smooth' });
+        // Всегда скроллим к #tariffs-anchor (он перед тарифами)
+        document.getElementById('tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
     });
 }
-
-// ===== ПЕРЕОПРЕДЕЛЯЕМ КЛИК ПО ТАРИФУ (СКРОЛЛ К ФОРМЕ + ПЕРЕКЛЮЧЕНИЕ) =====
-const originalSelectTariff = window.selectTariff;
-window.selectTariff = function(tariffId) {
-    if (window.innerWidth <= 700) {
-        // Сначала переключаем вкладку
-        mobileSelectTariff(tariffId);
-        // Потом скроллим к мобильной форме (она чуть ниже)
-        setTimeout(() => {
-            document.getElementById('mobile-tariffs-anchor').scrollIntoView({ behavior: 'smooth' });
-        }, 300);
-    } else {
-        originalSelectTariff(tariffId);
-    }
-};
 
 // ===== ПЕРЕОПРЕДЕЛЯЕМ ПЛАВАЮЩУЮ КНОПКУ "СОБЫТИЯ" =====
 const floatingEventBtn = document.getElementById('floating-event-btn');
