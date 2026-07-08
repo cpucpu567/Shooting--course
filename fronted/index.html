@@ -648,7 +648,7 @@ if (typeof vkBridge !== 'undefined') {
 }
 
 // ================================================================
-// ===== ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА ДАННЫХ (VK И БРАУЗЕР) =====
+// ===== ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА ДАННЫХ =====
 // ================================================================
 function forceLoadData() {
     console.log('🔄 Принудительная загрузка данных');
@@ -682,7 +682,6 @@ document.addEventListener('visibilitychange', function() {
 // ===== АВТОЗАПОЛНЕНИЕ ИЗ VK =====
 // ================================================================
 if (typeof vkBridge !== 'undefined') {
-    // 1. Имя и фамилия
     vkBridge.send('VKWebAppGetUserInfo')
         .then(user => {
             if (user.first_name) {
@@ -700,7 +699,6 @@ if (typeof vkBridge !== 'undefined') {
         })
         .catch(err => console.warn('❌ Не удалось получить данные пользователя:', err));
 
-    // 2. Номер телефона (с запросом разрешения)
     vkBridge.send('VKWebAppGetPhoneNumber')
         .then(data => {
             if (data.phone_number) {
@@ -758,7 +756,6 @@ async function loadConfig() {
     }
 }
 
-// ===== ОБНОВЛЁННАЯ ЛОГИКА ВЫБОРА ТАРИФА =====
 function selectTariff(t) {
     selectedCourse = t;
     document.getElementById('tariff-input').value = t;
@@ -1063,19 +1060,31 @@ function changeSlide(dir) {
     renderMainGallery();
 }
 
-// ===== События =====
+// ================================================================
+// ===== ИСПРАВЛЕННЫЙ БЛОК СОБЫТИЙ =====
+// ================================================================
 async function loadEvents() {
     try {
         const data = await apiFetch('/api/events');
         eventsData = data || [];
+        
+        // ✅ Сначала рендерим ПК-карусель, потом мобильную
         renderEventsCarousel();
-        // ✅ После загрузки синхронизируем первый слайд с event-id
+        
+        // ✅ Устанавливаем первый слайд в event-id
         if (eventsData.length > 0) {
             const eventIdInput = document.getElementById('event-id');
             if (eventIdInput) {
                 eventIdInput.value = eventsData[0].id;
             }
         }
+        
+        // ✅ Если мобилка — рендерим мобильную карусель
+        if (window.innerWidth <= 700) {
+            mobileRenderEventsCarousel();
+        }
+        
+        eventsLoaded = true;
     } catch (err) {
         console.warn('Не удалось загрузить события:', err);
     }
@@ -1084,6 +1093,8 @@ async function loadEvents() {
 function renderEventsCarousel() {
     const container = document.getElementById('events-carousel');
     const dotsContainer = document.getElementById('event-dots');
+    
+    if (!container) return;
     
     if (!eventsData || eventsData.length === 0) {
         container.innerHTML = `
@@ -1116,13 +1127,13 @@ function renderEventsCarousel() {
 
 function changeEventSlide(dir) {
     if (!eventsData.length) return;
-    const slides = document.querySelectorAll('.event-slide');
+    const slides = document.querySelectorAll('#events-carousel .event-slide');
+    if (!slides.length) return;
     slides[currentEventSlide].style.display = 'none';
     currentEventSlide = (currentEventSlide + dir + slides.length) % slides.length;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
 
-    // ✅ Синхронизируем скрытый инпут
     const eventIdInput = document.getElementById('event-id');
     if (eventIdInput && eventsData[currentEventSlide]) {
         eventIdInput.value = eventsData[currentEventSlide].id;
@@ -1131,13 +1142,13 @@ function changeEventSlide(dir) {
 
 function goToEventSlide(index) {
     if (!eventsData.length) return;
-    const slides = document.querySelectorAll('.event-slide');
+    const slides = document.querySelectorAll('#events-carousel .event-slide');
+    if (!slides.length) return;
     slides[currentEventSlide].style.display = 'none';
     currentEventSlide = index;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
 
-    // ✅ Синхронизируем скрытый инпут
     const eventIdInput = document.getElementById('event-id');
     if (eventIdInput && eventsData[currentEventSlide]) {
         eventIdInput.value = eventsData[currentEventSlide].id;
@@ -1145,7 +1156,7 @@ function goToEventSlide(index) {
 }
 
 function updateEventDots() {
-    const dots = document.querySelectorAll('.event-dot');
+    const dots = document.querySelectorAll('#event-dots .event-dot');
     dots.forEach((dot, i) => {
         dot.style.background = i === currentEventSlide ? 'var(--purple)' : '#444';
     });
@@ -1194,7 +1205,7 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-// ✅ ОБНОВЛЁННЫЙ ОБРАБОТЧИК ФОРМЫ СОБЫТИЙ (с учётом чекбокса подписки)
+// ✅ ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ СОБЫТИЙ
 document.getElementById('events-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('events-form-feedback');
@@ -1212,7 +1223,14 @@ document.getElementById('events-form').addEventListener('submit', async function
         return;
     }
 
-    const eventId = document.getElementById('event-id').value; // ✅ Берём из скрытого инпута
+    // ✅ ЖДЁМ, пока загрузятся события, если ещё нет
+    if (!eventsLoaded || eventsData.length === 0) {
+        fb.className = 'feedback error';
+        fb.textContent = '⏳ События загружаются, подождите немного...';
+        return;
+    }
+
+    const eventId = document.getElementById('event-id').value;
     if (!eventId) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Событие не выбрано';
@@ -1255,10 +1273,9 @@ if (ht) {
 }
 
 // ================================================================
-// ===== ДОБАВЛЕННЫЙ КОД ДЛЯ МОБИЛЬНОГО ПЕРЕКЛЮЧЕНИЯ И НАВИГАЦИИ =====
+// ===== МОБИЛЬНОЕ ПЕРЕКЛЮЧЕНИЕ И НАВИГАЦИЯ =====
 // ================================================================
 
-// ===== МОБИЛЬНОЕ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ =====
 function mobileSetMode(mode) {
     const intensiveFields = document.getElementById('mobile-intensive-fields');
     const eventFields = document.getElementById('mobile-event-fields');
@@ -1531,9 +1548,12 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
     }, 800);
 });
 
+// ✅ МОБИЛЬНАЯ КАРУСЕЛЬ (рендерится отдельно, с задержкой)
 function mobileRenderEventsCarousel() {
     const container = document.getElementById('mobile-events-carousel');
     const dotsContainer = document.getElementById('mobile-event-dots');
+    
+    if (!container) return;
     
     if (!eventsData || eventsData.length === 0) {
         container.innerHTML = `
@@ -1593,19 +1613,12 @@ function mobileUpdateEventDots() {
     });
 }
 
-const originalLoadEvents = window.loadEvents;
-window.loadEvents = function() {
-    originalLoadEvents();
-    setTimeout(() => {
-        if (window.innerWidth <= 700) {
-            mobileRenderEventsCarousel();
-        }
-    }, 500);
-};
-
-const originalApiPost = window.apiPost;
+// ================================================================
+// ===== ПЕРЕХВАТ СОЗДАНИЯ СОБЫТИЙ ДЛЯ ОБНОВЛЕНИЯ КАРУСЕЛИ =====
+// ================================================================
+const originalApiPostEvents = window.apiPost;
 window.apiPost = async function(url, data) {
-    const result = await originalApiPost(url, data);
+    const result = await originalApiPostEvents(url, data);
     if (url === '/api/events' && result.status === 'created') {
         await loadEvents();
         if (window.innerWidth <= 700) {
@@ -1615,14 +1628,12 @@ window.apiPost = async function(url, data) {
     return result;
 };
 
-// ================================================================
-// ===== УДАЛЯЕМ СТАРЫЙ DOMContentLoaded, ТАК КАК forceLoadData УЖЕ РАБОТАЕТ =====
-// ================================================================
-// document.addEventListener('DOMContentLoaded', () => {
-//     loadConfig();
-//     loadGallery();
-//     loadEvents();
-// });
+// ✅ Если события уже загружены, но мобильная карусель пустая — принудительно рендерим
+setTimeout(() => {
+    if (eventsData.length > 0 && window.innerWidth <= 700) {
+        mobileRenderEventsCarousel();
+    }
+}, 1000);
 </script>
 </body>
 </html>
