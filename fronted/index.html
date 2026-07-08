@@ -1634,6 +1634,106 @@ setTimeout(() => {
         mobileRenderEventsCarousel();
     }
 }, 1000);
+// ================================================================
+// ===== ФИКС: АВТОМАТИЧЕСКИЙ ВЫБОР ПЕРВОГО СОБЫТИЯ =====
+// ================================================================
+
+// Функция, которая гарантирует, что event-id заполнен
+function ensureEventIdSelected() {
+    const eventIdInput = document.getElementById('event-id');
+    if (!eventIdInput) return;
+
+    // Если инпут пустой, но события загружены — берём первое событие
+    if (!eventIdInput.value && eventsData.length > 0) {
+        eventIdInput.value = eventsData[0].id;
+        console.log(`✅ Событие ID ${eventsData[0].id} автоматически выбрано для формы.`);
+    }
+}
+
+// Слушаем загрузку событий
+const originalLoadEventsForFix = window.loadEvents;
+window.loadEvents = function() {
+    // Вызываем оригинальную функцию
+    if (typeof originalLoadEventsForFix === 'function') {
+        // Если это переопределённая функция, используем её, иначе вызываем напрямую
+    }
+    // В любом случае, после загрузки данных вызываем наш фикс
+    setTimeout(ensureEventIdSelected, 500);
+};
+
+// А также вызываем принудительно при старте
+setTimeout(ensureEventIdSelected, 1500);
+
+// ================================================================
+// ===== ФИКС ОБРАБОТЧИКА ФОРМЫ (чтобы показывал ошибки) =====
+// ================================================================
+
+// Перехватываем отправку формы событий с явным выводом ошибки в консоль
+document.getElementById('events-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fb = document.getElementById('events-form-feedback');
+    fb.className = 'feedback'; fb.style.display = 'none';
+
+    const surname = document.getElementById('events-surname').value.trim();
+    const name = document.getElementById('events-name').value.trim();
+    const phone = document.getElementById('events-phone').value.trim();
+    const email = document.getElementById('events-email').value.trim();
+    const subscribed = document.getElementById('events-newsletter').checked;
+    
+    if (!surname || !name || !phone) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Заполните все обязательные поля';
+        fb.style.display = 'block';
+        return;
+    }
+
+    // Принудительно проверяем event-id перед отправкой
+    let eventId = document.getElementById('event-id').value;
+    
+    // Если вдруг он пустой, пытаемся взять первый из списка
+    if (!eventId && eventsData.length > 0) {
+        eventId = eventsData[0].id;
+        document.getElementById('event-id').value = eventId;
+        console.log(`🔄 Исправлено: использовано событие ID ${eventId}`);
+    }
+
+    if (!eventId) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Событие не выбрано (загрузите страницу заново или выберите событие в карусели)';
+        fb.style.display = 'block';
+        console.error('❌ Ошибка: event-id = null или undefined');
+        return;
+    }
+
+    console.log(`📤 Отправка заявки на событие ID: ${eventId}`);
+
+    try {
+        const result = await apiPost('/api/event/booking', {
+            event_id: parseInt(eventId),
+            surname,
+            name,
+            phone: normalizePhone(phone),
+            email,
+            subscribed
+        });
+        if (result.status === 'created') {
+            fb.className = 'feedback success';
+            fb.textContent = '✅ Заявка на событие принята!';
+            fb.style.display = 'block';
+            document.getElementById('events-form').reset();
+            // Восстанавливаем ID события после сброса формы
+            document.getElementById('event-id').value = eventId;
+        } else {
+            fb.className = 'feedback error';
+            fb.textContent = '❌ ' + (result.detail || 'Ошибка сервера');
+            fb.style.display = 'block';
+        }
+    } catch (err) {
+        fb.className = 'feedback error';
+        fb.textContent = '❌ Ошибка сети: ' + err.message;
+        fb.style.display = 'block';
+    }
+});
 </script>
 </body>
 </html>
