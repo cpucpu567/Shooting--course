@@ -636,10 +636,11 @@ async function loadEvents() {
         const res = await fetch(API_BASE + '/api/events');
         eventsData = await res.json();
         
-        // Если есть события — отрисовываем карусель и подставляем ID в форму
         if (eventsData.length > 0) {
             renderMobileCarousel();
-            setupMobileForm(); // Подставляем ID первого события
+            setupMobileForm();
+        } else {
+            document.getElementById('mobile-events-carousel').innerHTML = '<p style="color:var(--text-soft); text-align:center; padding:20px;">Событий пока нет</p>';
         }
     } catch (e) {
         console.warn('Ошибка загрузки событий:', e);
@@ -651,12 +652,8 @@ function renderMobileCarousel() {
     const container = document.getElementById('mobile-events-carousel');
     const dotsContainer = document.getElementById('mobile-event-dots');
     
-    if (!container || eventsData.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-soft); text-align:center; padding:20px;">Событий пока нет</p>';
-        return;
-    }
+    if (!container || eventsData.length === 0) return;
 
-    // Рендерим слайды
     container.innerHTML = eventsData.map((e, i) => `
         <div class="event-slide" style="min-width:100%; padding:20px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
             ${e.posterUrl ? `<img src="${e.posterUrl}" style="max-width:100%; border-radius:8px; max-height:150px; object-fit:cover;">` : ''}
@@ -668,7 +665,6 @@ function renderMobileCarousel() {
         </div>
     `).join('');
 
-    // Рендерим точки
     dotsContainer.innerHTML = eventsData.map((_, i) => `
         <div class="event-dot" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="goToSlide(${i})"></div>
     `).join('');
@@ -676,7 +672,6 @@ function renderMobileCarousel() {
     window.mobileCurrentEventSlide = 0;
 }
 
-// ===== ПЕРЕКЛЮЧЕНИЕ СЛАЙДОВ =====
 function changeSlide(dir) {
     const slides = document.querySelectorAll('#mobile-events-carousel .event-slide');
     if (!slides.length) return;
@@ -702,37 +697,61 @@ function updateDots() {
     });
 }
 
-// ===== ВЫБОР СОБЫТИЯ ДЛЯ ЗАПИСИ =====
+// ===== ВЫБОР СОБЫТИЯ =====
 function selectMobileEvent(eventId) {
     const event = eventsData.find(e => e.id === eventId);
     if (event) {
-        // Показываем плашку и заполняем скрытое поле
         document.getElementById('mobile-selected-event-id').value = eventId;
         document.getElementById('mobile-selected-event-name').textContent = event.title;
         document.getElementById('mobile-selected-event-badge').style.display = 'block';
         
-        // Переключаем вкладку на "Событие"
+        // ПРИНУДИТЕЛЬНО ПЕРЕКЛЮЧАЕМ НА СОБЫТИЕ
         document.getElementById('mobile-form-mode').value = 'event';
         document.getElementById('mobile-intensive-fields').style.display = 'none';
         document.getElementById('mobile-event-fields').style.display = 'block';
         
-        // Визуально выделяем кнопку "Событие"
         document.getElementById('mobile-mode-event').style.background = 'var(--gold)';
         document.getElementById('mobile-mode-event').style.color = '#1A1C20';
         document.getElementById('mobile-mode-intensive').style.background = 'transparent';
         document.getElementById('mobile-mode-intensive').style.color = 'var(--text-soft)';
         
-        // Прокручиваем к форме
         document.getElementById('booking-section').scrollIntoView({ behavior: 'smooth' });
     }
 }
+
+// ===== ЖЕСТКОЕ ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ПО КЛИКУ =====
+document.getElementById('mobile-mode-event').addEventListener('click', function() {
+    // Принудительно переключаем HTML-форму на СОБЫТИЕ
+    document.getElementById('mobile-form-mode').value = 'event';
+    document.getElementById('mobile-intensive-fields').style.display = 'none';
+    document.getElementById('mobile-event-fields').style.display = 'block';
+    
+    // Визуальные эффекты
+    this.style.background = 'var(--gold)';
+    this.style.color = '#1A1C20';
+    document.getElementById('mobile-mode-intensive').style.background = 'transparent';
+    document.getElementById('mobile-mode-intensive').style.color = 'var(--text-soft)';
+});
+
+document.getElementById('mobile-mode-intensive').addEventListener('click', function() {
+    // Принудительно переключаем HTML-форму на ИНТЕНСИВ
+    document.getElementById('mobile-form-mode').value = 'intensive';
+    document.getElementById('mobile-intensive-fields').style.display = 'block';
+    document.getElementById('mobile-event-fields').style.display = 'none';
+    document.getElementById('mobile-selected-event-badge').style.display = 'none';
+    
+    // Визуальные эффекты
+    this.style.background = 'var(--purple)';
+    this.style.color = '#fff';
+    document.getElementById('mobile-mode-event').style.background = 'transparent';
+    document.getElementById('mobile-mode-event').style.color = 'var(--text-soft)';
+});
 
 // ===== НАСТРОЙКА ФОРМЫ =====
 function setupMobileForm() {
     const form = document.getElementById('mobile-universal-form');
     if (!form) return;
 
-    // Берем первое событие, если пользователь ничего не выбрал
     const firstEventId = eventsData.length > 0 ? eventsData[0].id : null;
     if (firstEventId) {
         document.getElementById('mobile-selected-event-id').value = firstEventId;
@@ -743,13 +762,11 @@ function setupMobileForm() {
         const fb = document.getElementById('mobile-form-feedback');
         fb.className = 'feedback'; fb.style.display = 'none';
 
-        // 1. Собираем данные
         const surname = document.getElementById('mobile-surname').value.trim();
         const name = document.getElementById('mobile-name').value.trim();
         const phone = document.getElementById('mobile-phone').value.trim();
         const eventId = document.getElementById('mobile-selected-event-id').value;
 
-        // 2. Проверки
         if (!surname || !name || !phone) {
             fb.className = 'feedback error';
             fb.textContent = '❌ Заполните Фамилию, Имя и Телефон!';
@@ -767,7 +784,6 @@ function setupMobileForm() {
         const email = document.getElementById('mobile-email').value.trim();
         const subscribed = document.getElementById('mobile-newsletter').checked;
 
-        // 3. Отправляем запрос
         try {
             const res = await fetch(API_BASE + '/api/event/booking', {
                 method: 'POST',
@@ -789,7 +805,6 @@ function setupMobileForm() {
                 fb.textContent = '✅ Заявка на событие принята!';
                 fb.style.display = 'block';
                 form.reset();
-                // Восстанавливаем ID события после сброса
                 document.getElementById('mobile-selected-event-id').value = eventId;
             } else {
                 fb.className = 'feedback error';
