@@ -230,9 +230,18 @@ def get_prices():
     return {"practice": {"base": 5000, "instructor": 2000}, "basic": {"base": 5000, "instructor": 3500}, "pro": {"base": 10000, "instructor": 3500}}
 
 def send_admin_notification(booking_id, data, final_price, discount):
+    # Определяем тип заявки: есть ли поле tariff (интенсив) или event_id (событие)
+    is_event = hasattr(data, 'event_id') and data.event_id is not None
+    
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token:
-        msg = f"🔫 Новая заявка #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n🎯 {data.tariff}\n📅 {data.date} {data.time_slot}\n💰 Итог: {final_price} ₽\n📱 Источник: {data.source or 'не указан'}"
+        if is_event:
+            # Сообщение для СОБЫТИЯ
+            msg = f"📅 Новая заявка на событие #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n📧 {data.email or 'не указан'}\n💰 Итог: {final_price} ₽"
+        else:
+            # Сообщение для ИНТЕНСИВА
+            msg = f"🔫 Новая заявка на интенсив #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n🎯 {data.tariff}\n📅 {data.date} {data.time_slot}\n💰 Итог: {final_price} ₽\n📱 Источник: {data.source or 'не указан'}"
+        
         try:
             requests.post("https://api.vk.com/method/messages.send", params={
                 "access_token": vk_token,
@@ -244,6 +253,22 @@ def send_admin_notification(booking_id, data, final_price, discount):
             logger.info("VK: уведомление администратору отправлено")
         except Exception as e:
             logger.error(f"Ошибка VK админу: {str(e)}", exc_info=True)
+            
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+    user_id = os.getenv("TELEGRAM_USER_ID", "")
+    if telegram_token and chat_id and user_id:
+        if is_event:
+            tg_msg = f"📅 Новая заявка на событие #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n📧 {data.email or 'не указан'}\n💰 Итог: {final_price} ₽"
+        else:
+            tg_msg = f"🔫 Новая заявка на интенсив #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n🎯 {data.tariff}\n📅 {data.date} {data.time_slot}\n💰 Итог: {final_price} ₽"
+        
+        try:
+            requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": chat_id, "text": tg_msg})
+            requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": user_id, "text": tg_msg})
+            logger.info("Telegram: уведомления администратору отправлены")
+        except Exception as e:
+            logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
             
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
