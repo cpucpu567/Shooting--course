@@ -269,18 +269,6 @@ def send_admin_notification(booking_id, data, final_price, discount):
             logger.info("Telegram: уведомления администратору отправлены")
         except Exception as e:
             logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
-            
-    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
-    user_id = os.getenv("TELEGRAM_USER_ID", "")
-    if telegram_token and chat_id and user_id:
-        tg_msg = f"🔫 Новая заявка #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n🎯 {data.tariff}\n📅 {data.date} {data.time_slot}\n💰 Итог: {final_price} ₽"
-        try:
-            requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": chat_id, "text": tg_msg})
-            requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": user_id, "text": tg_msg})
-            logger.info("Telegram: уведомления администратору отправлены")
-        except Exception as e:
-            logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
 
 def send_client_notification(phone, tariff, date, time_slot, final_price):
     conn = get_db()
