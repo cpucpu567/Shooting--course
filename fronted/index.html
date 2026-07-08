@@ -647,50 +647,90 @@ if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
 }
 
-function openVKApp() {
-    const appId = '54664967';
-    const vkDeepLink = `https://vk.com/app${appId}`;
-    const vkSchemeLink = `vk://vk.com/app${appId}`;
-    document.getElementById('vk-auth-status').textContent = '⏳ Открываем VK...';
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = vkSchemeLink;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-        document.body.removeChild(iframe);
-        window.location.href = vkDeepLink;
-    }, 2000);
+// ================================================================
+// ===== ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА ДАННЫХ (VK И БРАУЗЕР) =====
+// ================================================================
+function forceLoadData() {
+    console.log('🔄 Принудительная загрузка данных');
+    loadConfig();
+    loadGallery();
+    loadEvents();
 }
 
+// Загружаем при старте
+forceLoadData();
+
+// Если через VK — перезагружаем при восстановлении из фона
 if (typeof vkBridge !== 'undefined') {
+    vkBridge.subscribe((e) => {
+        if (e.type === 'VKWebAppViewRestore') {
+            console.log('📱 Приложение восстановлено — перезагружаем данные');
+            forceLoadData();
+        }
+    });
+}
+
+// Для браузера — перезагружаем при возврате на вкладку
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        console.log('🔄 Вкладка активна — обновляем данные');
+        forceLoadData();
+    }
+});
+
+// ================================================================
+// ===== АВТОЗАПОЛНЕНИЕ ИЗ VK =====
+// ================================================================
+if (typeof vkBridge !== 'undefined') {
+    // 1. Имя и фамилия
     vkBridge.send('VKWebAppGetUserInfo')
         .then(user => {
-            if (user.first_name) document.getElementById('name').value = user.first_name;
-            if (user.last_name) document.getElementById('surname').value = user.last_name;
-            if (user.id) document.getElementById('vk-id').value = user.id;
-            const statusEl = document.getElementById('vk-auth-status');
-            if (statusEl) statusEl.textContent = '✅ Данные подтянуты из VK!';
-            return vkBridge.send('VKWebAppGetGroupInfo', { group_id: 239743393 });
+            if (user.first_name) {
+                document.getElementById('name').value = user.first_name;
+                document.getElementById('mobile-name').value = user.first_name;
+            }
+            if (user.last_name) {
+                document.getElementById('surname').value = user.last_name;
+                document.getElementById('mobile-surname').value = user.last_name;
+            }
+            if (user.id) {
+                document.getElementById('vk-id').value = user.id;
+                document.getElementById('mobile-vk-id').value = user.id;
+            }
         })
-        .then(groups => {
-            if (!groups.is_member) {
-                return vkBridge.send('VKWebAppShowSubscriptionBox', {
-                    subscribe: true,
-                    message: 'Подпишитесь на сообщество «Стрелковый интенсив», чтобы получать анонсы и новости.',
-                    buttonText: 'Подписаться',
-                    skipButtonText: 'Позже'
-                }).then(result => {
-                    if (result.is_subscribed) console.log('✅ Пользователь подписался!');
-                });
+        .catch(err => console.warn('❌ Не удалось получить данные пользователя:', err));
+
+    // 2. Номер телефона (с запросом разрешения)
+    vkBridge.send('VKWebAppGetPhoneNumber')
+        .then(data => {
+            if (data.phone_number) {
+                const phoneInput = document.getElementById('phone');
+                const mobilePhoneInput = document.getElementById('mobile-phone');
+                if (phoneInput && !phoneInput.value.trim()) {
+                    phoneInput.value = data.phone_number;
+                }
+                if (mobilePhoneInput && !mobilePhoneInput.value.trim()) {
+                    mobilePhoneInput.value = data.phone_number;
+                }
+                console.log('📞 Номер телефона подтянут:', data.phone_number);
             }
         })
         .catch(err => {
-            console.warn('⚠️ VK авторизация не сработала:', err.message);
+            console.warn('❌ Пользователь не дал доступ к номеру:', err);
         });
 }
 
+// ================================================================
+// ===== API С НАСТРОЙКОЙ NO-CACHE =====
+// ================================================================
 async function apiFetch(url) {
-    const res = await fetch(API_BASE + url);
+    const res = await fetch(API_BASE + url, {
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
 }
@@ -703,6 +743,9 @@ async function apiPost(url, data) {
     return json;
 }
 
+// ================================================================
+// ===== ЗАГРУЗКА КОНФИГА И ТАРИФОВ =====
+// ================================================================
 async function loadConfig() {
     try {
         const config = await apiFetch('/api/config');
@@ -724,7 +767,6 @@ function selectTariff(t) {
     document.getElementById('subgroup-row').style.display = t === 'practice' ? 'block' : 'none';
     if (t !== 'practice') document.getElementById('time-slot').value = 'full';
 
-    // Меняем цвет кнопки отправки
     const courseNames = {
         basic: { name: 'Базовый', color: 'var(--text-soft)' },
         practice: { name: 'Практика', color: 'var(--purple)' },
@@ -737,13 +779,11 @@ function selectTariff(t) {
         submitBtn.style.borderColor = course.color;
     }
 
-    // Показываем красивую плашку с названием тарифа
     const badge = document.getElementById('selected-tariff-badge');
     const badgeName = document.getElementById('selected-tariff-name');
     badge.className = 'selected-tariff-badge active ' + t;
     badgeName.textContent = course.name;
 
-    // Плавно скроллим к форме записи на интенсив
     document.getElementById('booking-intensive').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -871,7 +911,6 @@ document.getElementById('phone').addEventListener('input', function() {
             const infoEl = document.getElementById('client-info');
             const statusEl = document.getElementById('client-status');
 
-            // ✅ ДОБАВЛЕНО: определения для отрисовки статуса
             const levelColors = {
                 pro: 'var(--gold)',
                 experienced: 'var(--purple)',
@@ -885,20 +924,17 @@ document.getElementById('phone').addEventListener('input', function() {
 
             infoEl.style.display = 'block';
 
-            // Проверяем, есть ли сообщение "Вы уже записаны"
             if (data.message && data.message.includes('Вы уже записаны')) {
                 statusEl.innerHTML = `
                     <div style="padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155,138,240,0.1); color:var(--purple);">
                         <strong>ℹ️ ${data.message}</strong>
                     </div>
                 `;
-                // Скрываем чекбокс бонуса, если есть сообщение о записи
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            // Если бонусы есть и они больше 0 — показываем их и чекбокс
             const hasBonus = data.bonus && typeof data.bonus === 'number' && data.bonus > 0;
             if (hasBonus) {
                 statusEl.innerHTML = `
@@ -908,14 +944,12 @@ document.getElementById('phone').addEventListener('input', function() {
                     </span>
                     <span style="color:var(--gold); margin-left:8px;">💰 ${data.bonus} ₽</span>
                 `;
-                // ✅ Показываем чекбокс списания бонуса
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) {
                     wrapper.style.display = 'flex';
                     document.getElementById('bonus-amount').textContent = `(${data.bonus} ₽)`;
                 }
             } else {
-                // В любом другом случае (0, null, undefined) — показываем приветствие
                 statusEl.innerHTML = `
                     <strong>Ваш статус:</strong> 
                     <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
@@ -925,7 +959,6 @@ document.getElementById('phone').addEventListener('input', function() {
                         <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
                     </div>
                 `;
-                // Скрываем чекбокс
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
@@ -953,7 +986,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const tr=document.getElementById('tariff-input').value;
     const vkId = document.getElementById('vk-id').value;
 
-    // ✅ Чекбокс списания бонуса
     const bonusCheckbox = document.getElementById('use-bonus');
     const useBonus = bonusCheckbox ? bonusCheckbox.checked : false;
 
@@ -979,17 +1011,14 @@ document.getElementById('order-form').addEventListener('submit', async function(
     try {
         const result = await apiPost('/api/booking', data);
         if (result.status === 'created') {
-            // Сначала показываем модалку
             document.getElementById('modal-message').textContent = `✅ Запись на ${dv}. Формат: ${tariffConfig[tr].label}. Итог: ${result.finalPrice} ₽`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // А потом сбрасываем форму и перезагружаем состояние
             document.getElementById('order-form').reset();
             selectTariff('pro');
             updateDateSelect('pro');
             document.getElementById('client-info').style.display = 'none';
-            // Скрываем чекбокс после сброса
             const wrapper = document.getElementById('bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
         } else {
@@ -1040,6 +1069,13 @@ async function loadEvents() {
         const data = await apiFetch('/api/events');
         eventsData = data || [];
         renderEventsCarousel();
+        // ✅ После загрузки синхронизируем первый слайд с event-id
+        if (eventsData.length > 0) {
+            const eventIdInput = document.getElementById('event-id');
+            if (eventIdInput) {
+                eventIdInput.value = eventsData[0].id;
+            }
+        }
     } catch (err) {
         console.warn('Не удалось загрузить события:', err);
     }
@@ -1085,6 +1121,12 @@ function changeEventSlide(dir) {
     currentEventSlide = (currentEventSlide + dir + slides.length) % slides.length;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
+
+    // ✅ Синхронизируем скрытый инпут
+    const eventIdInput = document.getElementById('event-id');
+    if (eventIdInput && eventsData[currentEventSlide]) {
+        eventIdInput.value = eventsData[currentEventSlide].id;
+    }
 }
 
 function goToEventSlide(index) {
@@ -1094,6 +1136,12 @@ function goToEventSlide(index) {
     currentEventSlide = index;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
+
+    // ✅ Синхронизируем скрытый инпут
+    const eventIdInput = document.getElementById('event-id');
+    if (eventIdInput && eventsData[currentEventSlide]) {
+        eventIdInput.value = eventsData[currentEventSlide].id;
+    }
 }
 
 function updateEventDots() {
@@ -1156,7 +1204,7 @@ document.getElementById('events-form').addEventListener('submit', async function
     const name = document.getElementById('events-name').value.trim();
     const phone = document.getElementById('events-phone').value.trim();
     const email = document.getElementById('events-email').value.trim();
-    const subscribed = document.getElementById('events-newsletter').checked; // ✅ Читаем чекбокс
+    const subscribed = document.getElementById('events-newsletter').checked;
     
     if (!surname || !name || !phone) {
         fb.className = 'feedback error';
@@ -1164,7 +1212,7 @@ document.getElementById('events-form').addEventListener('submit', async function
         return;
     }
 
-    const eventId = eventsData[currentEventSlide]?.id;
+    const eventId = document.getElementById('event-id').value; // ✅ Берём из скрытого инпута
     if (!eventId) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Событие не выбрано';
@@ -1173,12 +1221,12 @@ document.getElementById('events-form').addEventListener('submit', async function
 
     try {
         const result = await apiPost('/api/event/booking', {
-            event_id: eventId,
+            event_id: parseInt(eventId),
             surname,
             name,
             phone: normalizePhone(phone),
             email,
-            subscribed // ✅ Отправляем значение на сервер
+            subscribed
         });
         if (result.status === 'created') {
             fb.className = 'feedback success';
@@ -1219,7 +1267,6 @@ function mobileSetMode(mode) {
     const submitBtn = document.getElementById('mobile-submit-btn');
     const modeInput = document.getElementById('mobile-form-mode');
 
-    // Сброс стилей кнопок
     document.getElementById('mobile-mode-intensive').className = 'btn secondary';
     document.getElementById('mobile-mode-intensive').style.background = 'transparent';
     document.getElementById('mobile-mode-event').className = 'btn secondary';
@@ -1237,7 +1284,6 @@ function mobileSetMode(mode) {
         document.getElementById('mobile-mode-intensive').className = 'btn';
         document.getElementById('mobile-mode-intensive').style.background = 'var(--purple)';
         
-        // Загружаем даты для интенсива
         mobileUpdateDateSelect(document.getElementById('mobile-tariff-input').value);
     } else {
         modeInput.value = 'event';
@@ -1254,7 +1300,6 @@ function mobileSetMode(mode) {
     }
 }
 
-// ===== МОБИЛЬНАЯ ФУНКЦИЯ ЗАГРУЗКИ ДАТ =====
 function mobileUpdateDateSelect(tariff) {
     const select = document.getElementById('mobile-date');
     const hint = document.getElementById('mobile-date-hint');
@@ -1278,7 +1323,6 @@ function mobileUpdateDateSelect(tariff) {
     hint.textContent = '';
 }
 
-// ===== МОБИЛЬНАЯ ФУНКЦИЯ ВЫБОРА ТАРИФА =====
 function mobileSelectTariff(tariffId) {
     const names = { basic: 'Базовый', practice: 'Практика', pro: 'Продвинутый' };
     document.getElementById('mobile-tariff-input').value = tariffId;
@@ -1289,7 +1333,6 @@ function mobileSelectTariff(tariffId) {
     document.getElementById('mobile-subgroup-row').style.display = tariffId === 'practice' ? 'block' : 'none';
 }
 
-// ===== МОБИЛЬНАЯ ФУНКЦИЯ ВЫБОРА СОБЫТИЯ =====
 function mobileSelectEvent(eventId) {
     const event = eventsData.find(e => e.id === eventId);
     if (event) {
@@ -1300,7 +1343,6 @@ function mobileSelectEvent(eventId) {
     }
 }
 
-// ===== МОБИЛЬНЫЙ ОБРАБОТЧИК ОТПРАВКИ ФОРМЫ =====
 document.getElementById('mobile-universal-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('mobile-form-feedback');
@@ -1336,7 +1378,6 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             }
             const [date, ts] = dateRaw.split('|');
 
-            // ✅ Чекбокс списания бонуса (мобильная)
             const bonusCheckbox = document.getElementById('mobile-use-bonus');
             const useBonus = bonusCheckbox ? bonusCheckbox.checked : false;
 
@@ -1369,7 +1410,6 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.body.style.overflow = 'hidden';
             document.getElementById('mobile-universal-form').reset();
             document.getElementById('mobile-client-info').style.display = 'none';
-            // Скрываем чекбокс после сброса
             const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
         } else {
@@ -1382,7 +1422,6 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
     }
 });
 
-// ===== ПЕРЕОПРЕДЕЛЯЕМ КНОПКУ "ПОПАСТЬ В СЕБЯ" =====
 const heroBtn = document.querySelector('.hero .btn');
 if (heroBtn) {
     heroBtn.addEventListener('click', function(e) {
@@ -1391,23 +1430,18 @@ if (heroBtn) {
     });
 }
 
-// ===== ВОЗВРАЩАЕМ СКРОЛЛ ПРИ ВЫБОРЕ ТАРИФА (ТОЛЬКО ДЛЯ ТЕЛЕФОНОВ) =====
 const originalSelectTariff = window.selectTariff;
 window.selectTariff = function(tariffId) {
     if (window.innerWidth <= 700) {
-        // Вызываем мобильную логику выбора тарифа
         mobileSelectTariff(tariffId);
-        // Через небольшую задержку скроллим к форме записи
         setTimeout(() => {
             document.getElementById('booking-section').scrollIntoView({ behavior: 'smooth' });
         }, 300);
     } else {
-        // На ПК оставляем стандартную логику
         originalSelectTariff(tariffId);
     }
 };
 
-// ===== ПЕРЕОПРЕДЕЛЯЕМ ПЛАВАЮЩУЮ КНОПКУ "СОБЫТИЯ" =====
 const floatingEventBtn = document.getElementById('floating-event-btn');
 if (floatingEventBtn) {
     floatingEventBtn.addEventListener('click', function(e) {
@@ -1421,7 +1455,6 @@ if (floatingEventBtn) {
     });
 }
 
-// ===== МОБИЛЬНЫЙ ОБРАБОТЧИК ВВОДА ТЕЛЕФОНА (для статуса) =====
 document.getElementById('mobile-phone').addEventListener('input', function() {
     clearTimeout(window.mobileStatusTimeout);
     const rawPhone = this.value.replace(/[\s\-\(\)\+]/g, '').replace(/^8/, '7').replace(/^7/, '+7');
@@ -1441,7 +1474,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
             const infoEl = document.getElementById('mobile-client-info');
             const statusEl = document.getElementById('mobile-client-status');
 
-            // ✅ ДОБАВЛЕНО: определения для отрисовки статуса
             const levelColors = {
                 pro: 'var(--gold)',
                 experienced: 'var(--purple)',
@@ -1455,20 +1487,17 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
 
             infoEl.style.display = 'block';
 
-            // Проверяем, есть ли сообщение "Вы уже записаны"
             if (data.message && data.message.includes('Вы уже записаны')) {
                 statusEl.innerHTML = `
                     <div style="padding:10px; border:1px solid var(--purple); border-radius:6px; background:rgba(155,138,240,0.1); color:var(--purple);">
                         <strong>ℹ️ ${data.message}</strong>
                     </div>
                 `;
-                // Скрываем чекбокс бонуса
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            // Если бонусы есть и они больше 0 — показываем их и чекбокс
             const hasBonus = data.bonus && typeof data.bonus === 'number' && data.bonus > 0;
             if (hasBonus) {
                 statusEl.innerHTML = `
@@ -1478,14 +1507,12 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                     </span>
                     <span style="color:var(--gold); margin-left:8px;">💰 ${data.bonus} ₽</span>
                 `;
-                // ✅ Показываем чекбокс списания бонуса
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) {
                     wrapper.style.display = 'flex';
                     document.getElementById('mobile-bonus-amount').textContent = `(${data.bonus} ₽)`;
                 }
             } else {
-                // В любом другом случае (0, null, undefined) — показываем приветствие
                 statusEl.innerHTML = `
                     <strong>Ваш статус:</strong> 
                     <span style="color:${levelColors[data.level] || 'var(--text-soft)'}; font-weight:600;">
@@ -1495,7 +1522,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                         <strong>🔰 Вы у нас впервые!</strong> Добро пожаловать в клуб. Записывайтесь и получайте бонусы за каждое 5-е посещение.
                     </div>
                 `;
-                // Скрываем чекбокс
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
@@ -1505,7 +1531,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
     }, 800);
 });
 
-// ===== МОБИЛЬНАЯ КАРУСЕЛЬ СОБЫТИЙ =====
 function mobileRenderEventsCarousel() {
     const container = document.getElementById('mobile-events-carousel');
     const dotsContainer = document.getElementById('mobile-event-dots');
@@ -1568,7 +1593,6 @@ function mobileUpdateEventDots() {
     });
 }
 
-// Переопределяем функцию загрузки событий для мобильной версии
 const originalLoadEvents = window.loadEvents;
 window.loadEvents = function() {
     originalLoadEvents();
@@ -1579,14 +1603,10 @@ window.loadEvents = function() {
     }, 500);
 };
 
-// ===== АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ КАРУСЕЛИ СОБЫТИЙ ПРИ СОЗДАНИИ НОВОГО =====
-// Перехватываем создание события через API и принудительно перезагружаем карусель
 const originalApiPost = window.apiPost;
 window.apiPost = async function(url, data) {
     const result = await originalApiPost(url, data);
-    // Если это создание события и оно успешно
     if (url === '/api/events' && result.status === 'created') {
-        // Обновляем события и перерисовываем обе карусели (ПК и мобильную)
         await loadEvents();
         if (window.innerWidth <= 700) {
             setTimeout(mobileRenderEventsCarousel, 300);
@@ -1596,14 +1616,13 @@ window.apiPost = async function(url, data) {
 };
 
 // ================================================================
-// ===== КОНЕЦ ДОБАВЛЕННОГО КОДА =====
+// ===== УДАЛЯЕМ СТАРЫЙ DOMContentLoaded, ТАК КАК forceLoadData УЖЕ РАБОТАЕТ =====
 // ================================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadConfig();
-    loadGallery();
-    loadEvents();
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//     loadConfig();
+//     loadGallery();
+//     loadEvents();
+// });
 </script>
 </body>
 </html>
