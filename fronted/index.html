@@ -679,21 +679,47 @@ document.addEventListener('visibilitychange', function() {
 });
 
 // ================================================================
-// ===== ЗАПРОС ТЕЛЕФОНА ПРИ ТАПЕ ПО ПОЛЮ =====
+// ===== ЗАПРОС ДАННЫХ VK ПО ТАПУ НА ПОЛЕ ТЕЛЕФОНА =====
 // ================================================================
-function requestVKPhone() {
+
+// Флаг, чтобы запрос не дублировался
+let vkDataRequested = false;
+
+function requestVKData() {
+    // Если уже запрашивали в этой сессии — не делаем повторно
+    if (vkDataRequested) return;
     if (typeof vkBridge === 'undefined') return;
 
-    // Проверяем, не запрашивали ли мы уже телефон в текущей сессии
-    if (localStorage.getItem('vkPhoneRequested') === 'true') return;
+    vkDataRequested = true; // Блокируем повторные вызовы
 
+    console.log('📱 Запрос данных VK...');
+
+    // 1. Запрашиваем Имя и Фамилию (это происходит быстро и без доп. окон)
+    vkBridge.send('VKWebAppGetUserInfo')
+        .then(user => {
+            if (user.first_name) {
+                document.getElementById('name').value = user.first_name;
+                document.getElementById('mobile-name').value = user.first_name;
+            }
+            if (user.last_name) {
+                document.getElementById('surname').value = user.last_name;
+                document.getElementById('mobile-surname').value = user.last_name;
+            }
+            if (user.id) {
+                document.getElementById('vk-id').value = user.id;
+                document.getElementById('mobile-vk-id').value = user.id;
+            }
+            console.log('👤 Имя и фамилия подтянуты');
+        })
+        .catch(err => console.warn('Не удалось получить данные пользователя:', err));
+
+    // 2. Запрашиваем Номер телефона (вызывает окно разрешения)
     vkBridge.send('VKWebAppGetPhoneNumber')
         .then(data => {
             if (data.phone_number) {
                 const phoneInput = document.getElementById('phone');
                 const mobilePhoneInput = document.getElementById('mobile-phone');
                 
-                // Заполняем только если поле пустое
                 if (phoneInput && !phoneInput.value.trim()) {
                     phoneInput.value = data.phone_number;
                 }
@@ -701,31 +727,30 @@ function requestVKPhone() {
                     mobilePhoneInput.value = data.phone_number;
                 }
                 console.log('📞 Номер телефона подтянут:', data.phone_number);
-                
-                // Запоминаем, что запрос уже был
-                localStorage.setItem('vkPhoneRequested', 'true');
             }
         })
         .catch(err => {
             console.warn('❌ Пользователь не дал доступ к номеру:', err);
+            // Если пользователь отказал, сбрасываем флаг, чтобы он мог попробовать снова при следующем клике
+            vkDataRequested = false;
         });
 }
 
-// Добавляем обработчики событий на оба поля (ПК и мобильное)
+// ================================================================
+// ===== ПОДКЛЮЧАЕМ ОБРАБОТЧИКИ (ТОЛЬКО ОДИН РАЗ НА ПОЛЕ) =====
+// ================================================================
 document.addEventListener('DOMContentLoaded', function() {
+    // Поле на ПК
     const phoneInput = document.getElementById('phone');
-    const mobilePhoneInput = document.getElementById('mobile-phone');
-
-    // Обработчик клика/тапа на ПК-поле
     if (phoneInput) {
-        phoneInput.addEventListener('focus', requestVKPhone);
-        phoneInput.addEventListener('click', requestVKPhone); // для надежности
+        // Используем только focus, чтобы не было двойного срабатывания на мобильных
+        phoneInput.addEventListener('focus', requestVKData);
     }
 
-    // Обработчик клика/тапа на мобильное поле
+    // Мобильное поле
+    const mobilePhoneInput = document.getElementById('mobile-phone');
     if (mobilePhoneInput) {
-        mobilePhoneInput.addEventListener('focus', requestVKPhone);
-        mobilePhoneInput.addEventListener('click', requestVKPhone);
+        mobilePhoneInput.addEventListener('focus', requestVKData);
     }
 });
 
