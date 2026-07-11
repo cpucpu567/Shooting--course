@@ -931,3 +931,25 @@ async def get_event_bookings(event_id: int):
     conn.close()
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "email": r['email'],
              "subscribed": r['subscribed'], "status": r['status'], "createdAt": r['created_at']} for r in rows]
+
+# ===== API: Ручное редактирование бонусов (для админа) =====
+@app.post("/api/client/bonus")
+async def update_client_bonus(phone: str, amount: int):
+    if amount < 0:
+        raise HTTPException(400, "Сумма бонуса не может быть отрицательной")
+    
+    conn = get_db()
+    c = conn.cursor()
+    # Проверяем, существует ли клиент
+    c.execute("SELECT phone FROM clients WHERE phone = %s", (phone,))
+    if not c.fetchone():
+        conn.close()
+        raise HTTPException(404, "Клиент не найден")
+    
+    # Обновляем бонусы
+    c.execute("UPDATE clients SET total_discounts = %s WHERE phone = %s", (amount, phone))
+    conn.commit()
+    conn.close()
+    
+    logger.info(f"Админ вручную установил бонусы для {phone}: {amount} ₽")
+    return {"status": "updated", "phone": phone, "new_total": amount}
