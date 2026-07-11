@@ -365,7 +365,7 @@
                     min_persons: minPersons,
                     max_persons: maxPersons
                 });
-                await renderDates(); // Принудительно обновляем список дат
+                await renderDates();
                 document.getElementById('new-date').value = '';
                 document.getElementById('new-date-label').value = '';
                 alert('✅ Дата добавлена!');
@@ -378,13 +378,13 @@
             if (!confirm('Удалить это занятие?')) return;
             try {
                 await fetch(`${API_BASE}/api/dates/${id}`, { method: 'DELETE' });
-                await renderDates(); // Принудительно обновляем список дат
+                await renderDates();
             } catch (err) {
                 alert('❌ Ошибка при удалении: ' + err.message);
             }
         }
 
-        // ===== Клиенты =====
+        // ===== Клиенты (с редактированием бонусов) =====
         async function renderClients() {
             const container = document.getElementById('admin-clients-list');
             try {
@@ -406,13 +406,17 @@
                             <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
                             <span style="opacity:0.4;">${c.phone}</span>
                             <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
-                            <br><span style="font-size:0.7rem;opacity:0.4;">💰 Бонусы: ${c.totalDiscounts || 0} ₽</span>
+                            <br><span style="font-size:0.7rem;opacity:0.4;">💰 Бонусы: <strong id="bonus-display-${c.phone}">${c.totalDiscounts || 0}</strong> ₽</span>
                             ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
                               c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
                               ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
                             ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
                         </div>
-                        <div>
+                        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+                            <div style="display:flex;gap:5px;">
+                                <input type="number" id="bonus-input-${c.phone}" value="${c.totalDiscounts || 0}" style="width:70px;padding:4px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:4px;font-size:0.7rem;">
+                                <button onclick="updateClientBonus('${c.phone}')" class="btn" style="padding:4px 8px;font-size:0.6rem;background:var(--gold);color:#1A1C20;">💾</button>
+                            </div>
                             <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
                         </div>
                     </div>
@@ -422,12 +426,45 @@
             }
         }
 
+        // ===== Функция изменения бонусов через админку =====
+        async function updateClientBonus(phone) {
+            const input = document.getElementById(`bonus-input-${phone}`);
+            const newAmount = parseInt(input.value);
+            
+            if (isNaN(newAmount) || newAmount < 0) {
+                alert('Введите корректное положительное число!');
+                return;
+            }
+            
+            if (!confirm(`Установить бонусы для ${phone} на сумму ${newAmount} ₽?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/client/bonus?phone=${encodeURIComponent(phone)}&amount=${newAmount}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const display = document.getElementById(`bonus-display-${phone}`);
+                    if (display) display.textContent = newAmount;
+                    alert('✅ Бонусы успешно обновлены!');
+                } else {
+                    const err = await response.json();
+                    alert('❌ Ошибка: ' + (err.detail || 'Неизвестная ошибка'));
+                }
+            } catch (err) {
+                alert('❌ Ошибка сети: ' + err.message);
+            }
+        }
+
         async function deleteClient(phone) {
             if (!confirm(`Удалить клиента ${phone}? Это удалит все его данные.`)) return;
             try {
                 await fetch(`${API_BASE}/api/clients/${encodeURIComponent(phone)}`, { method: 'DELETE' });
-                await renderClients(); // Обновляем список клиентов
-                await renderDates(); // Принудительно обновляем даты
+                await renderClients();
+                await renderDates();
             } catch (err) {
                 alert('❌ Ошибка при удалении клиента');
             }
@@ -483,7 +520,7 @@
             }
         }
 
-        // ===== Галерея (через сервер) =====
+        // ===== Галерея =====
         async function loadGallery() {
             try {
                 const items = await apiFetch('/api/gallery');
@@ -570,7 +607,6 @@
             }
         }
 
-        // ===== Полная и работающая функция createEvent =====
         async function createEvent() {
             console.log('📌 Начинаем создание события...');
             const title = document.getElementById('event-title').value.trim();
