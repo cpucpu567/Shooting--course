@@ -445,11 +445,29 @@ async def create_booking(data: BookingRequest):
         try:
             conn = get_db()
             c = conn.cursor()
-            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
-            c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.referral,))
+            
+            # 1. Проверяем, не вписал ли этот человек самого себя (защита от дурака)
+            if data.referral == data.phone:
+                logger.warning(f"Пользователь {data.phone} попытался привести сам себя. Бонус не начислен.")
+                conn.close()
+            else:
+                # 2. Проверяем, не вписал ли этот человек того, кто уже вписал его (эффект «зеркала»)
+                c.execute("SELECT referrer FROM clients WHERE phone = %s", (data.referral,))
+                row = c.fetchone()
+                
+                # Если у того, кого привели (referral), в поле referrer уже стоит номер текущего клиента (phone) — это зеркало
+                if row and row['referrer'] == data.phone:
+                    # Зеркало! Начисляем бонус ТОЛЬКО текущему клиенту (тому, кто реально отправил заявку первым)
+                    c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
+                    logger.info(f"Обнаружена зеркальная запись. Бонус 500 ₽ начислен только инициатору {data.phone}")
+                else:
+                    # Всё чисто, начисляем обоим
+                    c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
+                    c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.referral,))
+                    logger.info(f"Бонус 500 ₽ начислен обоим: {data.phone} и {data.referral}")
+            
             conn.commit()
             conn.close()
-            logger.info(f"Скидка 500 ₽ начислена обоим")
         except Exception as e:
             logger.error(f"Ошибка начисления скидки другу: {str(e)}", exc_info=True)
 
