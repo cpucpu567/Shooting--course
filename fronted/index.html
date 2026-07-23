@@ -67,6 +67,7 @@
         .hero .mission { font-size:0.9rem; max-width:600px; margin:0 auto 30px; color: var(--text-soft); opacity:0.7; }
         .btn { display:inline-block; background:var(--purple); color:#fff; padding:16px 48px; font-size:1.1rem; font-weight:700; text-transform:uppercase; border-radius:8px; text-decoration:none; transition:0.3s; border:none; cursor:pointer; letter-spacing:2px; }
         .btn:hover { background:var(--purple-hover); transform:translateY(-2px); box-shadow:0 6px 20px rgba(155,138,240,0.3); }
+        .btn.secondary { background:transparent; border:1px solid var(--card-border); color:var(--text); }
         section { padding:50px 0; }
         h2 { font-size:2rem; margin-bottom:30px; text-align:center; text-transform:uppercase; letter-spacing:3px; color: var(--text); }
         h2::after { content:''; display:block; width:60px; height:3px; background:var(--purple); margin:10px auto 0; }
@@ -134,7 +135,6 @@
         .modal { background:#2a2824; border:2px solid var(--purple); border-radius:8px; padding:28px; max-width:550px; width:100%; max-height:90vh; overflow-y:auto; color: var(--text); }
         footer { text-align:center; padding:30px; color: var(--text-soft); opacity:0.5; font-size:0.8rem; }
 
-        /* ===== ДВУХКОЛОНОЧНАЯ ВЁРСТКА (ПК и Планшеты > 700px) ===== */
         @media (min-width: 701px) {
             .pc-version { display: block; }
             .mobile-version { display: none !important; }
@@ -142,7 +142,6 @@
             #floating-event-btn { display: none !important; }
         }
 
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ (Телефоны < 700px) ===== */
         @media (max-width: 700px) {
             .hero h1 { font-size: 2rem; }
             .grid-2 { grid-template-columns: 1fr; }
@@ -150,12 +149,10 @@
             .instructor { flex-direction: column; text-align: center; }
             .form-row { grid-template-columns: 1fr; }
             .gallery-main { height: 250px; }
-            
             .pc-version { display: none !important; }
             .mobile-version { display: block !important; }
             .booking-double-col { display: none !important; }
             #floating-event-btn { display: flex !important; }
-            
             .tariff-grid {
                 display: flex;
                 overflow-x: auto;
@@ -179,7 +176,6 @@
             .tariff-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.3s; cursor: pointer; }
             .tariff-dot.active { background: var(--purple); }
             .tariff-nav { display: none !important; }
-            
             #floating-event-btn { display: flex !important; }
         }
         
@@ -187,7 +183,6 @@
             .tariff-dots, .tariff-nav { display: none !important; }
         }
 
-        /* Общие заголовки */
         .booking-col h3 {
             text-align: center;
             color: var(--gold);
@@ -203,8 +198,6 @@
             opacity: 0.7;
             margin-bottom: 10px;
         }
-        
-        /* Стили для плашки выбранного тарифа */
         .selected-tariff-badge {
             display: none;
             padding: 8px 16px;
@@ -281,7 +274,6 @@
 
     <div id="tariffs-anchor"></div>
 
-    <!-- ===== БЛОК ТАРИФОВ (ПЕРЕД БЛОКОМ ЛОЯЛЬНОСТИ) ===== -->
     <section id="tariff-section">
         <div class="container">
             <h2>Форматы <span>участия</span></h2>
@@ -310,30 +302,21 @@
     </div>
 </div></section>
 
-    <!-- ===== БЛОК ЗАПИСИ (УНИВЕРСАЛЬНЫЙ) ===== -->
     <section id="booking-section" style="padding: 50px 0;">
         <div class="container">
-            
-            <!-- ===== ПК-ВЕРСИЯ (ДВЕ КОЛОНКИ) ===== -->
             <div class="pc-version">
                 <h2>Записаться</h2>
-                
                 <div class="booking-double-col">
-                    
-                    <!-- КОЛОНКА 1: СОБЫТИЯ -->
                     <div class="booking-col" id="booking-events">
                         <h3>На <span style="color:var(--gold);">событие</span></h3>
                         <p class="sub-desc">Акции, мастер-классы и встречи</p>
-
                         <div id="events-anchor"></div>
-                        
                         <div id="events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
                             <div id="events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
                             <button onclick="changeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
                             <button onclick="changeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
                             <div id="event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
                         </div>
-
                         <div class="form-card glass">
                             <form id="events-form" novalidate>
                                 <input type="hidden" id="event-id" value="">
@@ -343,59 +326,44 @@
                                 </div>
                                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="events-phone" placeholder="+7 (999) 123-45-67" required></div>
                                 <div class="form-group"><label>Email</label><input type="email" id="events-email" placeholder="mail@example.com"></div>
-                                
                                 <div class="form-group checkbox-group">
                                     <input type="checkbox" id="events-newsletter">
                                     <label>Я подписан(а) на сообщество и согласен получать уведомления о новых событиях, акциях и занятиях</label>
                                 </div>
-
                                 <button type="submit" class="btn" style="width:100%;">Отправить заявку</button>
                                 <div class="feedback" id="events-form-feedback"></div>
                             </form>
                         </div>
                     </div>
 
-                    <!-- КОЛОНКА 2: ИНТЕНСИВ -->
                     <div class="booking-col" id="booking-intensive">
                         <h3>На <span style="color:var(--purple);">интенсив</span></h3>
                         <p class="sub-desc">Основные курсы: Базовый, Практика, Продвинутый</p>
-                        
                         <div class="form-card glass">
                             <div id="selected-tariff-badge" class="selected-tariff-badge">
                                 Выбран тариф: <span id="selected-tariff-name">Базовый</span>
                             </div>
-
-                            <!-- ❌ КНОПКА VK УДАЛЕНА -->
-                            
                             <form id="order-form" novalidate>
                                 <input type="hidden" id="tariff-input" value="pro">
                                 <input type="hidden" id="vk-id" value="">
-                                
                                 <div class="form-row">
                                     <div class="form-group"><label>Фамилия *</label><input type="text" id="surname" placeholder="Иванов" required></div>
                                     <div class="form-group"><label>Имя *</label><input type="text" id="name" placeholder="Иван" required></div>
                                 </div>
-                                
                                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
-                                
                                 <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                                     <div id="client-status"></div>
                                 </div>
-
                                 <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
                                 <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
-                                
                                 <div class="form-row">
                                     <div class="form-group"><label>Дата *</label><select id="date" required></select><p class="hint" id="date-hint"></p></div>
                                     <div class="form-group" id="subgroup-row" style="display:none;"><label>Время</label><select id="time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
                                 </div>
-                                
-                                <!-- ✅ ЧЕКБОКС СПИСАНИЯ БОНУСА (ПК) -->
                                 <div class="form-group checkbox-group" id="bonus-checkbox-wrapper" style="display:none;">
                                     <input type="checkbox" id="use-bonus">
                                     <label>Списать бонус <span id="bonus-amount" style="color:var(--gold); font-weight:600;"></span></label>
                                 </div>
-                                
                                 <div class="form-group checkbox-group">
                                     <input type="checkbox" id="agree" required>
                                     <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
@@ -404,70 +372,51 @@
                                     <input type="checkbox" id="privacy" required>
                                     <label>Согласен на обработку персональных данных <a href="#" onclick="openPrivacyModal(); return false;">(Политика конфиденциальности)</a></label>
                                 </div>
-                                
                                 <div class="form-group checkbox-group">
                                     <input type="checkbox" id="newsletter" checked>
                                     <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
                                 </div>
-                                
                                 <button type="submit" id="submit-btn" class="btn" style="width:100%;">Попасть в себя</button>
                                 <div class="feedback" id="form-feedback"></div>
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- ===== МОБИЛЬНАЯ ВЕРСИЯ (одна форма + карусель событий внутри) ===== -->
             <div class="mobile-version" style="display:none;">
                 <div id="mobile-events-anchor"></div>
                 <h2>Записаться</h2>
-                
-                <!-- Переключатель вкладок -->
                 <div style="display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap;">
                     <button id="mobile-mode-intensive" class="btn" onclick="mobileSetMode('intensive')" style="background:var(--purple); padding:10px 20px; font-size:0.9rem;">🎯 Интенсив</button>
                     <button id="mobile-mode-event" class="btn secondary" onclick="mobileSetMode('event')" style="background:transparent; border:1px solid var(--card-border); padding:10px 20px; font-size:0.9rem;">📅 Событие</button>
                 </div>
-
                 <div class="form-card glass" style="max-width:100%; margin:0 auto;">
-                    <!-- Плашка выбранного тарифа -->
                     <div id="mobile-selected-tariff-badge" class="selected-tariff-badge" style="display:none;">
                         Выбран тариф: <strong id="mobile-selected-tariff-name">Продвинутый</strong>
                     </div>
-
-                    <!-- Плашка выбранного события -->
                     <div id="mobile-selected-event-badge" style="display:none; padding:10px; border-radius:6px; background:rgba(196,160,96,0.15); border:1px solid var(--gold); color:var(--text-soft); margin-bottom:15px; text-align:center;">
                         📅 Вы записываетесь на событие: <strong id="mobile-selected-event-name" style="color:var(--gold);">Название события</strong>
                     </div>
-
-                    <!-- КАРУСЕЛЬ СОБЫТИЙ (только для мобильных) -->
                     <div id="mobile-events-carousel-wrapper" style="position:relative; margin-bottom:20px;">
                         <div id="mobile-events-carousel" style="display:flex; overflow:hidden; border-radius:8px; border:1px solid var(--card-border);"></div>
                         <button onclick="mobileChangeEventSlide(-1)" style="position:absolute; top:50%; left:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❮</button>
                         <button onclick="mobileChangeEventSlide(1)" style="position:absolute; top:50%; right:8px; transform:translateY(-50%); background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:1.2rem; cursor:pointer; z-index:2;">❯</button>
                         <div id="mobile-event-dots" style="display:flex; justify-content:center; gap:8px; padding:10px;"></div>
                     </div>
-
                     <form id="mobile-universal-form" novalidate>
                         <input type="hidden" id="mobile-form-mode" value="intensive">
                         <input type="hidden" id="mobile-vk-id" value="">
                         <input type="hidden" id="mobile-selected-event-id" value="">
                         <input type="hidden" id="mobile-tariff-input" value="pro">
-
                         <div class="form-row">
                             <div class="form-group"><label>Фамилия *</label><input type="text" id="mobile-surname" placeholder="Иванов" required></div>
                             <div class="form-group"><label>Имя *</label><input type="text" id="mobile-name" placeholder="Иван" required></div>
                         </div>
-
                         <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
-
-                        <!-- Блок статуса клиента -->
                         <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                             <div id="mobile-client-status"></div>
                         </div>
-
-                        <!-- ===== ПОЛЯ ДЛЯ ИНТЕНСИВА ===== -->
                         <div id="mobile-intensive-fields">
                             <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
                             <div class="form-group"><label>Откуда узнали?</label><select id="mobile-source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
@@ -476,19 +425,13 @@
                                 <div class="form-group" id="mobile-subgroup-row" style="display:none;"><label>Время</label><select id="mobile-time-slot"><option value="10-14">10:00 – 14:00</option><option value="14-18">14:00 – 18:00</option></select></div>
                             </div>
                         </div>
-
-                        <!-- ===== ПОЛЯ ДЛЯ СОБЫТИЯ ===== -->
                         <div id="mobile-event-fields" style="display:none;">
                             <div class="form-group"><label>Email (необязательно)</label><input type="email" id="mobile-email" placeholder="mail@example.com"></div>
                         </div>
-
-                        <!-- ✅ ЧЕКБОКС СПИСАНИЯ БОНУСА (МОБИЛЬНАЯ) -->
                         <div class="form-group checkbox-group" id="mobile-bonus-checkbox-wrapper" style="display:none;">
                             <input type="checkbox" id="mobile-use-bonus">
                             <label>Списать бонус <span id="mobile-bonus-amount" style="color:var(--gold); font-weight:600;"></span></label>
                         </div>
-
-                        <!-- Чекбоксы -->
                         <div class="form-group checkbox-group">
                             <input type="checkbox" id="mobile-agree" required>
                             <label>Согласен с <a href="#" onclick="openRulesModal(); return false;">Правилами клуба</a></label>
@@ -501,21 +444,17 @@
                             <input type="checkbox" id="mobile-newsletter" checked>
                             <label>Я согласен получать уведомления о новых событиях, акциях и занятиях в VK и Telegram</label>
                         </div>
-
                         <button type="submit" id="mobile-submit-btn" class="btn" style="width:100%; background:var(--purple);">Записаться</button>
                         <div class="feedback" id="mobile-form-feedback"></div>
                     </form>
                 </div>
             </div>
-
         </div>
     </section>
-
 </main>
 
 <footer><div class="container">Стрелковый интенсив. Пермь.</div></footer>
 
-<!-- ===== МОДАЛЬНЫЕ ОКНА ===== -->
 <div class="modal-overlay" id="success-modal">
     <div class="modal" style="text-align:center;">
         <span style="font-size:3rem;">✅</span>
@@ -602,7 +541,6 @@
     </div>
 </div>
 
-<!-- ===== ПЛАВАЮЩАЯ КНОПКА "СОБЫТИЯ" (ПОЯВЛЯЕТСЯ ТОЛЬКО НА ТЕЛЕФОНАХ) ===== -->
 <a href="#events-anchor" id="floating-event-btn" style="
     position: fixed;
     bottom: 30px;
@@ -649,9 +587,6 @@ if (typeof vkBridge !== 'undefined') {
     vkBridge.send('VKWebAppInit');
 }
 
-// ================================================================
-// ===== ПРИНУДИТЕЛЬНАЯ ЗАГРУЗКА ДАННЫХ =====
-// ================================================================
 function forceLoadData() {
     console.log('🔄 Принудительная загрузка данных');
     loadConfig();
@@ -659,10 +594,8 @@ function forceLoadData() {
     loadEvents();
 }
 
-// Загружаем при старте
 forceLoadData();
 
-// Если через VK — перезагружаем при восстановлении из фона
 if (typeof vkBridge !== 'undefined') {
     vkBridge.subscribe((e) => {
         if (e.type === 'VKWebAppViewRestore') {
@@ -672,7 +605,6 @@ if (typeof vkBridge !== 'undefined') {
     });
 }
 
-// Для браузера — перезагружаем при возврате на вкладку
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') {
         console.log('🔄 Вкладка активна — обновляем данные');
@@ -680,23 +612,13 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// ================================================================
-// ===== ЗАПРОС ДАННЫХ VK ПО ТАПУ НА ПОЛЕ ТЕЛЕФОНА =====
-// ================================================================
-
-// Флаг, чтобы запрос не дублировался
 let vkDataRequested = false;
 
 function requestVKData() {
-    // Если уже запрашивали в этой сессии — не делаем повторно
     if (vkDataRequested) return;
     if (typeof vkBridge === 'undefined') return;
-
-    vkDataRequested = true; // Блокируем повторные вызовы
-
+    vkDataRequested = true;
     console.log('📱 Запрос данных VK...');
-
-    // 1. Запрашиваем Имя и Фамилию (это происходит быстро и без доп. окон)
     vkBridge.send('VKWebAppGetUserInfo')
         .then(user => {
             if (user.first_name) {
@@ -714,14 +636,11 @@ function requestVKData() {
             console.log('👤 Имя и фамилия подтянуты');
         })
         .catch(err => console.warn('Не удалось получить данные пользователя:', err));
-
-    // 2. Запрашиваем Номер телефона (вызывает окно разрешения)
     vkBridge.send('VKWebAppGetPhoneNumber')
         .then(data => {
             if (data.phone_number) {
                 const phoneInput = document.getElementById('phone');
                 const mobilePhoneInput = document.getElementById('mobile-phone');
-                
                 if (phoneInput && !phoneInput.value.trim()) {
                     phoneInput.value = data.phone_number;
                 }
@@ -733,32 +652,21 @@ function requestVKData() {
         })
         .catch(err => {
             console.warn('❌ Пользователь не дал доступ к номеру:', err);
-            // Если пользователь отказал, сбрасываем флаг, чтобы он мог попробовать снова при следующем клике
             vkDataRequested = false;
         });
 }
 
-// ================================================================
-// ===== ПОДКЛЮЧАЕМ ОБРАБОТЧИКИ (ТОЛЬКО ОДИН РАЗ НА ПОЛЕ) =====
-// ================================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Поле на ПК
     const phoneInput = document.getElementById('phone');
     if (phoneInput) {
-        // Используем только focus, чтобы не было двойного срабатывания на мобильных
         phoneInput.addEventListener('focus', requestVKData);
     }
-
-    // Мобильное поле
     const mobilePhoneInput = document.getElementById('mobile-phone');
     if (mobilePhoneInput) {
         mobilePhoneInput.addEventListener('focus', requestVKData);
     }
 });
 
-// ================================================================
-// ===== API С НАСТРОЙКОЙ NO-CACHE =====
-// ================================================================
 async function apiFetch(url) {
     const res = await fetch(API_BASE + url, {
         headers: {
@@ -779,9 +687,6 @@ async function apiPost(url, data) {
     return json;
 }
 
-// ================================================================
-// ===== ЗАГРУЗКА КОНФИГА И ТАРИФОВ =====
-// ================================================================
 async function loadConfig() {
     try {
         const config = await apiFetch('/api/config');
@@ -1003,9 +908,6 @@ document.getElementById('phone').addEventListener('input', function() {
     }, 800);
 });
 
-// ================================================================
-// ===== ИНТЕНСИВ (ПК) + ЗАЩИТА ОТ ДВОЙНОГО КЛИКА + МОДАЛКА =====
-// ================================================================
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
     const fb=document.getElementById('form-feedback');
@@ -1014,6 +916,16 @@ document.getElementById('order-form').addEventListener('submit', async function(
     const submitBtn = document.getElementById('submit-btn');
     submitBtn.disabled = true;
     submitBtn.textContent = '⏳ Отправка...';
+
+    const vkIdInput = document.getElementById('vk-id');
+    if (!vkIdInput.value && typeof vkBridge !== 'undefined') {
+        try {
+            const user = await vkBridge.send('VKWebAppGetUserInfo');
+            vkIdInput.value = user.id;
+        } catch (err) {
+            console.warn('Не удалось получить VK ID:', err);
+        }
+    }
 
     const sn=document.getElementById('surname').value.trim();
     const nm=document.getElementById('name').value.trim();
@@ -1063,7 +975,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Показываем кнопки подписки
             const phone = normalizePhone(document.getElementById('phone').value);
             showSubscriptionButtons(phone);
 
@@ -1086,7 +997,6 @@ document.getElementById('order-form').addEventListener('submit', async function(
     }
 });
 
-// ===== Галерея =====
 let galleryFiles = [];
 let currentSlide = 0;
 
@@ -1120,30 +1030,20 @@ function changeSlide(dir) {
     renderMainGallery();
 }
 
-// ================================================================
-// ===== ИСПРАВЛЕННЫЙ БЛОК СОБЫТИЙ =====
-// ================================================================
 async function loadEvents() {
     try {
         const data = await apiFetch('/api/events');
         eventsData = data || [];
-        
-        // ✅ Сначала рендерим ПК-карусель, потом мобильную
         renderEventsCarousel();
-        
-        // ✅ Устанавливаем первый слайд в event-id
         if (eventsData.length > 0) {
             const eventIdInput = document.getElementById('event-id');
             if (eventIdInput) {
                 eventIdInput.value = eventsData[0].id;
             }
         }
-        
-        // ✅ Если мобилка — рендерим мобильную карусель
         if (window.innerWidth <= 700) {
             mobileRenderEventsCarousel();
         }
-        
         eventsLoaded = true;
     } catch (err) {
         console.warn('Не удалось загрузить события:', err);
@@ -1153,9 +1053,7 @@ async function loadEvents() {
 function renderEventsCarousel() {
     const container = document.getElementById('events-carousel');
     const dotsContainer = document.getElementById('event-dots');
-    
     if (!container) return;
-    
     if (!eventsData || eventsData.length === 0) {
         container.innerHTML = `
             <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center;">
@@ -1165,7 +1063,6 @@ function renderEventsCarousel() {
         dotsContainer.innerHTML = '';
         return;
     }
-    
     container.innerHTML = eventsData.map((e, i) => `
         <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
             ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:15px; max-height:200px; object-fit:cover;">` : ''}
@@ -1176,11 +1073,9 @@ function renderEventsCarousel() {
             <button class="btn" onclick="openEventDetails(${i})" style="padding:8px 18px; font-size:0.8rem; margin-top:5px;">Подробнее</button>
         </div>
     `).join('');
-    
     dotsContainer.innerHTML = eventsData.map((_, i) => `
         <div class="event-dot" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="goToEventSlide(${i})"></div>
     `).join('');
-    
     currentEventSlide = 0;
     eventsLoaded = true;
 }
@@ -1193,7 +1088,6 @@ function changeEventSlide(dir) {
     currentEventSlide = (currentEventSlide + dir + slides.length) % slides.length;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
-
     const eventIdInput = document.getElementById('event-id');
     if (eventIdInput && eventsData[currentEventSlide]) {
         eventIdInput.value = eventsData[currentEventSlide].id;
@@ -1208,7 +1102,6 @@ function goToEventSlide(index) {
     currentEventSlide = index;
     slides[currentEventSlide].style.display = 'block';
     updateEventDots();
-
     const eventIdInput = document.getElementById('event-id');
     if (eventIdInput && eventsData[currentEventSlide]) {
         eventIdInput.value = eventsData[currentEventSlide].id;
@@ -1265,9 +1158,6 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-// ================================================================
-// ===== СОБЫТИЕ (ПК) + ЗАЩИТА ОТ ДВОЙНОГО КЛИКА + МОДАЛКА =====
-// ================================================================
 document.getElementById('events-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('events-form-feedback');
@@ -1291,7 +1181,6 @@ document.getElementById('events-form').addEventListener('submit', async function
         return;
     }
 
-    // ✅ ЖДЁМ, пока загрузятся события, если ещё нет
     if (!eventsLoaded || eventsData.length === 0) {
         fb.className = 'feedback error';
         fb.textContent = '⏳ События загружаются, подождите немного...';
@@ -1319,13 +1208,11 @@ document.getElementById('events-form').addEventListener('submit', async function
             subscribed
         });
         if (result.status === 'created') {
-            // Открываем модалку с кнопками подписки
             const phone = normalizePhone(document.getElementById('events-phone').value);
             document.getElementById('modal-message').textContent = `✅ Вы записаны на событие!`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
             showSubscriptionButtons(phone);
-
             document.getElementById('events-form').reset();
         } else {
             fb.className = 'feedback error';
@@ -1351,10 +1238,6 @@ if (ht) {
     ht.addEventListener('touchend', () => clearTimeout(tt));
     ht.addEventListener('touchmove', () => clearTimeout(tt));
 }
-
-// ================================================================
-// ===== МОБИЛЬНОЕ ПЕРЕКЛЮЧЕНИЕ И НАВИГАЦИЯ =====
-// ================================================================
 
 function mobileSetMode(mode) {
     const intensiveFields = document.getElementById('mobile-intensive-fields');
@@ -1402,7 +1285,6 @@ function mobileUpdateDateSelect(tariff) {
     const hint = document.getElementById('mobile-date-hint');
     const tariffConfig = { basic: 'basic', practice: 'practice', pro: 'pro' };
     const group = tariffConfig[tariff] || 'pro';
-    
     const dates = allDates.filter(d => d.group === group);
     select.innerHTML = '<option value="">Выберите дату...</option>';
     dates.forEach(d => {
@@ -1440,9 +1322,6 @@ function mobileSelectEvent(eventId) {
     }
 }
 
-// ================================================================
-// ===== МОБИЛЬНАЯ УНИВЕРСАЛЬНАЯ ФОРМА + ЗАЩИТА + МОДАЛКА =====
-// ================================================================
 document.getElementById('mobile-universal-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('mobile-form-feedback');
@@ -1451,6 +1330,16 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
     const mobileSubmitBtn = document.getElementById('mobile-submit-btn');
     mobileSubmitBtn.disabled = true;
     mobileSubmitBtn.textContent = '⏳ Отправка...';
+
+    const vkIdInput = document.getElementById('mobile-vk-id');
+    if (!vkIdInput.value && typeof vkBridge !== 'undefined') {
+        try {
+            const user = await vkBridge.send('VKWebAppGetUserInfo');
+            vkIdInput.value = user.id;
+        } catch (err) {
+            console.warn('Не удалось получить VK ID:', err);
+        }
+    }
 
     const mode = document.getElementById('mobile-form-mode').value;
     const surname = document.getElementById('mobile-surname').value.trim();
@@ -1493,7 +1382,7 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
                 surname, name, phone: normalizePhone(phone),
                 referral: referral ? normalizePhone(referral) : '',
                 tariff, date, timeSlot: ts || 'full',
-                source, newsletter, use_bonus: useBonus, vk_id: ''
+                source, newsletter, use_bonus: useBonus, vk_id: vkIdInput.value
             });
         } else {
             const eventId = document.getElementById('mobile-selected-event-id').value;
@@ -1519,7 +1408,6 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Показываем кнопки подписки для мобильной версии
             const phone = normalizePhone(document.getElementById('mobile-phone').value);
             showSubscriptionButtons(phone);
 
@@ -1649,13 +1537,10 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
     }, 800);
 });
 
-// ✅ МОБИЛЬНАЯ КАРУСЕЛЬ (рендерится отдельно, с задержкой)
 function mobileRenderEventsCarousel() {
     const container = document.getElementById('mobile-events-carousel');
     const dotsContainer = document.getElementById('mobile-event-dots');
-    
     if (!container) return;
-    
     if (!eventsData || eventsData.length === 0) {
         container.innerHTML = `
             <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center;">
@@ -1665,7 +1550,6 @@ function mobileRenderEventsCarousel() {
         dotsContainer.innerHTML = '';
         return;
     }
-    
     container.innerHTML = eventsData.map((e, i) => `
         <div class="event-slide" style="min-width:100%; padding:30px; background:var(--card-bg); text-align:center; display:${i === 0 ? 'block' : 'none'};">
             ${e.posterUrl ? `<img src="${e.posterUrl}" alt="${e.title}" style="max-width:100%; border-radius:8px; margin-bottom:15px; max-height:200px; object-fit:cover;">` : ''}
@@ -1677,11 +1561,9 @@ function mobileRenderEventsCarousel() {
             <button class="btn secondary" onclick="mobileSelectEvent(${e.id})" style="padding:8px 18px; font-size:0.8rem; margin-top:5px; background:var(--gold); color:#1A1C20;">Выбрать</button>
         </div>
     `).join('');
-    
     dotsContainer.innerHTML = eventsData.map((_, i) => `
         <div class="event-dot" style="width:8px; height:8px; border-radius:50%; background:${i === 0 ? 'var(--purple)' : '#444'}; cursor:pointer; transition:0.3s;" onclick="mobileGoToEventSlide(${i})"></div>
     `).join('');
-    
     window.mobileCurrentEventSlide = 0;
 }
 
@@ -1714,9 +1596,6 @@ function mobileUpdateEventDots() {
     });
 }
 
-// ================================================================
-// ===== ПЕРЕХВАТ СОЗДАНИЯ СОБЫТИЙ ДЛЯ ОБНОВЛЕНИЯ КАРУСЕЛИ =====
-// ================================================================
 const originalApiPostEvents = window.apiPost;
 window.apiPost = async function(url, data) {
     const result = await originalApiPostEvents(url, data);
@@ -1729,54 +1608,39 @@ window.apiPost = async function(url, data) {
     return result;
 };
 
-// ✅ Если события уже загружены, но мобильная карусель пустая — принудительно рендерим
 setTimeout(() => {
     if (eventsData.length > 0 && window.innerWidth <= 700) {
         mobileRenderEventsCarousel();
     }
 }, 1000);
 
-// ================================================================
-// ===== НОВЫЕ ФУНКЦИИ ДЛЯ ПОДПИСОК (ВСТАВЛЕНЫ В КОНЕЦ) =====
-// ================================================================
-
-// Вызывается после успешной записи, чтобы показать кнопки подписки
+// ===================== ИСПРАВЛЕННЫЕ КНОПКИ ПОДПИСОК =====================
 function showSubscriptionButtons(phone) {
     fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
         .then(res => res.json())
         .then(status => {
             const container = document.getElementById('subscription-buttons-container');
             if (!container) return;
-            
             let html = '';
-            let bonusMessage = '';
 
-            // VK
-if (!status.vk_subscribed) {
-    html += `
-        <a href="https://vk.com/club239743393" target="_blank" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; margin:5px;">
-            🔵 Подписаться VK (+250 ₽)
-        </a>
-    `;
-}
-
-// Telegram
-if (!status.tg_subscribed) {
-    html += `
-        <a href="https://t.me/ShootingIntensiveBot?start=phone_${phone}" target="_blank" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; margin:5px;">
-            📱 Подписаться Telegram (+250 ₽)
-        </a>
-    `;
-}
-
-            // Если уже всё получено
-            if (status.vk_bonus_issued && status.tg_bonus_issued) {
-                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
+            if (!status.vk_subscribed) {
+                html += `
+                    <button onclick="confirmVKSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
+                        🔵 Подписаться VK (+250 ₽)
+                    </button>
+                `;
             }
 
-            // Если есть сообщение о бонусах
-            if (bonusMessage) {
-                html += `<p style="font-size:0.85rem; color:var(--text-soft); margin-top:5px;">${bonusMessage}</p>`;
+            if (!status.tg_subscribed) {
+                html += `
+                    <button onclick="confirmTGSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
+                        📱 Подписаться Telegram (+250 ₽)
+                    </button>
+                `;
+            }
+
+            if (status.vk_bonus_issued && status.tg_bonus_issued) {
+                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
             }
 
             container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
@@ -1786,35 +1650,47 @@ if (!status.tg_subscribed) {
         });
 }
 
-// VK подписка
-function subscribeVK(phone) {
-    // Если в мини-приложении VK
-    if (typeof vkBridge !== 'undefined') {
-        vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 })
-            .then(data => {
-                fetch('/api/callback/vk', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ vk_id: data.user_id, phone: phone })
-                }).then(() => {
-                    alert('✅ Подписка VK подтверждена! Бонус 250 ₽ начислен.');
-                    location.reload();
-                });
-            })
-            .catch(() => {
-                alert('❌ Не удалось подтвердить подписку. Попробуйте позже.');
-            });
-    } else {
-        // В браузере — открываем сообщество
+async function confirmVKSubscription(phone) {
+    if (typeof vkBridge === 'undefined') {
+        alert('Эта функция работает только внутри приложения VK. Вступите в группу и напишите боту "БОНУС + ваш_номер", чтобы получить бонус.');
         window.open('https://vk.com/club239743393', '_blank');
-        alert('✅ Вступите в группу и напишите боту "phone_' + phone + '", чтобы получить бонус.');
+        return;
+    }
+    try {
+        const data = await vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 });
+        await fetch('/api/callback/vk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vk_id: data.user_id, phone: phone })
+        });
+        alert('✅ Подписка подтверждена! Бонус 250 ₽ начислен.');
+        location.reload();
+    } catch (err) {
+        alert('❌ Ошибка: ' + err.message);
     }
 }
 
-// Telegram подписка
-function subscribeTG(phone) {
+async function confirmTGSubscription(phone) {
     window.open(`https://t.me/ShootingIntensiveBot?start=phone_${phone}`, '_blank');
-    alert('✅ Перейдите в бота и нажмите "Запустить". Бонус начислится автоматически.');
+    alert('✅ Перейдите в бота, нажмите "Запустить" и вернитесь на эту страницу.\n\nБонус начислится автоматически.');
+    try {
+        const response = await fetch('/api/callback/telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tg_id: 'не_известен', phone: phone })
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            alert('✅ Подписка подтверждена! Бонус 250 ₽ начислен.');
+            location.reload();
+        } else if (result.status === 'not_subscribed') {
+            alert('❌ Вы ещё не подписались. Вступите в канал и нажмите "Запустить" в боте, затем вернитесь сюда.');
+        } else {
+            alert('ℹ️ ' + (result.reason || 'Проверьте подписку и попробуйте снова.'));
+        }
+    } catch (err) {
+        alert('❌ Ошибка проверки: ' + err.message);
+    }
 }
 </script>
 </body>
