@@ -1752,26 +1752,22 @@ function showSubscriptionButtons(phone) {
             let bonusMessage = '';
 
             // VK
-            if (!status.vk_subscribed) {
-                html += `
-                    <button onclick="subscribeVK('${phone}')" style="padding:8px 16px; background:#4a76a8; color:#fff; border:none; border-radius:6px; cursor:pointer;">
-                        🔵 Подписаться VK (+250 ₽)
-                    </button>
-                `;
-            } else if (!status.vk_bonus_issued) {
-                bonusMessage += '✅ Бонус VK будет начислен автоматически. ';
-            }
+if (!status.vk_subscribed) {
+    html += `
+        <a href="https://vk.com/club239743393" target="_blank" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; margin:5px;">
+            🔵 Подписаться VK (+250 ₽)
+        </a>
+    `;
+}
 
-            // Telegram
-            if (!status.tg_subscribed) {
-                html += `
-                    <button onclick="subscribeTG('${phone}')" style="padding:8px 16px; background:#0088cc; color:#fff; border:none; border-radius:6px; cursor:pointer;">
-                        📱 Подписаться Telegram (+250 ₽)
-                    </button>
-                `;
-            } else if (!status.tg_bonus_issued) {
-                bonusMessage += '✅ Бонус Telegram будет начислен автоматически. ';
-            }
+// Telegram
+if (!status.tg_subscribed) {
+    html += `
+        <a href="https://t.me/ShootingIntensiveBot?start=phone_${phone}" target="_blank" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; margin:5px;">
+            📱 Подписаться Telegram (+250 ₽)
+        </a>
+    `;
+}
 
             // Если уже всё получено
             if (status.vk_bonus_issued && status.tg_bonus_issued) {
