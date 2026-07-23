@@ -56,25 +56,28 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
     
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS clients (
-            phone TEXT PRIMARY KEY,
-            surname TEXT NOT NULL,
-            name TEXT NOT NULL,
-            visits INTEGER DEFAULT 0,
-            experienced TEXT DEFAULT 'newbie',
-            newsletter BOOLEAN DEFAULT FALSE,
-            total_discounts INTEGER DEFAULT 0,
-            last_visit TIMESTAMP,
-            referrer TEXT,
-            vk_id TEXT,
-            tg_id TEXT,
-            vk_subscribed BOOLEAN DEFAULT FALSE,
-            tg_subscribed BOOLEAN DEFAULT FALSE,
-            vk_bonus_issued BOOLEAN DEFAULT FALSE,
-            tg_bonus_issued BOOLEAN DEFAULT FALSE
-        );
-    ''')
+    # Создаём таблицу, если её нет (базовая структура)
+c.execute('''
+    CREATE TABLE IF NOT EXISTS clients (
+        phone TEXT PRIMARY KEY,
+        surname TEXT NOT NULL,
+        name TEXT NOT NULL,
+        visits INTEGER DEFAULT 0,
+        experienced TEXT DEFAULT 'newbie',
+        newsletter BOOLEAN DEFAULT FALSE,
+        total_discounts INTEGER DEFAULT 0,
+        last_visit TIMESTAMP,
+        referrer TEXT,
+        vk_id TEXT
+    );
+''')
+
+# Добавляем новые колонки, если их ещё нет (безопасно)
+c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tg_id TEXT;")
+c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS vk_subscribed BOOLEAN DEFAULT FALSE;")
+c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tg_subscribed BOOLEAN DEFAULT FALSE;")
+c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS vk_bonus_issued BOOLEAN DEFAULT FALSE;")
+c.execute("ALTER TABLE clients ADD COLUMN IF NOT EXISTS tg_bonus_issued BOOLEAN DEFAULT FALSE;")
     
     c.execute('''
         CREATE TABLE IF NOT EXISTS bookings (
