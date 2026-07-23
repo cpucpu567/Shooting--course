@@ -964,7 +964,7 @@ async def vk_callback(request: Request):
     
     # Подтверждение адреса сервера
     if body.get("type") == "confirmation":
-        return PlainTextResponse("5f24ac13")
+        return PlainTextResponse("13f009d9")
     
     # Вступление в группу
     if body.get("type") == "group_join":
