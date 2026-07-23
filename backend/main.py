@@ -1102,7 +1102,7 @@ async def vk_callback(request: Request):
     
         # Проверяем: начинается с phone_ ИЛИ равно слову БОНУС (без регистра)
         if user_id and (text.startswith("phone_") or text.upper() == "БОНУС"):
-            phone = text.replace("phone_", "").strip()
+        phone = text.replace("phone_", "").strip()
         
             # Если это слово БОНУС — пытаемся найти клиента по последнему известному номеру, либо оставляем пустым для ручного ввода
             if text.upper() == "БОНУС":
