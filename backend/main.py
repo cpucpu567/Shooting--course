@@ -1071,6 +1071,27 @@ async def vk_callback(request: Request):
     
     logger.info(f"📥 VK Callback: {body}")
     
+    # Если это прямой запрос от кнопки (vk_id и phone уже переданы)
+if "vk_id" in body and "phone" in body:
+    vk_id = body["vk_id"]
+    phone = body["phone"]
+    
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
+    client = c.fetchone()
+    
+    if client:
+        c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (vk_id, phone))
+        if not client['vk_subscribed']:
+            c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
+            if not client['vk_bonus_issued']:
+                c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
+                logger.info(f"✅ VK бонус 250 ₽ начислен через кнопку: {phone}")
+        conn.commit()
+    conn.close()
+    return {"ok": True}
+    
     if body.get("type") == "confirmation":
         return PlainTextResponse("13f009d9")
     
