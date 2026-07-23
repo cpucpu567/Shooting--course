@@ -1098,25 +1098,61 @@ async def vk_callback(request: Request):
     
     if body.get("type") == "message_new":
         user_id = body.get("object", {}).get("user_id")
-        text = body.get("object", {}).get("text", "")
-        if user_id and text.startswith("phone_"):
+        text = body.get("object", {}).get("text", "").strip()
+    
+        # Проверяем: начинается с phone_ ИЛИ равно слову БОНУС (без регистра)
+        if user_id and (text.startswith("phone_") or text.upper() == "БОНУС"):
             phone = text.replace("phone_", "").strip()
+        
+            # Если это слово БОНУС — пытаемся найти клиента по последнему известному номеру, либо оставляем пустым для ручного ввода
+            if text.upper() == "БОНУС":
+                conn = get_db()
+                c = conn.cursor()
+                c.execute("SELECT phone FROM clients WHERE vk_id = %s", (str(user_id),))
+                row = c.fetchone()
+                conn.close()
+                if row:
+                    phone = row['phone']
+                else:
+                    # Если не нашли, возвращаем ошибку, но не ломаем сервер
+                    logger.warning(f"Пользователь {user_id} написал БОНУС, но номер не найден")
+                    return {"ok": True}
+
             conn = get_db()
             c = conn.cursor()
             c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
             client = c.fetchone()
+        
             if client:
                 c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (str(user_id), phone))
                 if not client['vk_subscribed']:
-                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
-                    if not client['vk_bonus_issued']:
-                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
-                        logger.info(f"✅ VK бонус 250 ₽ начислен через бота: {phone}")
+                    # Проверяем реальную подписку через VK API
+                    vk_token = os.getenv("VK_TOKEN", "")
+                    group_id = "239743393"
+                    is_member = False
+                    if vk_token:
+                        try:
+                            resp = requests.get("https://api.vk.com/method/groups.isMember", params={
+                            "access_token": vk_token,
+                            "v": "5.131",
+                            "group_id": group_id,
+                            "user_id": user_id
+                            })
+                            result = resp.json()
+                            is_member = result.get("response", 0) == 1
+                        except Exception as e:
+                            logger.error(f"Ошибка VK API: {e}")
+                
+                    if is_member:
+                        c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
+                        if not client['vk_bonus_issued']:
+                            c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
+                            logger.info(f"✅ VK бонус 250 ₽ начислен через бота: {phone}")
+                        else:
+                            logger.info(f"ℹ️ VK подписка подтверждена для {phone}, бонус уже выдан")
                 conn.commit()
             conn.close()
             return {"ok": True}
-    
-    return {"ok": True}
 
 @app.post("/api/callback/telegram")
 async def telegram_callback(data: TelegramCallbackRequest):
