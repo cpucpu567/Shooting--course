@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 import os
 import psycopg2
@@ -67,7 +67,12 @@ def init_db():
             total_discounts INTEGER DEFAULT 0,
             last_visit TIMESTAMP,
             referrer TEXT,
-            vk_id TEXT
+            vk_id TEXT,
+            tg_id TEXT,
+            vk_subscribed BOOLEAN DEFAULT FALSE,
+            tg_subscribed BOOLEAN DEFAULT FALSE,
+            vk_bonus_issued BOOLEAN DEFAULT FALSE,
+            tg_bonus_issued BOOLEAN DEFAULT FALSE
         );
     ''')
     
@@ -215,6 +220,18 @@ class GalleryItem(BaseModel):
     type: str
     name: str = ""
 
+class VKCallbackRequest(BaseModel):
+    vk_id: str
+    phone: str
+
+class TelegramCallbackRequest(BaseModel):
+    tg_id: str
+    phone: str
+
+class MailingRequest(BaseModel):
+    text: str
+    platform: str  # "vk", "telegram", "both"
+
 # ===== Вспомогательные функции =====
 def get_prices():
     conn = get_db()
@@ -230,16 +247,13 @@ def get_prices():
     return {"practice": {"base": 5000, "instructor": 2000}, "basic": {"base": 5000, "instructor": 3500}, "pro": {"base": 10000, "instructor": 3500}}
 
 def send_admin_notification(booking_id, data, final_price, discount):
-    # Определяем тип заявки: есть ли поле tariff (интенсив) или event_id (событие)
     is_event = hasattr(data, 'event_id') and data.event_id is not None
     
     vk_token = os.getenv("VK_TOKEN", "")
     if vk_token:
         if is_event:
-            # Сообщение для СОБЫТИЯ
             msg = f"📅 Новая заявка на событие #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n📧 {data.email or 'не указан'}\n💰 Итог: {final_price} ₽"
         else:
-            # Сообщение для ИНТЕНСИВА
             msg = f"🔫 Новая заявка на интенсив #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n🎯 {data.tariff}\n📅 {data.date} {data.time_slot}\n💰 Итог: {final_price} ₽\n📱 Источник: {data.source or 'не указан'}"
         
         try:
@@ -256,8 +270,7 @@ def send_admin_notification(booking_id, data, final_price, discount):
             
     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
-    user_id = os.getenv("TELEGRAM_USER_ID", "")
-    if telegram_token and chat_id and user_id:
+    if telegram_token and chat_id:
         if is_event:
             tg_msg = f"📅 Новая заявка на событие #{booking_id}\n👤 {data.surname} {data.name}\n📞 {data.phone}\n📧 {data.email or 'не указан'}\n💰 Итог: {final_price} ₽"
         else:
@@ -265,8 +278,7 @@ def send_admin_notification(booking_id, data, final_price, discount):
         
         try:
             requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": chat_id, "text": tg_msg})
-            requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": user_id, "text": tg_msg})
-            logger.info("Telegram: уведомления администратору отправлены")
+            logger.info("Telegram: уведомление администратору отправлено")
         except Exception as e:
             logger.error(f"Ошибка Telegram админу: {str(e)}", exc_info=True)
 
@@ -397,12 +409,16 @@ async def create_booking(data: BookingRequest):
     
     discount = 0
     if data.use_bonus and total_discount > 0:
-        max_bonus = int(instructor_price * 0.3)
+        max_bonus = int(instructor_price * 0.20)  # 20% вместо 30%
         discount = min(total_discount, max_bonus)
     final_price = base_price + (instructor_price - discount)
     
     conn = get_db()
     c = conn.cursor()
+    
+    # Если vk_id передан — сохраняем
+    vk_id_to_save = data.vk_id if data.vk_id else None
+    
     c.execute('''
         INSERT INTO clients (phone, surname, name, visits, experienced, newsletter, referrer, vk_id)
         VALUES (%s, %s, %s, 1, 'newbie', %s, %s, %s)
@@ -418,7 +434,7 @@ async def create_booking(data: BookingRequest):
             newsletter = EXCLUDED.newsletter,
             referrer = COALESCE(EXCLUDED.referrer, clients.referrer),
             vk_id = COALESCE(EXCLUDED.vk_id, clients.vk_id)
-    ''', (data.phone, data.surname, data.name, data.newsletter, data.referral, data.vk_id))
+    ''', (data.phone, data.surname, data.name, data.newsletter, data.referral, vk_id_to_save))
     conn.commit()
     conn.close()
 
@@ -445,27 +461,19 @@ async def create_booking(data: BookingRequest):
         try:
             conn = get_db()
             c = conn.cursor()
-            
-            # 1. Проверяем, не вписал ли этот человек самого себя (защита от дурака)
             if data.referral == data.phone:
                 logger.warning(f"Пользователь {data.phone} попытался привести сам себя. Бонус не начислен.")
                 conn.close()
             else:
-                # 2. Проверяем, не вписал ли этот человек того, кто уже вписал его (эффект «зеркала»)
                 c.execute("SELECT referrer FROM clients WHERE phone = %s", (data.referral,))
                 row = c.fetchone()
-                
-                # Если у того, кого привели (referral), в поле referrer уже стоит номер текущего клиента (phone) — это зеркало
                 if row and row['referrer'] == data.phone:
-                    # Зеркало! Начисляем бонус ТОЛЬКО текущему клиенту (тому, кто реально отправил заявку первым)
                     c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
                     logger.info(f"Обнаружена зеркальная запись. Бонус 500 ₽ начислен только инициатору {data.phone}")
                 else:
-                    # Всё чисто, начисляем обоим
                     c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.phone,))
                     c.execute("UPDATE clients SET total_discounts = total_discounts + 500 WHERE phone = %s", (data.referral,))
                     logger.info(f"Бонус 500 ₽ начислен обоим: {data.phone} и {data.referral}")
-            
             conn.commit()
             conn.close()
         except Exception as e:
@@ -506,6 +514,16 @@ async def create_booking(data: BookingRequest):
         
         for row in phones:
             send_client_notification(row['phone'], data.tariff, data.date, data.time_slot, final_price)
+        
+        telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        channel_id = "-1002612715364"
+        if telegram_token and channel_id:
+            channel_msg = f"✅ ИНТЕНСИВ ПОДТВЕРЖДЁН!\n\n📅 Дата: {data.date}\n🎯 Тариф: {data.tariff}\n👥 Участников: {len(phones)} чел.\n\n📍 Место: стрельбище, г. Пермь"
+            try:
+                requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": channel_id, "text": channel_msg})
+                logger.info("Telegram: уведомление отправлено в канал")
+            except Exception as e:
+                logger.error(f"Ошибка отправки в канал: {str(e)}")
     
     return {"id": booking_id, "status": "created", "finalPrice": final_price, "discount": discount}
 
@@ -513,25 +531,17 @@ async def create_booking(data: BookingRequest):
 async def get_client_status(phone: str):
     conn = get_db()
     c = conn.cursor()
-    
-    # 1. Проверяем, есть ли у клиента записи на ИНТЕНСИВ со статусом pending
     c.execute("SELECT COUNT(*) FROM bookings WHERE phone = %s AND status = 'pending'", (phone,))
     pending_bookings = c.fetchone()['count']
-    
-    # 2. Проверяем, есть ли у клиента записи на СОБЫТИЯ со статусом pending
     c.execute("SELECT COUNT(*) FROM event_bookings WHERE phone = %s AND status = 'pending'", (phone,))
     pending_events = c.fetchone()['count']
-    
-    # 3. Получаем данные клиента (визиты, опыт, бонусы)
     c.execute("SELECT visits, experienced, total_discounts FROM clients WHERE phone = %s", (phone,))
     row = c.fetchone()
     conn.close()
     
-    # Если клиента вообще нет в базе (новый номер, никогда не записывался)
     if not row:
         return {"level": "newbie", "visits": 0, "bonus": 0, "message": "Вы ещё не были у нас. Записывайтесь!"}
     
-    # Специальные сообщения, если человек уже записан, но группа не набралась
     if pending_bookings > 0:
         return {
             "level": row['experienced'],
@@ -548,7 +558,6 @@ async def get_client_status(phone: str):
             "message": "✅ Вы уже записаны на событие, ждём подтверждения!"
         }
     
-    # Стандартные сообщения для активных пользователей
     messages = {
         "newbie": "🔰 Отлично! Вы начнёте с основ.",
         "experienced": "⭐ С возвращением! Готовы к скорости?",
@@ -627,7 +636,9 @@ async def get_clients(limit: int = 100, offset: int = 0):
     return [{"phone": r['phone'], "surname": r['surname'], "name": r['name'], "visits": r['visits'], 
              "experienced": r['experienced'], "newsletter": r['newsletter'], 
              "totalDiscounts": r['total_discounts'], "lastVisit": r['last_visit'],
-             "referrer": r['referrer'], "vk_id": r['vk_id']} for r in rows]
+             "referrer": r['referrer'], "vk_id": r['vk_id'], "tg_id": r['tg_id'],
+             "vk_subscribed": r['vk_subscribed'], "tg_subscribed": r['tg_subscribed'],
+             "vk_bonus_issued": r['vk_bonus_issued'], "tg_bonus_issued": r['tg_bonus_issued']} for r in rows]
 
 @app.delete("/api/clients/{phone}")
 async def delete_client(phone: str):
@@ -719,8 +730,6 @@ async def get_events():
 @app.post("/api/events")
 async def create_event(event: EventItem):
     logger.info(f"📥 Получен запрос на создание события: {event.title}")
-    logger.info(f"📦 Данные: {event.dict()}")
-    
     try:
         conn = get_db()
         c = conn.cursor()
@@ -732,10 +741,8 @@ async def create_event(event: EventItem):
         event_id = c.fetchone()['id']
         conn.commit()
         conn.close()
-        
         logger.info(f"✅ Событие успешно создано: {event.title} (ID: {event_id})")
         
-        # Второстепенные действия (не ломают создание события)
         try:
             vk_token = os.getenv("VK_TOKEN", "")
             telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -747,8 +754,7 @@ async def create_event(event: EventItem):
 {event.title}
 📅 {event.date} в {event.time}
 📍 {event.location}
-💰 {event.price} ₽
-👥 Участников: {event.min_participants}–{event.max_participants}
+💰 {event.price} ₽👥 Участников: {event.min_participants}–{event.max_participants}
 
 {event.description}
 
@@ -892,7 +898,6 @@ async def create_event_booking(data: EventBookingRequest):
     conn.commit()
     conn.close()
 
-    # Отправляем уведомление администратору о бронировании события
     send_admin_notification(booking_id, data, event['price'], 0)
     
     conn = get_db()
@@ -919,6 +924,16 @@ async def create_event_booking(data: EventBookingRequest):
         
         for row in phones:
             send_event_client_notification(row['phone'], event['title'], event['date'], event['time'], event['location'], event['price'])
+        
+        telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        channel_id = "-1002612715364"
+        if telegram_token and channel_id:
+            channel_msg = f"✅ СОБЫТИЕ ПОДТВЕРЖДЁНО!\n\n📅 Дата: {event['date']} в {event['time']}\n📍 Место: {event['location']}\n🎯 Название: {event['title']}\n👥 Участников: {len(phones)} чел."
+            try:
+                requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={"chat_id": channel_id, "text": channel_msg})
+                logger.info("Telegram: уведомление отправлено в канал")
+            except Exception as e:
+                logger.error(f"Ошибка отправки в канал: {str(e)}")
     
     return {"id": booking_id, "status": "created"}
 
@@ -932,6 +947,221 @@ async def get_event_bookings(event_id: int):
     return [{"id": r['id'], "surname": r['surname'], "name": r['name'], "phone": r['phone'], "email": r['email'],
              "subscribed": r['subscribed'], "status": r['status'], "createdAt": r['created_at']} for r in rows]
 
+# ===== API: Подписки и callback'и =====
+
+@app.post("/api/callback/vk")
+async def vk_callback(request: Request):
+    """
+    VK Callback API.
+    Обрабатывает подтверждение, вступление в группу (group_join) и новые сообщения.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return PlainTextContent("error")
+    
+    logger.info(f"📥 VK Callback: {body}")
+    
+    # Подтверждение адреса сервера
+    if body.get("type") == "confirmation":
+        return PlainTextResponse("5f24ac13")
+    
+    # Вступление в группу
+    if body.get("type") == "group_join":
+        user_id = body.get("object", {}).get("user_id")
+        if user_id:
+            # Ищем клиента по vk_id
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE vk_id = %s", (str(user_id),))
+            client = c.fetchone()
+            
+            if client:
+                if not client['vk_subscribed']:
+                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (client['phone'],))
+                    conn.commit()
+                    logger.info(f"✅ VK подписка подтверждена для {client['phone']} (vk_id: {user_id})")
+                    
+                    if not client['vk_bonus_issued']:
+                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (client['phone'],))
+                        conn.commit()
+                        logger.info(f"✅ VK бонус 250 ₽ начислен: {client['phone']}")
+                conn.close()
+            else:
+                logger.info(f"ℹ️ VK group_join: пользователь {user_id} не найден в базе")
+            return {"ok": True}
+    
+    # Сообщение от пользователя (если бот)
+    if body.get("type") == "message_new":
+        user_id = body.get("object", {}).get("user_id")
+        text = body.get("object", {}).get("text", "")
+        if user_id and text.startswith("phone_"):
+            phone = text.replace("phone_", "").strip()
+            conn = get_db()
+            c = conn.cursor()
+            c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
+            client = c.fetchone()
+            if client:
+                c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (str(user_id), phone))
+                if not client['vk_subscribed']:
+                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
+                    if not client['vk_bonus_issued']:
+                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
+                        logger.info(f"✅ VK бонус 250 ₽ начислен через бота: {phone}")
+                conn.commit()
+            conn.close()
+            return {"ok": True}
+    
+    return {"ok": True}
+
+@app.post("/api/callback/telegram")
+async def telegram_callback(data: TelegramCallbackRequest):
+    """
+    Принимает tg_id и phone от Telegram бота (через параметр start=phone_...).
+    Проверяет подписку через getChatMember, начисляет бонус 250 ₽.
+    """
+    conn = get_db()
+    c = conn.cursor()
+    
+    c.execute("SELECT phone, tg_subscribed, tg_bonus_issued FROM clients WHERE phone = %s", (data.phone,))
+    client = c.fetchone()
+    if not client:
+        conn.close()
+        raise HTTPException(404, "Клиент не найден")
+    
+    if client['tg_subscribed'] and client['tg_bonus_issued']:
+        conn.close()
+        return {"status": "skipped", "reason": "already subscribed and bonus issued"}
+    
+    # Проверяем подписку через Telegram API
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    channel_id = "-1002612715364"
+    
+    is_member = False
+    if telegram_token and channel_id:
+        try:
+            resp = requests.get(f"https://api.telegram.org/bot{telegram_token}/getChatMember", params={
+                "chat_id": channel_id,
+                "user_id": data.tg_id
+            })
+            result = resp.json()
+            status = result.get("result", {}).get("status", "")
+            is_member = status in ("member", "administrator", "creator")
+        except Exception as e:
+            logger.error(f"Ошибка Telegram API: {e}")
+    
+    if is_member:
+        c.execute("UPDATE clients SET tg_subscribed = TRUE, tg_id = %s WHERE phone = %s", (data.tg_id, data.phone))
+        if not client['tg_bonus_issued']:
+            c.execute("UPDATE clients SET total_discounts = total_discounts + 250, tg_bonus_issued = TRUE WHERE phone = %s", (data.phone,))
+            logger.info(f"✅ Telegram бонус 250 ₽ начислен: {data.phone}")
+        
+        conn.commit()
+        conn.close()
+        return {"status": "success", "bonus": 250}
+    
+    c.execute("UPDATE clients SET tg_id = %s WHERE phone = %s", (data.tg_id, data.phone))
+    conn.commit()
+    conn.close()
+    return {"status": "not_subscribed", "tg_id": data.tg_id}
+
+@app.get("/api/client/subscription-status")
+async def get_subscription_status(phone: str):
+    """
+    Возвращает статус подписок и бонусов для конкретного клиента.
+    Используется в модалке после записи.
+    """
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT vk_subscribed, tg_subscribed, vk_bonus_issued, tg_bonus_issued,
+               vk_id, tg_id, total_discounts
+        FROM clients WHERE phone = %s
+    """, (phone,))
+    row = c.fetchone()
+    conn.close()
+    
+    if not row:
+        return {
+            "vk_subscribed": False,
+            "tg_subscribed": False,
+            "vk_bonus_issued": False,
+            "tg_bonus_issued": False,
+            "vk_id": None,
+            "tg_id": None,
+            "total_discounts": 0
+        }
+    
+    return {
+        "vk_subscribed": row['vk_subscribed'],
+        "tg_subscribed": row['tg_subscribed'],
+        "vk_bonus_issued": row['vk_bonus_issued'],
+        "tg_bonus_issued": row['tg_bonus_issued'],
+        "vk_id": row['vk_id'],
+        "tg_id": row['tg_id'],
+        "total_discounts": row['total_discounts']
+    }
+
+@app.post("/api/mailing")
+async def send_mailing(data: MailingRequest):
+    """
+    Рассылка только подписанным на новости (newsletter=True)
+    и имеющим известный vk_id или tg_id.
+    """
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("SELECT phone, vk_id, tg_id FROM clients WHERE newsletter = TRUE")
+    clients = c.fetchall()
+    conn.close()
+    
+    sent_vk = 0
+    sent_tg = 0
+    skipped_no_id = []
+    
+    vk_token = os.getenv("VK_TOKEN", "")
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    
+    for client in clients:
+        phone = client['phone']
+        vk_id = client['vk_id']
+        tg_id = client['tg_id']
+        
+        # VK
+        if data.platform in ("vk", "both") and vk_id and vk_token:
+            try:
+                requests.post("https://api.vk.com/method/messages.send", params={
+                    "access_token": vk_token,
+                    "v": "5.131",
+                    "user_id": vk_id,
+                    "message": data.text,
+                    "random_id": 0
+                })
+                sent_vk += 1
+            except Exception as e:
+                logger.error(f"VK ошибка для {phone}: {e}")
+        
+        # Telegram
+        if data.platform in ("telegram", "both") and tg_id and telegram_token:
+            try:
+                requests.post(f"https://api.telegram.org/bot{telegram_token}/sendMessage", json={
+                    "chat_id": tg_id,
+                    "text": data.text
+                })
+                sent_tg += 1
+            except Exception as e:
+                logger.error(f"Telegram ошибка для {phone}: {e}")
+        
+        # Если нет ни vk_id, ни tg_id — пропускаем
+        if not vk_id and not tg_id:
+            skipped_no_id.append(phone)
+    
+    return {
+        "sent_vk": sent_vk,
+        "sent_tg": sent_tg,
+        "skipped_no_id": skipped_no_id,
+        "total_newsletter": len(clients)
+    }
+
 # ===== API: Ручное редактирование бонусов (для админа) =====
 @app.post("/api/client/bonus")
 async def update_client_bonus(phone: str, amount: int):
@@ -940,13 +1170,11 @@ async def update_client_bonus(phone: str, amount: int):
     
     conn = get_db()
     c = conn.cursor()
-    # Проверяем, существует ли клиент
     c.execute("SELECT phone FROM clients WHERE phone = %s", (phone,))
     if not c.fetchone():
         conn.close()
         raise HTTPException(404, "Клиент не найден")
     
-    # Обновляем бонусы
     c.execute("UPDATE clients SET total_discounts = %s WHERE phone = %s", (amount, phone))
     conn.commit()
     conn.close()
