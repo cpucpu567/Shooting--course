@@ -304,7 +304,8 @@
         <div style="color:var(--text-soft); font-size:0.95rem;">
             — за приглашение друга<br>
             — за каждое 5-е занятие<br>
-            — за посещение события
+            — за посещение события<br>
+            — за подписку на <strong>VK</strong> и <strong>Telegram</strong> (по 250 ₽ за каждую)
         </div>
     </div>
 </div></section>
@@ -520,6 +521,7 @@
         <span style="font-size:3rem;">✅</span>
         <h3>Заявка принята!</h3>
         <p id="modal-message" style="margin:14px 0;"></p>
+        <div id="subscription-buttons-container" style="margin:10px 0; display:flex; flex-direction:column; gap:8px;"></div>
         <button class="btn" onclick="closeModal()">Понял, жду</button>
     </div>
 </div>
@@ -1001,10 +1003,17 @@ document.getElementById('phone').addEventListener('input', function() {
     }, 800);
 });
 
+// ================================================================
+// ===== ИНТЕНСИВ (ПК) + ЗАЩИТА ОТ ДВОЙНОГО КЛИКА + МОДАЛКА =====
+// ================================================================
 document.getElementById('order-form').addEventListener('submit', async function(e){
     e.preventDefault();
     const fb=document.getElementById('form-feedback');
     fb.className='feedback'; fb.style.display='none';
+
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Отправка...';
 
     const sn=document.getElementById('surname').value.trim();
     const nm=document.getElementById('name').value.trim();
@@ -1024,7 +1033,13 @@ document.getElementById('order-form').addEventListener('submit', async function(
 
     const er=[];
     if(!sn) er.push('Фамилия'); if(!nm) er.push('Имя'); if(!ph) er.push('Телефон'); if(!dr) er.push('Дата'); if(!ag) er.push('Согласие с правилами'); if(!pr) er.push('Согласие на обработку ПД');
-    if(er.length){ fb.className='feedback error'; fb.textContent='❌ '+er.join(', '); return; }
+    if(er.length){ 
+        fb.className='feedback error'; 
+        fb.textContent='❌ '+er.join(', '); 
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Попасть в себя';
+        return; 
+    }
 
     const [dv, timeSlot] = dr.split('|');
     const data = { 
@@ -1048,6 +1063,10 @@ document.getElementById('order-form').addEventListener('submit', async function(
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
+            // Показываем кнопки подписки
+            const phone = normalizePhone(document.getElementById('phone').value);
+            showSubscriptionButtons(phone);
+
             document.getElementById('order-form').reset();
             selectTariff('pro');
             updateDateSelect('pro');
@@ -1055,10 +1074,15 @@ document.getElementById('order-form').addEventListener('submit', async function(
             const wrapper = document.getElementById('bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
         } else {
-            fb.className='feedback error'; fb.textContent='❌ ' + (result.detail || 'Ошибка');
+            fb.className='feedback error'; 
+            fb.textContent='❌ ' + (result.detail || 'Ошибка');
         }
     } catch (err) {
-        fb.className='feedback error'; fb.textContent='❌ Ошибка сети: ' + err.message;
+        fb.className='feedback error'; 
+        fb.textContent='❌ Ошибка сети: ' + err.message;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Попасть в себя';
     }
 });
 
@@ -1241,11 +1265,17 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
-// ✅ ИСПРАВЛЕННЫЙ ОБРАБОТЧИК ФОРМЫ СОБЫТИЙ
+// ================================================================
+// ===== СОБЫТИЕ (ПК) + ЗАЩИТА ОТ ДВОЙНОГО КЛИКА + МОДАЛКА =====
+// ================================================================
 document.getElementById('events-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('events-form-feedback');
     fb.className = 'feedback'; fb.style.display = 'none';
+
+    const submitBtn = document.querySelector('#events-form .btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Отправка...';
 
     const surname = document.getElementById('events-surname').value.trim();
     const name = document.getElementById('events-name').value.trim();
@@ -1256,6 +1286,8 @@ document.getElementById('events-form').addEventListener('submit', async function
     if (!surname || !name || !phone) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Заполните все обязательные поля';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Отправить заявку';
         return;
     }
 
@@ -1263,6 +1295,8 @@ document.getElementById('events-form').addEventListener('submit', async function
     if (!eventsLoaded || eventsData.length === 0) {
         fb.className = 'feedback error';
         fb.textContent = '⏳ События загружаются, подождите немного...';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Отправить заявку';
         return;
     }
 
@@ -1270,6 +1304,8 @@ document.getElementById('events-form').addEventListener('submit', async function
     if (!eventId) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Событие не выбрано';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Отправить заявку';
         return;
     }
 
@@ -1283,8 +1319,13 @@ document.getElementById('events-form').addEventListener('submit', async function
             subscribed
         });
         if (result.status === 'created') {
-            fb.className = 'feedback success';
-            fb.textContent = '✅ Заявка на событие принята!';
+            // Открываем модалку с кнопками подписки
+            const phone = normalizePhone(document.getElementById('events-phone').value);
+            document.getElementById('modal-message').textContent = `✅ Вы записаны на событие!`;
+            document.getElementById('success-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            showSubscriptionButtons(phone);
+
             document.getElementById('events-form').reset();
         } else {
             fb.className = 'feedback error';
@@ -1293,6 +1334,9 @@ document.getElementById('events-form').addEventListener('submit', async function
     } catch (err) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Ошибка сети: ' + err.message;
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Отправить заявку';
     }
 });
 
@@ -1396,10 +1440,17 @@ function mobileSelectEvent(eventId) {
     }
 }
 
+// ================================================================
+// ===== МОБИЛЬНАЯ УНИВЕРСАЛЬНАЯ ФОРМА + ЗАЩИТА + МОДАЛКА =====
+// ================================================================
 document.getElementById('mobile-universal-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const fb = document.getElementById('mobile-form-feedback');
     fb.className = 'feedback'; fb.style.display = 'none';
+
+    const mobileSubmitBtn = document.getElementById('mobile-submit-btn');
+    mobileSubmitBtn.disabled = true;
+    mobileSubmitBtn.textContent = '⏳ Отправка...';
 
     const mode = document.getElementById('mobile-form-mode').value;
     const surname = document.getElementById('mobile-surname').value.trim();
@@ -1412,6 +1463,8 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
     if (!surname || !name || !phone || !agree || !privacy) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Заполните все обязательные поля';
+        mobileSubmitBtn.disabled = false;
+        mobileSubmitBtn.textContent = 'Записаться';
         return;
     }
 
@@ -1427,6 +1480,8 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             if (!dateRaw) {
                 fb.className = 'feedback error';
                 fb.textContent = '❌ Выберите дату';
+                mobileSubmitBtn.disabled = false;
+                mobileSubmitBtn.textContent = 'Записаться';
                 return;
             }
             const [date, ts] = dateRaw.split('|');
@@ -1447,6 +1502,8 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             if (!eventId) {
                 fb.className = 'feedback error';
                 fb.textContent = '❌ Выберите событие в карусели';
+                mobileSubmitBtn.disabled = false;
+                mobileSubmitBtn.textContent = 'Записаться';
                 return;
             }
 
@@ -1461,6 +1518,11 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.getElementById('modal-message').textContent = `✅ Заявка принята! Мы свяжемся с вами.`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // Показываем кнопки подписки для мобильной версии
+            const phone = normalizePhone(document.getElementById('mobile-phone').value);
+            showSubscriptionButtons(phone);
+
             document.getElementById('mobile-universal-form').reset();
             document.getElementById('mobile-client-info').style.display = 'none';
             const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
@@ -1472,6 +1534,9 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
     } catch (err) {
         fb.className = 'feedback error';
         fb.textContent = '❌ Ошибка сети: ' + err.message;
+    } finally {
+        mobileSubmitBtn.disabled = false;
+        mobileSubmitBtn.textContent = 'Записаться';
     }
 });
 
@@ -1670,6 +1735,91 @@ setTimeout(() => {
         mobileRenderEventsCarousel();
     }
 }, 1000);
+
+// ================================================================
+// ===== НОВЫЕ ФУНКЦИИ ДЛЯ ПОДПИСОК (ВСТАВЛЕНЫ В КОНЕЦ) =====
+// ================================================================
+
+// Вызывается после успешной записи, чтобы показать кнопки подписки
+function showSubscriptionButtons(phone) {
+    fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
+        .then(res => res.json())
+        .then(status => {
+            const container = document.getElementById('subscription-buttons-container');
+            if (!container) return;
+            
+            let html = '';
+            let bonusMessage = '';
+
+            // VK
+            if (!status.vk_subscribed) {
+                html += `
+                    <button onclick="subscribeVK('${phone}')" style="padding:8px 16px; background:#4a76a8; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+                        🔵 Подписаться VK (+250 ₽)
+                    </button>
+                `;
+            } else if (!status.vk_bonus_issued) {
+                bonusMessage += '✅ Бонус VK будет начислен автоматически. ';
+            }
+
+            // Telegram
+            if (!status.tg_subscribed) {
+                html += `
+                    <button onclick="subscribeTG('${phone}')" style="padding:8px 16px; background:#0088cc; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+                        📱 Подписаться Telegram (+250 ₽)
+                    </button>
+                `;
+            } else if (!status.tg_bonus_issued) {
+                bonusMessage += '✅ Бонус Telegram будет начислен автоматически. ';
+            }
+
+            // Если уже всё получено
+            if (status.vk_bonus_issued && status.tg_bonus_issued) {
+                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
+            }
+
+            // Если есть сообщение о бонусах
+            if (bonusMessage) {
+                html += `<p style="font-size:0.85rem; color:var(--text-soft); margin-top:5px;">${bonusMessage}</p>`;
+            }
+
+            container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
+        })
+        .catch(err => {
+            console.warn('Ошибка получения статуса подписок:', err);
+        });
+}
+
+// VK подписка
+function subscribeVK(phone) {
+    // Если в мини-приложении VK
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 })
+            .then(data => {
+                fetch('/api/callback/vk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ vk_id: data.user_id, phone: phone })
+                }).then(() => {
+                    alert('✅ Подписка VK подтверждена! Бонус 250 ₽ начислен.');
+                    location.reload();
+                });
+            })
+            .catch(() => {
+                alert('❌ Не удалось подтвердить подписку. Попробуйте позже.');
+            });
+    } else {
+        // В браузере — открываем сообщество
+        window.open('https://vk.com/club239743393', '_blank');
+        alert('✅ Вступите в группу и напишите боту "phone_' + phone + '", чтобы получить бонус.');
+    }
+}
+
+// Telegram подписка
+function subscribeTG(phone) {
+    window.open(`https://t.me/ShootingIntensiveBot?start=phone_${phone}`, '_blank');
+    alert('✅ Перейдите в бота и нажмите "Запустить". Бонус начислится автоматически.');
+}
 </script>
 </body>
 </html>

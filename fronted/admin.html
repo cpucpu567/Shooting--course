@@ -173,20 +173,23 @@
         </div>
 
         <div id="tab-mailing" class="content">
-            <div class="card">
-                <h4>📨 Рассылка</h4>
-                <p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">Отправить сообщение всем согласившимся.</p>
-                <div class="form-group">
-                    <label>Текст сообщения</label>
-                    <textarea id="mailing-message" rows="4" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.9rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea>
-                </div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <button onclick="sendMailing('vk')" class="btn">📤 VK</button>
-                    <button onclick="sendMailing('telegram')" class="btn secondary">📤 Telegram</button>
-                </div>
-                <div id="mailing-result" style="margin-top:10px;font-size:0.85rem;color:var(--text-soft);"></div>
-            </div>
+    <div class="card">
+        <h4>📨 Рассылка (автоматическая по ID)</h4>
+        <p style="font-size:0.75rem;opacity:0.6;margin-bottom:8px;">
+            Отправить сообщение только подписанным на новости (newsletter=True) с известным VK ID или Telegram ID.
+        </p>
+        <div class="form-group">
+            <label>Текст сообщения</label>
+            <textarea id="mailing-message" rows="4" style="width:100%;padding:10px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;font-family:inherit;font-size:0.9rem;">Новый набор на «Стрелковый интенсив»! Подробности на сайте.</textarea>
         </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="sendMailing('vk')" class="btn">📤 VK</button>
+            <button onclick="sendMailing('telegram')" class="btn secondary">📤 Telegram</button>
+            <button onclick="sendMailing('both')" class="btn secondary">📤 Обе</button>
+        </div>
+        <div id="mailing-result" style="margin-top:10px;font-size:0.85rem;color:var(--text-soft);"></div>
+    </div>
+</div>
 
         <div id="tab-report" class="content">
             <div class="card">
@@ -401,26 +404,34 @@
                     return;
                 }
                 container.innerHTML = filtered.map(c => `
-                    <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                        <div>
-                            <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
-                            <span style="opacity:0.4;">${c.phone}</span>
-                            <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
-                            <br><span style="font-size:0.7rem;opacity:0.4;">💰 Бонусы: <strong id="bonus-display-${c.phone}">${c.totalDiscounts || 0}</strong> ₽</span>
-                            ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
-                              c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
-                              ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
-                            ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
-                            <div style="display:flex;gap:5px;">
-                                <input type="number" id="bonus-input-${c.phone}" value="${c.totalDiscounts || 0}" style="width:70px;padding:4px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:4px;font-size:0.7rem;">
-                                <button onclick="updateClientBonus('${c.phone}')" class="btn" style="padding:4px 8px;font-size:0.6rem;background:var(--gold);color:#1A1C20;">💾</button>
-                            </div>
-                            <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
-                        </div>
-                    </div>
-                `).join('');
+    <div class="card" style="padding:15px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+        <div>
+            <strong style="color:var(--purple);">${c.surname} ${c.name}</strong>
+            <span style="opacity:0.4;">${c.phone}</span>
+            <br><span style="font-size:0.7rem;opacity:0.4;">Занятий: ${c.visits}</span>
+            <br><span style="font-size:0.7rem;opacity:0.4;">💰 Бонусы: <strong id="bonus-display-${c.phone}">${c.totalDiscounts || 0}</strong> ₽</span>
+            ${c.experienced === 'pro' ? ' <span style="background:var(--gold);color:#1A1C20;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🏆 Про</span>' :
+              c.experienced === 'experienced' ? ' <span style="background:var(--purple);color:#fff;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">⭐ Опытный</span>' :
+              ' <span style="background:#444;color:#aaa;padding:2px 8px;border-radius:4px;font-size:0.6rem;font-weight:600;">🔰 Новичок</span>'}
+            ${c.referrer ? `<div style="font-size:0.6rem;opacity:0.5;margin-top:4px;">👤 Привёл: ${c.referrer}</div>` : ''}
+            
+            <!-- НОВЫЕ СТРОКИ: подписки и ID -->
+            <div style="font-size:0.7rem; opacity:0.6; margin-top:4px; border-top:1px solid var(--card-border); padding-top:4px;">
+                VK ID: ${c.vk_id || '—'} ${c.vk_subscribed ? '✅' : '❌'} | 
+                TG ID: ${c.tg_id || '—'} ${c.tg_subscribed ? '✅' : '❌'} |
+                Бонус VK: ${c.vk_bonus_issued ? '✅' : '❌'} |
+                Бонус TG: ${c.tg_bonus_issued ? '✅' : '❌'}
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
+            <div style="display:flex;gap:5px;">
+                <input type="number" id="bonus-input-${c.phone}" value="${c.totalDiscounts || 0}" style="width:70px;padding:4px;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:4px;font-size:0.7rem;">
+                <button onclick="updateClientBonus('${c.phone}')" class="btn" style="padding:4px 8px;font-size:0.6rem;background:var(--gold);color:#1A1C20;">💾</button>
+            </div>
+            <button onclick="deleteClient('${c.phone}')" class="btn secondary" style="width:auto;padding:4px 12px;font-size:0.6rem;">🗑 Удалить</button>
+        </div>
+    </div>
+`).join('');
             } catch (err) {
                 container.innerHTML = `<p style="opacity:0.5; color:#c44;">⚠️ Ошибка загрузки клиентов: ${err.message}</p>`;
             }
@@ -667,37 +678,32 @@
 
         // ===== Рассылка =====
         async function sendMailing(platform) {
-            const msg = document.getElementById('mailing-message').value.trim();
-            const resultDiv = document.getElementById('mailing-result');
-            if (!msg) {
-                resultDiv.textContent = '⚠️ Введите текст сообщения';
-                return;
-            }
-            try {
-                const clients = await apiFetch('/api/clients');
-                const phones = clients
-                    .filter(c => c.newsletter && c.phone && c.phone.length >= 10)
-                    .map(c => c.phone);
-                if (!phones.length) {
-                    resultDiv.textContent = 'Нет согласившихся на рассылку.';
-                    return;
-                }
-                const encoded = encodeURIComponent(msg);
-                const links = phones.map(p => {
-                    const clean = p.replace(/\D/g, '');
-                    if (platform === 'vk') return `https://vk.com/write?phone=+${clean}`;
-                    if (platform === 'telegram') return `https://t.me/msg?phone=+${clean}&text=${encoded}`;
-                    return '';
-                }).join('\n');
-                resultDiv.innerHTML = `
-                    <p style="margin-top:8px;">📨 ${phones.length} номеров. Скопируйте ссылки:</p>
-                    <textarea rows="5" style="width:100%;background:var(--input-bg);color:var(--text);border:1px solid var(--input-border);border-radius:6px;padding:6px;font-size:0.7rem;" onclick="this.select()">${links}</textarea>
-                    <p style="font-size:0.65rem;opacity:0.5;">Открывайте ссылки по одной — они ведут в чат с клиентом.</p>
-                `;
-            } catch (err) {
-                resultDiv.textContent = '❌ Ошибка: ' + err.message;
-            }
-        }
+    const msg = document.getElementById('mailing-message').value.trim();
+    const resultDiv = document.getElementById('mailing-result');
+    if (!msg) {
+        resultDiv.innerHTML = '⚠️ Введите текст сообщения';
+        return;
+    }
+    try {
+        const res = await fetch('/api/mailing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: msg, platform: platform })
+        });
+        const data = await res.json();
+        resultDiv.innerHTML = `
+            <p>✅ VK отправлено: ${data.sent_vk}</p>
+            <p>✅ Telegram отправлено: ${data.sent_tg}</p>
+            <p>⚠️ Пропущено (нет ID): ${data.skipped_no_id.length} чел.</p>
+            <details>
+                <summary>Список пропущенных</summary>
+                <pre style="font-size:0.7rem;">${data.skipped_no_id.join('\n')}</pre>
+            </details>
+        `;
+    } catch (err) {
+        resultDiv.innerHTML = '❌ Ошибка: ' + err.message;
+    }
+}
 
         // ===== Отчёт =====
         async function renderReport() {
