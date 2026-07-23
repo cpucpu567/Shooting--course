@@ -1671,7 +1671,7 @@ async function confirmVKSubscription(phone) {
 }
 
 async function confirmTGSubscription(phone) {
-    window.open(`https://t.me/ShootingIntensiveBot?start=phone_${phone}`, '_blank');
+    window.open(`https://t.me/ShootingIntensive_Bot?start=phone_${phone}`, '_blank');
     alert('✅ Перейдите в бота, нажмите "Запустить" и вернитесь на эту страницу.\n\nБонус начислится автоматически.');
     try {
         const response = await fetch('/api/callback/telegram', {
