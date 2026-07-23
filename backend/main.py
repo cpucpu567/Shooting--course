@@ -966,23 +966,28 @@ async def vk_callback(request: Request):
     
     logger.info(f"📥 VK Callback: {body}")
     
-    # 1. Прямой вызов от кнопки (из модалки)
+    # ===== 1. САМОЕ ВАЖНОЕ: ОБРАБОТКА ПРЯМОГО ЗАПРОСА ОТ КНОПКИ =====
     if "vk_id" in body and "phone" in body:
         vk_id = body["vk_id"]
         phone = body["phone"]
+        
         conn = get_db()
         c = conn.cursor()
         c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (vk_id, phone))
         c.execute("SELECT vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
         row = c.fetchone()
+        
         if row and not row['vk_bonus_issued']:
             c.execute("UPDATE clients SET vk_subscribed = TRUE, vk_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
             logger.info(f"✅ VK бонус 250 ₽ начислен через кнопку: {phone}")
+        elif row and row['vk_bonus_issued']:
+            logger.info(f"ℹ️ VK бонус для {phone} уже начислен ранее")
+        
         conn.commit()
         conn.close()
         return {"ok": True}
-    
-    # 2. Обработка Callback от VK (group_join)
+
+    # ===== 2. ОБРАБОТКА CALLBACK ОТ VK (group_join) =====
     if body.get("type") == "confirmation":
         return PlainTextResponse("13f009d9")
     
@@ -1006,7 +1011,7 @@ async def vk_callback(request: Request):
                 logger.info(f"ℹ️ VK group_join: пользователь {user_id} не найден в базе")
             return {"ok": True}
     
-    # 3. Обработка сообщений (включая "БОНУС")
+    # ===== 3. ОБРАБОТКА СООБЩЕНИЙ (включая "БОНУС") =====
     if body.get("type") == "message_new":
         user_id = body.get("object", {}).get("user_id")
         text = body.get("object", {}).get("text", "").strip()
@@ -1014,7 +1019,7 @@ async def vk_callback(request: Request):
         if not user_id or not text:
             return {"ok": True}
         
-        # Сообщение начинается с phone_...
+        # Обработка phone_...
         if text.startswith("phone_"):
             phone = text.replace("phone_", "").strip()
             conn = get_db()
@@ -1032,8 +1037,9 @@ async def vk_callback(request: Request):
             conn.close()
             return {"ok": True}
         
-        # Сообщение начинается с "БОНУС"
+        # Обработка "БОНУС"
         if text.upper().startswith("БОНУС"):
+            import re
             phone_match = re.search(r'(\+?7|8)\d{10}', text)
             if phone_match:
                 phone = phone_match.group(0).replace("+", "").replace("8", "7")
@@ -1042,7 +1048,6 @@ async def vk_callback(request: Request):
                 else:
                     phone = "+7" + phone
             else:
-                # Если номера нет в сообщении — ищем в базе по vk_id
                 conn = get_db()
                 c = conn.cursor()
                 c.execute("SELECT phone FROM clients WHERE vk_id = %s", (str(user_id),))
@@ -1051,7 +1056,6 @@ async def vk_callback(request: Request):
                 if row:
                     phone = row['phone']
                 else:
-                    # Если нет ни в сообщении, ни в базе — просим написать номер
                     try:
                         vk_token = os.getenv("VK_TOKEN", "")
                         requests.post("https://api.vk.com/method/messages.send", params={
@@ -1065,7 +1069,6 @@ async def vk_callback(request: Request):
                         logger.error(f"Ошибка отправки ответа: {e}")
                     return {"ok": True}
             
-            # Начисляем бонус
             conn = get_db()
             c = conn.cursor()
             c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
