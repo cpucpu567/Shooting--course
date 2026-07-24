@@ -966,7 +966,7 @@ async def vk_callback(request: Request):
     
     logger.info(f"📥 VK Callback: {body}")
     
-    # ===== 1. САМОЕ ВАЖНОЕ: ОБРАБОТКА ПРЯМОГО ЗАПРОСА ОТ КНОПКИ =====
+    # --- 1. Запрос от кнопки (vk_id и phone уже есть) ---
     if "vk_id" in body and "phone" in body:
         vk_id = body["vk_id"]
         phone = body["phone"]
@@ -978,40 +978,46 @@ async def vk_callback(request: Request):
         row = c.fetchone()
         
         if row and not row['vk_bonus_issued']:
-            c.execute("UPDATE clients SET vk_subscribed = TRUE, vk_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
-            logger.info(f"✅ VK бонус 250 ₽ начислен через кнопку: {phone}")
-        elif row and row['vk_bonus_issued']:
-            logger.info(f"ℹ️ VK бонус для {phone} уже начислен ранее")
+            # Проверяем подписку на группу VK
+            vk_token = os.getenv("VK_TOKEN", "")
+            group_id = "239743393"
+            is_member = False
+            if vk_token:
+                try:
+                    resp = requests.get("https://api.vk.com/method/groups.isMember", params={
+                        "access_token": vk_token,
+                        "v": "5.131",
+                        "group_id": group_id,
+                        "user_id": vk_id
+                    })
+                    result = resp.json()
+                    is_member = result.get("response", 0) == 1
+                    logger.info(f"🔍 Проверка подписки VK: {vk_id} -> {is_member}")
+                except Exception as e:
+                    logger.error(f"Ошибка VK API: {e}")
+            
+            if is_member:
+                c.execute("UPDATE clients SET vk_subscribed = TRUE, vk_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
+                logger.info(f"✅ VK бонус 250 ₽ начислен через кнопку: {phone}")
+            else:
+                # Если не подписан — отправляем уведомление в ЛС
+                try:
+                    requests.post("https://api.vk.com/method/messages.send", params={
+                        "access_token": vk_token,
+                        "v": "5.131",
+                        "user_id": vk_id,
+                        "message": "❌ Чтобы получить бонус, сначала вступите в группу: https://vk.com/club239743393",
+                        "random_id": 0
+                    })
+                except Exception as e:
+                    logger.error(f"Ошибка отправки сообщения VK: {e}")
+                logger.info(f"ℹ️ Пользователь {phone} не подписан. Бонус не начислен.")
         
         conn.commit()
         conn.close()
         return {"ok": True}
-
-    # ===== 2. ОБРАБОТКА CALLBACK ОТ VK (group_join) =====
-    if body.get("type") == "confirmation":
-        return PlainTextResponse("13f009d9")
     
-    if body.get("type") == "group_join":
-        user_id = body.get("object", {}).get("user_id")
-        if user_id:
-            conn = get_db()
-            c = conn.cursor()
-            c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE vk_id = %s", (str(user_id),))
-            client = c.fetchone()
-            if client:
-                if not client['vk_subscribed']:
-                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (client['phone'],))
-                    conn.commit()
-                    if not client['vk_bonus_issued']:
-                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (client['phone'],))
-                        conn.commit()
-                        logger.info(f"✅ VK бонус 250 ₽ начислен через group_join: {client['phone']}")
-                conn.close()
-            else:
-                logger.info(f"ℹ️ VK group_join: пользователь {user_id} не найден в базе")
-            return {"ok": True}
-    
-    # ===== 3. ОБРАБОТКА СООБЩЕНИЙ (включая "БОНУС") =====
+    # --- 2. Обработка слова "БОНУС" (если пользователь сам написал) ---
     if body.get("type") == "message_new":
         user_id = body.get("object", {}).get("user_id")
         text = body.get("object", {}).get("text", "").strip()
@@ -1019,25 +1025,6 @@ async def vk_callback(request: Request):
         if not user_id or not text:
             return {"ok": True}
         
-        # Обработка phone_...
-        if text.startswith("phone_"):
-            phone = text.replace("phone_", "").strip()
-            conn = get_db()
-            c = conn.cursor()
-            c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
-            client = c.fetchone()
-            if client:
-                c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (str(user_id), phone))
-                if not client['vk_subscribed']:
-                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
-                    if not client['vk_bonus_issued']:
-                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
-                        logger.info(f"✅ VK бонус 250 ₽ начислен через phone_: {phone}")
-                conn.commit()
-            conn.close()
-            return {"ok": True}
-        
-        # Обработка "БОНУС"
         if text.upper().startswith("БОНУС"):
             import re
             phone_match = re.search(r'(\+?7|8)\d{10}', text)
@@ -1047,42 +1034,49 @@ async def vk_callback(request: Request):
                     phone = "+" + phone
                 else:
                     phone = "+7" + phone
-            else:
+                
                 conn = get_db()
                 c = conn.cursor()
-                c.execute("SELECT phone FROM clients WHERE vk_id = %s", (str(user_id),))
-                row = c.fetchone()
-                conn.close()
-                if row:
-                    phone = row['phone']
-                else:
-                    try:
-                        vk_token = os.getenv("VK_TOKEN", "")
-                        requests.post("https://api.vk.com/method/messages.send", params={
-                            "access_token": vk_token,
-                            "v": "5.131",
-                            "user_id": user_id,
-                            "message": "❌ Чтобы получить бонус, напишите ваш номер телефона в формате: БОНУС +79991234567",
-                            "random_id": 0
-                        })
-                    except Exception as e:
-                        logger.error(f"Ошибка отправки ответа: {e}")
-                    return {"ok": True}
-            
-            conn = get_db()
-            c = conn.cursor()
-            c.execute("SELECT phone, vk_subscribed, vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
-            client = c.fetchone()
-            if client:
                 c.execute("UPDATE clients SET vk_id = %s WHERE phone = %s", (str(user_id), phone))
-                if not client['vk_subscribed']:
-                    c.execute("UPDATE clients SET vk_subscribed = TRUE WHERE phone = %s", (phone,))
-                    if not client['vk_bonus_issued']:
-                        c.execute("UPDATE clients SET total_discounts = total_discounts + 250, vk_bonus_issued = TRUE WHERE phone = %s", (phone,))
+                c.execute("SELECT vk_bonus_issued FROM clients WHERE phone = %s", (phone,))
+                row = c.fetchone()
+                
+                if row and not row['vk_bonus_issued']:
+                    # Проверяем подписку
+                    vk_token = os.getenv("VK_TOKEN", "")
+                    is_member = False
+                    if vk_token:
+                        try:
+                            resp = requests.get("https://api.vk.com/method/groups.isMember", params={
+                                "access_token": vk_token,
+                                "v": "5.131",
+                                "group_id": "239743393",
+                                "user_id": user_id
+                            })
+                            is_member = resp.json().get("response", 0) == 1
+                        except Exception as e:
+                            logger.error(f"Ошибка VK API: {e}")
+                    
+                    if is_member:
+                        c.execute("UPDATE clients SET vk_subscribed = TRUE, vk_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
                         logger.info(f"✅ VK бонус 250 ₽ начислен через БОНУС: {phone}")
+                    else:
+                        # Если не подписан, отправляем ответ
+                        try:
+                            requests.post("https://api.vk.com/method/messages.send", params={
+                                "access_token": vk_token,
+                                "v": "5.131",
+                                "user_id": user_id,
+                                "message": "❌ Чтобы получить бонус, вступите в группу: https://vk.com/club239743393",
+                                "random_id": 0
+                            })
+                        except Exception as e:
+                            logger.error(f"Ошибка отправки сообщения VK: {e}")
+                        logger.info(f"ℹ️ Пользователь {phone} не подписан. Бонус не начислен.")
+                
                 conn.commit()
-            conn.close()
-            return {"ok": True}
+                conn.close()
+                return {"ok": True}
         
         return {"ok": True}
 
@@ -1099,12 +1093,12 @@ async def telegram_callback(request: Request):
         message = body.get("message", {})
         chat = message.get("chat", {})
         tg_id = str(chat.get("id", ""))
-        text = message.get("text", "")
+        text = message.get("text", "").strip()
         
         if not tg_id:
             return {"status": "error", "reason": "no_tg_id"}
         
-        # Если есть команда /start с телефоном
+        # Обработка /start с телефоном
         if text.startswith("/start"):
             parts = text.split()
             phone = ""
@@ -1114,28 +1108,31 @@ async def telegram_callback(request: Request):
                         phone = part.replace("phone_", "")
                         break
             
+            # Если телефон не передан, ищем в базе
+            if not phone:
+                conn = get_db()
+                c = conn.cursor()
+                c.execute("SELECT phone FROM clients WHERE tg_id = %s", (tg_id,))
+                row = c.fetchone()
+                conn.close()
+                if row:
+                    phone = row['phone']
+                    logger.info(f"🔍 Найден телефон {phone} по tg_id {tg_id}")
+                else:
+                    return {"status": "not_found", "reason": "user_not_found"}
+            
             if phone:
                 conn = get_db()
                 c = conn.cursor()
-                
-                # Проверяем, есть ли клиент в базе
-                c.execute("SELECT tg_id, tg_subscribed, tg_bonus_issued FROM clients WHERE phone = %s", (phone,))
-                client = c.fetchone()
-                
-                if not client:
-                    conn.close()
-                    logger.warning(f"⚠️ Клиент с phone={phone} не найден в БД")
-                    return {"status": "error", "reason": "client_not_found"}
-                
-                # Всегда обновляем tg_id
                 c.execute("UPDATE clients SET tg_id = %s WHERE phone = %s", (tg_id, phone))
+                c.execute("SELECT tg_bonus_issued FROM clients WHERE phone = %s", (phone,))
+                row = c.fetchone()
                 
-                # Проверяем подписку на канал через Telegram API (только если ещё не начислен бонус)
-                if not client['tg_bonus_issued']:
+                if row and not row['tg_bonus_issued']:
+                    # Проверяем подписку на канал
                     telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
                     channel_id = "-1002612715364"
                     is_member = False
-                    
                     if telegram_token and channel_id:
                         try:
                             resp = requests.get(
@@ -1145,24 +1142,80 @@ async def telegram_callback(request: Request):
                             result = resp.json()
                             status = result.get("result", {}).get("status", "")
                             is_member = status in ("member", "administrator", "creator")
-                            logger.info(f"🔍 Проверка подписки для tg_id={tg_id}: {status}")
+                            logger.info(f"🔍 Проверка подписки TG: {tg_id} -> {status}")
                         except Exception as e:
                             logger.error(f"Ошибка Telegram API: {e}")
                     
-                    # Если подписан — начисляем бонус и ставим флаги
                     if is_member:
-                        c.execute("""
-                            UPDATE clients 
-                            SET tg_subscribed = TRUE, 
-                                tg_bonus_issued = TRUE, 
-                                total_discounts = total_discounts + 250 
-                            WHERE phone = %s
-                        """, (phone,))
-                        logger.info(f"✅ Telegram бонус 250 ₽ начислен через вебхук: {phone}")
+                        c.execute("UPDATE clients SET tg_subscribed = TRUE, tg_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
+                        logger.info(f"✅ Telegram бонус 250 ₽ начислен через /start: {phone}")
                     else:
-                        logger.info(f"ℹ️ Пользователь {phone} не подписан на канал. Бонус не начислен.")
+                        # Отправляем сообщение, если не подписан
+                        try:
+                            requests.post(
+                                f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                                json={
+                                    "chat_id": tg_id,
+                                    "text": "❌ Чтобы получить бонус, сначала вступите в наш канал: https://t.me/...",
+                                    "disable_web_page_preview": False
+                                }
+                            )
+                        except Exception as e:
+                            logger.error(f"Ошибка отправки сообщения TG: {e}")
+                        logger.info(f"ℹ️ Пользователь {phone} не подписан. Бонус не начислен.")
+                
+                conn.commit()
+                conn.close()
+                return {"status": "success" if is_member else "not_subscribed", "bonus": 250 if is_member else 0}
+        
+        # Обработка слова "БОНУС"
+        if text.upper().startswith("БОНУС"):
+            import re
+            phone_match = re.search(r'(\+?7|8)\d{10}', text)
+            if phone_match:
+                phone = phone_match.group(0).replace("+", "").replace("8", "7")
+                if phone.startswith("7"):
+                    phone = "+" + phone
                 else:
-                    logger.info(f"ℹ️ Бонус для {phone} уже начислен ранее")
+                    phone = "+7" + phone
+                
+                conn = get_db()
+                c = conn.cursor()
+                c.execute("UPDATE clients SET tg_id = %s WHERE phone = %s", (tg_id, phone))
+                c.execute("SELECT tg_bonus_issued FROM clients WHERE phone = %s", (phone,))
+                row = c.fetchone()
+                
+                if row and not row['tg_bonus_issued']:
+                    # Проверяем подписку
+                    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+                    is_member = False
+                    if telegram_token:
+                        try:
+                            resp = requests.get(
+                                f"https://api.telegram.org/bot{telegram_token}/getChatMember",
+                                params={"chat_id": "-1002612715364", "user_id": tg_id}
+                            )
+                            status = resp.json().get("result", {}).get("status", "")
+                            is_member = status in ("member", "administrator", "creator")
+                        except Exception as e:
+                            logger.error(f"Ошибка Telegram API: {e}")
+                    
+                    if is_member:
+                        c.execute("UPDATE clients SET tg_subscribed = TRUE, tg_bonus_issued = TRUE, total_discounts = total_discounts + 250 WHERE phone = %s", (phone,))
+                        logger.info(f"✅ Telegram бонус 250 ₽ начислен через БОНУС: {phone}")
+                    else:
+                        # Отправляем ответ
+                        try:
+                            requests.post(
+                                f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                                json={
+                                    "chat_id": tg_id,
+                                    "text": "❌ Чтобы получить бонус, вступите в канал: https://t.me/..."
+                                }
+                            )
+                        except Exception as e:
+                            logger.error(f"Ошибка отправки сообщения TG: {e}")
+                        logger.info(f"ℹ️ Пользователь {phone} не подписан. Бонус не начислен.")
                 
                 conn.commit()
                 conn.close()
