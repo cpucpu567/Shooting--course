@@ -1087,54 +1087,92 @@ async def vk_callback(request: Request):
         return {"ok": True}
 
 @app.post("/api/callback/telegram")
-async def telegram_callback(data: TelegramCallbackRequest):
-    conn = get_db()
-    c = conn.cursor()
+async def telegram_callback(request: Request):
+    try:
+        body = await request.json()
+    except:
+        return {"status": "error", "reason": "invalid_json"}
     
-    c.execute("SELECT tg_id, tg_subscribed, tg_bonus_issued FROM clients WHERE phone = %s", (data.phone,))
-    client = c.fetchone()
-    if not client:
-        conn.close()
-        return {"status": "error", "reason": "Клиент не найден"}
+    logger.info(f"📥 Telegram Webhook (RAW): {body}")
     
-    tg_id = client['tg_id']
-    if not tg_id and data.tg_id:
-        tg_id = data.tg_id
-        c.execute("UPDATE clients SET tg_id = %s WHERE phone = %s", (tg_id, data.phone))
-        conn.commit()
-    
-    if not tg_id:
-        conn.close()
-        return {"status": "not_subscribed", "reason": "tg_id не найден. Нажмите 'Запустить' в боте и попробуйте снова."}
-    
-    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-    channel_id = "-1002612715364"
-    
-    is_member = False
-    if telegram_token and channel_id:
-        try:
-            resp = requests.get(f"https://api.telegram.org/bot{telegram_token}/getChatMember", params={
-                "chat_id": channel_id,
-                "user_id": tg_id
-            })
-            result = resp.json()
-            status = result.get("result", {}).get("status", "")
-            is_member = status in ("member", "administrator", "creator")
-        except Exception as e:
-            logger.error(f"Ошибка Telegram API: {e}")
-    
-    if is_member:
-        if not client['tg_subscribed']:
-            c.execute("UPDATE clients SET tg_subscribed = TRUE WHERE phone = %s", (data.phone,))
-        if not client['tg_bonus_issued']:
-            c.execute("UPDATE clients SET total_discounts = total_discounts + 250, tg_bonus_issued = TRUE WHERE phone = %s", (data.phone,))
-            conn.commit()
-            logger.info(f"✅ Telegram бонус 250 ₽ начислен: {data.phone}")
-        conn.close()
-        return {"status": "success", "bonus": 250}
-    
-    conn.close()
-    return {"status": "not_subscribed", "tg_id": tg_id}
+    try:
+        message = body.get("message", {})
+        chat = message.get("chat", {})
+        tg_id = str(chat.get("id", ""))
+        text = message.get("text", "")
+        
+        if not tg_id:
+            return {"status": "error", "reason": "no_tg_id"}
+        
+        # Если есть команда /start с телефоном
+        if text.startswith("/start"):
+            parts = text.split()
+            phone = ""
+            if len(parts) > 1:
+                for part in parts:
+                    if part.startswith("phone_"):
+                        phone = part.replace("phone_", "")
+                        break
+            
+            if phone:
+                conn = get_db()
+                c = conn.cursor()
+                
+                # Проверяем, есть ли клиент в базе
+                c.execute("SELECT tg_id, tg_subscribed, tg_bonus_issued FROM clients WHERE phone = %s", (phone,))
+                client = c.fetchone()
+                
+                if not client:
+                    conn.close()
+                    logger.warning(f"⚠️ Клиент с phone={phone} не найден в БД")
+                    return {"status": "error", "reason": "client_not_found"}
+                
+                # Всегда обновляем tg_id
+                c.execute("UPDATE clients SET tg_id = %s WHERE phone = %s", (tg_id, phone))
+                
+                # Проверяем подписку на канал через Telegram API (только если ещё не начислен бонус)
+                if not client['tg_bonus_issued']:
+                    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+                    channel_id = "-1002612715364"
+                    is_member = False
+                    
+                    if telegram_token and channel_id:
+                        try:
+                            resp = requests.get(
+                                f"https://api.telegram.org/bot{telegram_token}/getChatMember",
+                                params={"chat_id": channel_id, "user_id": tg_id}
+                            )
+                            result = resp.json()
+                            status = result.get("result", {}).get("status", "")
+                            is_member = status in ("member", "administrator", "creator")
+                            logger.info(f"🔍 Проверка подписки для tg_id={tg_id}: {status}")
+                        except Exception as e:
+                            logger.error(f"Ошибка Telegram API: {e}")
+                    
+                    # Если подписан — начисляем бонус и ставим флаги
+                    if is_member:
+                        c.execute("""
+                            UPDATE clients 
+                            SET tg_subscribed = TRUE, 
+                                tg_bonus_issued = TRUE, 
+                                total_discounts = total_discounts + 250 
+                            WHERE phone = %s
+                        """, (phone,))
+                        logger.info(f"✅ Telegram бонус 250 ₽ начислен через вебхук: {phone}")
+                    else:
+                        logger.info(f"ℹ️ Пользователь {phone} не подписан на канал. Бонус не начислен.")
+                else:
+                    logger.info(f"ℹ️ Бонус для {phone} уже начислен ранее")
+                
+                conn.commit()
+                conn.close()
+                return {"status": "success" if is_member else "not_subscribed", "bonus": 250 if is_member else 0}
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        logger.error(f"❌ Ошибка обработки Telegram: {str(e)}", exc_info=True)
+        return {"status": "error", "reason": str(e)}
 
 @app.get("/api/client/subscription-status")
 async def get_subscription_status(phone: str):
@@ -1212,7 +1250,84 @@ async def send_mailing(data: MailingRequest):
         "skipped_no_id": skipped_no_id,
         "total_newsletter": len(clients)
     }
+    
+@app.post("/api/publish")
+async def publish_to_channel_and_wall(data: MailingRequest):
+    """
+    Публикует сообщение в Telegram-канал и на стену VK (без рассылки по пользователям)
+    """
+    vk_token = os.getenv("VK_TOKEN", "")
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    channel_id = "-1002612715364"
+    group_id = "-239743393"
 
+    if data.platform not in ("vk", "telegram", "both"):
+        raise HTTPException(400, "Платформа должна быть: vk, telegram или both")
+
+    results = {"vk": False, "telegram": False}
+    errors = []
+
+    # === Telegram ===
+    if data.platform in ("telegram", "both"):
+        if not telegram_token or not channel_id:
+            errors.append("Telegram: не настроен токен или ID канала")
+        else:
+            try:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{telegram_token}/sendMessage",
+                    json={
+                        "chat_id": channel_id,
+                        "text": data.text,
+                        "disable_web_page_preview": False,
+                        "parse_mode": "HTML"
+                    },
+                    timeout=10
+                )
+                if resp.status_code == 200:
+                    results["telegram"] = True
+                    logger.info("✅ Сообщение опубликовано в Telegram-канал")
+                else:
+                    error_msg = f"Telegram: {resp.status_code} - {resp.text}"
+                    errors.append(error_msg)
+                    logger.error(f"❌ {error_msg}")
+            except Exception as e:
+                errors.append(f"Telegram: {str(e)}")
+                logger.error(f"❌ Ошибка отправки в Telegram: {str(e)}")
+
+    # === VK ===
+    if data.platform in ("vk", "both"):
+        if not vk_token:
+            errors.append("VK: не настроен токен")
+        else:
+            try:
+                resp = requests.post(
+                    "https://api.vk.com/method/wall.post",
+                    params={
+                        "access_token": vk_token,
+                        "v": "5.131",
+                        "owner_id": group_id,
+                        "message": data.text,
+                        "from_group": 1
+                    },
+                    timeout=10
+                )
+                if resp.status_code == 200:
+                    results["vk"] = True
+                    logger.info("✅ Сообщение опубликовано на стене VK")
+                else:
+                    error_msg = f"VK: {resp.status_code} - {resp.text}"
+                    errors.append(error_msg)
+                    logger.error(f"❌ {error_msg}")
+            except Exception as e:
+                errors.append(f"VK: {str(e)}")
+                logger.error(f"❌ Ошибка отправки VK: {str(e)}")
+
+    # Если есть ошибки — возвращаем 400 с деталями
+    if errors:
+        raise HTTPException(status_code=400, detail={"results": results, "errors": errors})
+
+    return results
+    
 @app.post("/api/client/bonus")
 async def update_client_bonus(phone: str, amount: int):
     if amount < 0:
