@@ -1722,22 +1722,39 @@ function mobileShowSubscriptionButtonsInForm(phone, infoEl, statusEl, data) {
 }
 
 async function confirmVKSubscription(phone) {
-    if (typeof vkBridge === 'undefined') {
-        alert('Эта функция работает только внутри приложения VK. Вступите в группу и напишите боту "БОНУС + ваш_номер", чтобы получить бонус.');
-        window.open('https://vk.com/club239743393', '_blank');
-        return;
+    // 1. Всегда открываем ссылку на сообщество (работает и в браузере, и в приложении)
+    window.open('https://vk.com/club239743393', '_blank');
+
+    // 2. Если мы внутри приложения VK — запрашиваем разрешение
+    let vk_id = null;
+    if (typeof vkBridge !== 'undefined') {
+        try {
+            const data = await vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 });
+            vk_id = data.user_id;
+        } catch (err) {
+            console.warn('Не удалось получить VK ID через Bridge:', err);
+        }
     }
+
+    // 3. В любом случае отправляем запрос на сервер (с vk_id или без него)
     try {
-        const data = await vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 });
-        await fetch('/api/callback/vk', {
+        const response = await fetch('/api/callback/vk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ vk_id: data.user_id, phone: phone })
+            body: JSON.stringify({ 
+                vk_id: vk_id || '', 
+                phone: phone 
+            })
         });
-        alert('✅ Подписка подтверждена! Бонус 250 ₽ начислен.');
-        location.reload();
+        
+        if (response.ok) {
+            alert('✅ Запрос на бонус отправлен! Вступите в группу и напишите "БОНУС + телефон", чтобы получить его.');
+        } else {
+            const err = await response.json();
+            alert('❌ Ошибка: ' + (err.detail || 'Неизвестная ошибка'));
+        }
     } catch (err) {
-        alert('❌ Ошибка: ' + err.message);
+        alert('❌ Ошибка сети: ' + err.message);
     }
 }
 
