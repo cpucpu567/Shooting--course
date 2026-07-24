@@ -353,6 +353,7 @@
                                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
                                 <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                                     <div id="client-status"></div>
+                                    <div id="client-subscription-buttons" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
                                 </div>
                                 <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
                                 <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
@@ -416,6 +417,7 @@
                         <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
                         <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                             <div id="mobile-client-status"></div>
+                            <div id="mobile-client-subscription-buttons" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
                         </div>
                         <div id="mobile-intensive-fields">
                             <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
@@ -842,6 +844,8 @@ document.getElementById('phone').addEventListener('input', function() {
             infoEl.style.display = 'none';
             const statusEl = document.getElementById('client-status');
             if (statusEl) statusEl.innerHTML = '';
+            const subContainer = document.getElementById('client-subscription-buttons');
+            if (subContainer) subContainer.innerHTML = '';
         }
         return;
     }
@@ -872,6 +876,8 @@ document.getElementById('phone').addEventListener('input', function() {
                 `;
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
+                const subContainer = document.getElementById('client-subscription-buttons');
+                if (subContainer) subContainer.innerHTML = '';
                 return;
             }
 
@@ -902,6 +908,10 @@ document.getElementById('phone').addEventListener('input', function() {
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
+
+            // Показываем кнопки подписки прямо в форме
+            showSubscriptionButtonsInForm(rawPhone, infoEl, statusEl, data);
+
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
         }
@@ -975,8 +985,9 @@ document.getElementById('order-form').addEventListener('submit', async function(
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            const phone = normalizePhone(document.getElementById('phone').value);
-            showSubscriptionButtons(phone);
+            // В модалке кнопок больше нет — они уже в форме
+            const container = document.getElementById('subscription-buttons-container');
+            if (container) container.innerHTML = '';
 
             document.getElementById('order-form').reset();
             selectTariff('pro');
@@ -984,6 +995,8 @@ document.getElementById('order-form').addEventListener('submit', async function(
             document.getElementById('client-info').style.display = 'none';
             const wrapper = document.getElementById('bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
+            const subContainer = document.getElementById('client-subscription-buttons');
+            if (subContainer) subContainer.innerHTML = '';
         } else {
             fb.className='feedback error'; 
             fb.textContent='❌ ' + (result.detail || 'Ошибка');
@@ -1212,7 +1225,11 @@ document.getElementById('events-form').addEventListener('submit', async function
             document.getElementById('modal-message').textContent = `✅ Вы записаны на событие!`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
-            showSubscriptionButtons(phone);
+            
+            // В модалке кнопок больше нет
+            const container = document.getElementById('subscription-buttons-container');
+            if (container) container.innerHTML = '';
+
             document.getElementById('events-form').reset();
         } else {
             fb.className = 'feedback error';
@@ -1408,13 +1425,16 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            const phone = normalizePhone(document.getElementById('mobile-phone').value);
-            showSubscriptionButtons(phone);
+            // В модалке кнопок больше нет
+            const container = document.getElementById('subscription-buttons-container');
+            if (container) container.innerHTML = '';
 
             document.getElementById('mobile-universal-form').reset();
             document.getElementById('mobile-client-info').style.display = 'none';
             const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
+            const subContainer = document.getElementById('mobile-client-subscription-buttons');
+            if (subContainer) subContainer.innerHTML = '';
         } else {
             fb.className = 'feedback error';
             fb.textContent = '❌ ' + (result.detail || 'Ошибка');
@@ -1470,6 +1490,8 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
             infoEl.style.display = 'none';
             const statusEl = document.getElementById('mobile-client-status');
             if (statusEl) statusEl.innerHTML = '';
+            const subContainer = document.getElementById('mobile-client-subscription-buttons');
+            if (subContainer) subContainer.innerHTML = '';
         }
         return;
     }
@@ -1501,6 +1523,8 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                 `;
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
+                const subContainer = document.getElementById('mobile-client-subscription-buttons');
+                if (subContainer) subContainer.innerHTML = '';
                 return;
             }
 
@@ -1531,6 +1555,10 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
+
+            // Показываем кнопки подписки прямо в мобильной форме
+            mobileShowSubscriptionButtonsInForm(rawPhone, infoEl, statusEl, data);
+
         } catch (err) {
             console.warn('Ошибка статуса:', err);
         }
@@ -1614,13 +1642,19 @@ setTimeout(() => {
     }
 }, 1000);
 
-// ===================== ИСПРАВЛЕННЫЕ КНОПКИ ПОДПИСОК =====================
-function showSubscriptionButtons(phone) {
+// ===================== КНОПКИ ПОДПИСКИ В ФОРМЕ (вместо модалки) =====================
+function showSubscriptionButtonsInForm(phone, infoEl, statusEl, data) {
+    const container = document.getElementById('client-subscription-buttons');
+    if (!container) return;
+
+    if (data.bonus && data.bonus > 0 && data.level !== 'newbie') {
+        container.innerHTML = `<p style="color:var(--gold);">✅ Бонусы за подписки уже начислены!</p>`;
+        return;
+    }
+
     fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
         .then(res => res.json())
         .then(status => {
-            const container = document.getElementById('subscription-buttons-container');
-            if (!container) return;
             let html = '';
 
             if (!status.vk_subscribed) {
@@ -1645,9 +1679,46 @@ function showSubscriptionButtons(phone) {
 
             container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
         })
-        .catch(err => {
-            console.warn('Ошибка получения статуса подписок:', err);
-        });
+        .catch(err => console.warn('Ошибка статуса подписок:', err));
+}
+
+function mobileShowSubscriptionButtonsInForm(phone, infoEl, statusEl, data) {
+    const container = document.getElementById('mobile-client-subscription-buttons');
+    if (!container) return;
+
+    if (data.bonus && data.bonus > 0 && data.level !== 'newbie') {
+        container.innerHTML = `<p style="color:var(--gold);">✅ Бонусы за подписки уже начислены!</p>`;
+        return;
+    }
+
+    fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
+        .then(res => res.json())
+        .then(status => {
+            let html = '';
+
+            if (!status.vk_subscribed) {
+                html += `
+                    <button onclick="confirmVKSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
+                        🔵 Подписаться VK (+250 ₽)
+                    </button>
+                `;
+            }
+
+            if (!status.tg_subscribed) {
+                html += `
+                    <button onclick="confirmTGSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
+                        📱 Подписаться Telegram (+250 ₽)
+                    </button>
+                `;
+            }
+
+            if (status.vk_bonus_issued && status.tg_bonus_issued) {
+                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
+            }
+
+            container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
+        })
+        .catch(err => console.warn('Ошибка статуса подписок:', err));
 }
 
 async function confirmVKSubscription(phone) {
