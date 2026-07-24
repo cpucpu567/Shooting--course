@@ -353,7 +353,6 @@
                                 <div class="form-group"><label>Номер телефона *</label><input type="tel" id="phone" placeholder="+7 (999) 123-45-67" required></div>
                                 <div id="client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                                     <div id="client-status"></div>
-                                    <div id="client-subscription-buttons" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
                                 </div>
                                 <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="referral" placeholder="+7 (999) 000-00-00"></div>
                                 <div class="form-group"><label>Откуда узнали?</label><select id="source"><option value="">Выберите...</option><option value="vk">VK</option><option value="friends">Друзья</option><option value="ads">Реклама</option><option value="other">Другое</option></select></div>
@@ -417,7 +416,6 @@
                         <div class="form-group"><label>Номер телефона *</label><input type="tel" id="mobile-phone" placeholder="+7 (999) 123-45-67" required></div>
                         <div id="mobile-client-info" style="display:none; margin-bottom:12px; padding:8px; border-radius:6px; background:rgba(255,255,255,0.03); border:1px solid var(--card-border); font-size:0.8rem; color:var(--text-soft);">
                             <div id="mobile-client-status"></div>
-                            <div id="mobile-client-subscription-buttons" style="display:flex; flex-direction:column; gap:8px; margin-top:10px;"></div>
                         </div>
                         <div id="mobile-intensive-fields">
                             <div class="form-group"><label>Телефон друга (для скидки)</label><input type="tel" id="mobile-referral" placeholder="+7 (999) 000-00-00"></div>
@@ -462,7 +460,6 @@
         <span style="font-size:3rem;">✅</span>
         <h3>Заявка принята!</h3>
         <p id="modal-message" style="margin:14px 0;"></p>
-        <div id="subscription-buttons-container" style="margin:10px 0; display:flex; flex-direction:column; gap:8px;"></div>
         <button class="btn" onclick="closeModal()">Понял, жду</button>
     </div>
 </div>
@@ -844,8 +841,6 @@ document.getElementById('phone').addEventListener('input', function() {
             infoEl.style.display = 'none';
             const statusEl = document.getElementById('client-status');
             if (statusEl) statusEl.innerHTML = '';
-            const subContainer = document.getElementById('client-subscription-buttons');
-            if (subContainer) subContainer.innerHTML = '';
         }
         return;
     }
@@ -876,8 +871,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 `;
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
-                const subContainer = document.getElementById('client-subscription-buttons');
-                if (subContainer) subContainer.innerHTML = '';
                 return;
             }
 
@@ -908,10 +901,6 @@ document.getElementById('phone').addEventListener('input', function() {
                 const wrapper = document.getElementById('bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
-
-            // Показываем кнопки подписки прямо в форме
-            showSubscriptionButtonsInForm(rawPhone, infoEl, statusEl, data);
-
         } catch (err) {
             console.warn('Ошибка проверки статуса:', err);
         }
@@ -985,18 +974,12 @@ document.getElementById('order-form').addEventListener('submit', async function(
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // В модалке кнопок больше нет — они уже в форме
-            const container = document.getElementById('subscription-buttons-container');
-            if (container) container.innerHTML = '';
-
             document.getElementById('order-form').reset();
             selectTariff('pro');
             updateDateSelect('pro');
             document.getElementById('client-info').style.display = 'none';
             const wrapper = document.getElementById('bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
-            const subContainer = document.getElementById('client-subscription-buttons');
-            if (subContainer) subContainer.innerHTML = '';
         } else {
             fb.className='feedback error'; 
             fb.textContent='❌ ' + (result.detail || 'Ошибка');
@@ -1225,11 +1208,6 @@ document.getElementById('events-form').addEventListener('submit', async function
             document.getElementById('modal-message').textContent = `✅ Вы записаны на событие!`;
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
-            
-            // В модалке кнопок больше нет
-            const container = document.getElementById('subscription-buttons-container');
-            if (container) container.innerHTML = '';
-
             document.getElementById('events-form').reset();
         } else {
             fb.className = 'feedback error';
@@ -1425,16 +1403,10 @@ document.getElementById('mobile-universal-form').addEventListener('submit', asyn
             document.getElementById('success-modal').classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // В модалке кнопок больше нет
-            const container = document.getElementById('subscription-buttons-container');
-            if (container) container.innerHTML = '';
-
             document.getElementById('mobile-universal-form').reset();
             document.getElementById('mobile-client-info').style.display = 'none';
             const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
             if (wrapper) wrapper.style.display = 'none';
-            const subContainer = document.getElementById('mobile-client-subscription-buttons');
-            if (subContainer) subContainer.innerHTML = '';
         } else {
             fb.className = 'feedback error';
             fb.textContent = '❌ ' + (result.detail || 'Ошибка');
@@ -1490,8 +1462,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
             infoEl.style.display = 'none';
             const statusEl = document.getElementById('mobile-client-status');
             if (statusEl) statusEl.innerHTML = '';
-            const subContainer = document.getElementById('mobile-client-subscription-buttons');
-            if (subContainer) subContainer.innerHTML = '';
         }
         return;
     }
@@ -1523,8 +1493,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                 `;
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
-                const subContainer = document.getElementById('mobile-client-subscription-buttons');
-                if (subContainer) subContainer.innerHTML = '';
                 return;
             }
 
@@ -1555,10 +1523,6 @@ document.getElementById('mobile-phone').addEventListener('input', function() {
                 const wrapper = document.getElementById('mobile-bonus-checkbox-wrapper');
                 if (wrapper) wrapper.style.display = 'none';
             }
-
-            // Показываем кнопки подписки прямо в мобильной форме
-            mobileShowSubscriptionButtonsInForm(rawPhone, infoEl, statusEl, data);
-
         } catch (err) {
             console.warn('Ошибка статуса:', err);
         }
@@ -1642,144 +1606,6 @@ setTimeout(() => {
     }
 }, 1000);
 
-// ===================== КНОПКИ ПОДПИСКИ В ФОРМЕ (вместо модалки) =====================
-function showSubscriptionButtonsInForm(phone, infoEl, statusEl, data) {
-    const container = document.getElementById('client-subscription-buttons');
-    if (!container) return;
-
-    if (data.bonus && data.bonus > 0 && data.level !== 'newbie') {
-        container.innerHTML = `<p style="color:var(--gold);">✅ Бонусы за подписки уже начислены!</p>`;
-        return;
-    }
-
-    fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
-        .then(res => res.json())
-        .then(status => {
-            let html = '';
-
-            if (!status.vk_subscribed) {
-                html += `
-                    <button onclick="confirmVKSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
-                        🔵 Подписаться VK (+250 ₽)
-                    </button>
-                `;
-            }
-
-            if (!status.tg_subscribed) {
-                html += `
-                    <button onclick="confirmTGSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
-                        📱 Подписаться Telegram (+250 ₽)
-                    </button>
-                `;
-            }
-
-            if (status.vk_bonus_issued && status.tg_bonus_issued) {
-                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
-            }
-
-            container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
-        })
-        .catch(err => console.warn('Ошибка статуса подписок:', err));
-}
-
-function mobileShowSubscriptionButtonsInForm(phone, infoEl, statusEl, data) {
-    const container = document.getElementById('mobile-client-subscription-buttons');
-    if (!container) return;
-
-    if (data.bonus && data.bonus > 0 && data.level !== 'newbie') {
-        container.innerHTML = `<p style="color:var(--gold);">✅ Бонусы за подписки уже начислены!</p>`;
-        return;
-    }
-
-    fetch(`/api/client/subscription-status?phone=${encodeURIComponent(phone)}`)
-        .then(res => res.json())
-        .then(status => {
-            let html = '';
-
-            if (!status.vk_subscribed) {
-                html += `
-                    <button onclick="confirmVKSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#4a76a8; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
-                        🔵 Подписаться VK (+250 ₽)
-                    </button>
-                `;
-            }
-
-            if (!status.tg_subscribed) {
-                html += `
-                    <button onclick="confirmTGSubscription('${phone}')" style="display:inline-block; padding:8px 16px; background:#0088cc; color:#fff; border-radius:6px; border:none; cursor:pointer; margin:5px;">
-                        📱 Подписаться Telegram (+250 ₽)
-                    </button>
-                `;
-            }
-
-            if (status.vk_bonus_issued && status.tg_bonus_issued) {
-                html = `<p style="color:var(--gold);">✅ Все бонусы за подписки уже начислены!</p>`;
-            }
-
-            container.innerHTML = html || '<p style="opacity:0.5;">Подписки не требуются</p>';
-        })
-        .catch(err => console.warn('Ошибка статуса подписок:', err));
-}
-
-async function confirmVKSubscription(phone) {
-    // 1. Всегда открываем ссылку на сообщество (работает и в браузере, и в приложении)
-    window.open('https://vk.com/club239743393', '_blank');
-
-    // 2. Если мы внутри приложения VK — запрашиваем разрешение
-    let vk_id = null;
-    if (typeof vkBridge !== 'undefined') {
-        try {
-            const data = await vkBridge.send('VKWebAppAllowMessagesFromGroup', { group_id: 239743393 });
-            vk_id = data.user_id;
-        } catch (err) {
-            console.warn('Не удалось получить VK ID через Bridge:', err);
-        }
-    }
-
-    // 3. В любом случае отправляем запрос на сервер (с vk_id или без него)
-    try {
-        const response = await fetch('/api/callback/vk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                vk_id: vk_id || '', 
-                phone: phone 
-            })
-        });
-        
-        if (response.ok) {
-            alert('✅ Запрос на бонус отправлен! Вступите в группу и напишите "БОНУС + телефон", чтобы получить его.');
-        } else {
-            const err = await response.json();
-            alert('❌ Ошибка: ' + (err.detail || 'Неизвестная ошибка'));
-        }
-    } catch (err) {
-        alert('❌ Ошибка сети: ' + err.message);
-    }
-}
-
-async function confirmTGSubscription(phone) {
-    window.open(`https://t.me/ShootingIntensive_bot?start=phone_${phone}`, '_blank');
-    alert('✅ Перейдите в бота, нажмите "Запустить" и вернитесь на эту страницу.\n\nБонус начислится автоматически.');
-    try {
-        const response = await fetch('/api/callback/telegram', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tg_id: 'не_известен', phone: phone })
-        });
-        const result = await response.json();
-        if (result.status === 'success') {
-            alert('✅ Подписка подтверждена! Бонус 250 ₽ начислен.');
-            location.reload();
-        } else if (result.status === 'not_subscribed') {
-            alert('❌ Вы ещё не подписались. Вступите в канал и нажмите "Запустить" в боте, затем вернитесь сюда.');
-        } else {
-            alert('ℹ️ ' + (result.reason || 'Проверьте подписку и попробуйте снова.'));
-        }
-    } catch (err) {
-        alert('❌ Ошибка проверки: ' + err.message);
-    }
-}
 </script>
 </body>
 </html>
