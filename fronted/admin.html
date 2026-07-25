@@ -576,9 +576,11 @@
             const ext = url.split('.').pop().toLowerCase();
             const type = ['mp4', 'webm', 'mov', 'avi'].includes(ext) ? 'video' : 'image';
             const name = url.split('/').pop() || 'Файл';
-            
+    
             try {
                 await apiPost('/api/gallery', { url, type, name });
+                // ⏳ Добавляем небольшую задержку (0.5 сек), чтобы база успела сохранить запись
+                await new Promise(resolve => setTimeout(resolve, 500));
                 loadGallery();
                 document.getElementById('gallery-url').value = '';
                 alert('✅ Файл добавлен в галерею!');
