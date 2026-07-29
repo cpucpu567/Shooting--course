@@ -19,9 +19,12 @@ app = FastAPI(title="Стрелковый интенсив API")
 @app.middleware("http")
 async def disable_quic(request: Request, call_next):
     response = await call_next(request)
-    response.headers["Alt-Svc"] = "h2=\":443\""  # отключаем QUIC
+    # Запрещаем HTTP/3 и предотвращаем фрагментацию
+    response.headers["Alt-Svc"] = "h2=\":443\"; ma=86400"
+    response.headers["Cache-Control"] = "no-transform"
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return response 
-    
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
