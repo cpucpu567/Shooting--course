@@ -582,7 +582,8 @@
             const ext = url.split('.').pop().toLowerCase();
             if (['mp4', 'webm', 'mov', 'avi'].includes(ext)) {
                 type = 'video';
-            } else if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vk.com')) {
+            } else if (url.includes('youtube.com') || url.includes('youtu.be') || 
+                url.includes('vk.com') || url.includes('vk.ru')) {
                 type = 'iframe'; // для YouTube/VK используем iframe
             }
 
