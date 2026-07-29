@@ -139,10 +139,13 @@
             <div class="card">
                 <h4>🖼️ Добавить фото/видео по ссылке</h4>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <input type="text" id="gallery-url" placeholder="https://... .jpg / .mp4" style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--input-border); border-radius:6px; min-width:200px;" />
+                    <input type="text" id="gallery-url" placeholder="https://... .jpg / .mp4 / youtube.com" 
+                   style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:1px solid var(--input-border); border-radius:6px; min-width:200px;" />
                     <button class="btn" onclick="addGalleryToServer()" style="padding:10px 24px;">Добавить</button>
                 </div>
-                <p style="font-size:0.7rem; opacity:0.5; margin-top:5px;">Поддерживаются прямые ссылки на .jpg, .png, .mp4, .webm.</p>
+                <p style="font-size:0.7rem; opacity:0.5; margin-top:5px;">
+            Поддерживаются: .jpg, .png, .mp4, .webm, YouTube (youtube.com), VK (vk.com)
+                </p>
             </div>
             <div id="gallery-list"></div>
         </div>
@@ -560,7 +563,7 @@
             }
             c.innerHTML = items.map((f, i) => `
                 <div style="display:flex;justify-content:space-between;padding:6px;font-size:0.7rem;border-bottom:1px solid var(--input-border);">
-                    ${f.type === 'video' ? '🎬' : '🖼️'} 
+                    ${f.type === 'video' ? '🎬' : f.type === 'iframe' ? '🌐' : '🖼️'} 
                     <a href="${f.url}" target="_blank" style="color:var(--text-soft); text-decoration:underline;">${f.name || 'Файл'}</a>
                     <button onclick="deleteGalleryItem(${f.id})" style="background:none;border:none;color:#c44;cursor:pointer;">✕</button>
                 </div>
@@ -570,18 +573,24 @@
         async function addGalleryToServer() {
             const url = document.getElementById('gallery-url').value.trim();
             if (!url) {
-                alert('Вставьте ссылку на фото или видео!');
+                alert('Вставьте ссылку!');
                 return;
             }
+
+            // Определяем тип автоматически
+            let type = 'image';
             const ext = url.split('.').pop().toLowerCase();
-            const type = ['mp4', 'webm', 'mov', 'avi'].includes(ext) ? 'video' : 'image';
+            if (['mp4', 'webm', 'mov', 'avi'].includes(ext)) {
+                type = 'video';
+            } else if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vk.com')) {
+                type = 'iframe'; // для YouTube/VK используем iframe
+            }
+
             const name = url.split('/').pop() || 'Файл';
-    
+
             try {
                 await apiPost('/api/gallery', { url, type, name });
-                // ⏳ Добавляем небольшую задержку (0.5 сек), чтобы база успела сохранить запись
-                await new Promise(resolve => setTimeout(resolve, 500));
-                loadGallery();
+                await loadGallery(); // ← перезагружаем список
                 document.getElementById('gallery-url').value = '';
                 alert('✅ Файл добавлен в галерею!');
             } catch (err) {
@@ -593,7 +602,7 @@
             if (!confirm('Удалить?')) return;
             try {
                 await fetch(`${API_BASE}/api/gallery/${id}`, { method: 'DELETE' });
-                loadGallery();
+                await loadGallery();
             } catch (err) {
                 alert('❌ Ошибка при удалении: ' + err.message);
             }

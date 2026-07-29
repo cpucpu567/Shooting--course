@@ -1010,14 +1010,37 @@ function renderMainGallery() {
     const m = document.getElementById('gallery-main');
     const d = document.getElementById('gallery-dots');
     if (!m || !d) return;
-    if (!galleryFiles.length) {
+
+    if (!galleryFiles || !galleryFiles.length) {
         m.innerHTML = '<div class="gallery-placeholder">📸 Загрузите фото в админ-панели</div>';
         d.innerHTML = '';
         return;
     }
+
     const f = galleryFiles[currentSlide];
-    m.innerHTML = f.type === 'video' ? `<video src="${f.url}" controls playsinline style="max-width:100%;max-height:100%;"></video>` : `<img src="${f.url}" style="max-width:100%;max-height:100%;">`;
-    d.innerHTML = galleryFiles.map((_, i) => `<div class="gallery-dot ${i === currentSlide ? 'active' : ''}" onclick="currentSlide=${i};renderMainGallery();"></div>`).join('');
+    let html = '';
+
+    if (f.type === 'video') {
+        // Прямая ссылка на видеофайл
+        html = `<video src="${f.url}" controls playsinline style="max-width:100%;max-height:100%;" 
+                    onerror="this.parentElement.innerHTML='<div style=\'color:red;text-align:center;\'>⚠️ Видео не загружается.<br>Проверьте ссылку.</div>'"></video>`;
+    } else if (f.type === 'iframe') {
+        // YouTube / VK через iframe
+        html = `<iframe src="${f.url}" width="100%" height="400" frameborder="0" allowfullscreen style="max-width:100%;" 
+                    onerror="this.parentElement.innerHTML='<div style=\'color:red;text-align:center;\'>⚠️ Не удалось загрузить.<br>Проверьте ссылку.</div>'"></iframe>`;
+    } else {
+        // Изображение
+        html = `<img src="${f.url}" style="max-width:100%;max-height:100%;" 
+                  onerror="this.parentElement.innerHTML='<div style=\'color:red;text-align:center;\'>⚠️ Изображение не загружается.<br>Проверьте ссылку.</div>'">`;
+    }
+
+    m.innerHTML = html;
+
+    // Отрисовка точек
+    d.innerHTML = galleryFiles.map((_, i) => 
+        `<div class="gallery-dot ${i === currentSlide ? 'active' : ''}" 
+              onclick="currentSlide=${i};renderMainGallery();"></div>`
+    ).join('');
 }
 
 function changeSlide(dir) {
