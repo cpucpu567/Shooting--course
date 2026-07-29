@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
+@app.middleware("http")
+async def disable_quic(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Alt-Svc"] = "h2=\":443\""  # отключаем QUIC
+    return response 
+    
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
