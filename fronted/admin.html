@@ -303,6 +303,14 @@
                 window.location.href = '/';
                 return false;
             }
+            // Принудительно перезагружаем данные после успешного входа
+            setTimeout(() => {
+                renderDates();
+                loadPrices();
+                loadGallery();
+                renderEvents();
+                renderClients();
+            }, 100);
             return true;
         }
         if (!checkAuth()) {}
