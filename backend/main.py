@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 import os
 import psycopg2
@@ -16,14 +16,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
-# ===== ОБРАБОТКА OPTIONS ДЛЯ ВСЕХ ЗАПРОСОВ =====
-@app.middleware("http")
-async def handle_options(request: Request, call_next):
-    if request.method == "OPTIONS":
-        # Возвращаем 200 на любой OPTIONS (это сработает, но на всякий случай есть ещё запасной путь ниже)
-        return JSONResponse(status_code=200, content={})
-    return await call_next(request)
-    
 @app.middleware("http")
 async def disable_quic(request: Request, call_next):
     response = await call_next(request)
@@ -35,17 +27,9 @@ async def disable_quic(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://vk.com", 
-        "https://m.vk.com", 
-        "https://dev.vk.com",
-        "https://app.vk.com",
-        "https://vk.ru",
-        "https://shooting-course.onrender.com"
-    ],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,
 )
 
 # ===== ОТДАЧА ФАЙЛОВ ИЗ ПАПКИ fronted =====
@@ -53,7 +37,6 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "fronted")
 
 @app.get("/")
-@app.head("/")
 async def read_root():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
@@ -1349,10 +1332,3 @@ async def update_client_bonus(phone: str, amount: int):
     conn.close()
     logger.info(f"Админ вручную установил бонусы для {phone}: {amount} ₽")
     return {"status": "updated", "phone": phone, "new_total": amount}
-
-
-# ===== АВТОМАТИЧЕСКАЯ ОБРАБОТКА OPTIONS ДЛЯ ВСЕХ API (СПАСЕНИЕ ОТ 400) =====
-# Это перехватывает ЛЮБОЙ OPTIONS запрос, который начинается с /api/ (даже с ?_t=параметрами)
-@app.api_route("/api/{path:path}", methods=["OPTIONS"])
-async def options_api_handler(path: str):
-    return JSONResponse(status_code=200, content={})
