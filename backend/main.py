@@ -16,9 +16,11 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
+# ===== ОБРАБОТКА OPTIONS ДЛЯ ВСЕХ ЗАПРОСОВ =====
 @app.middleware("http")
 async def handle_options(request: Request, call_next):
     if request.method == "OPTIONS":
+        # Возвращаем 200 на любой OPTIONS (это сработает, но на всякий случай есть ещё запасной путь ниже)
         return JSONResponse(status_code=200, content={})
     return await call_next(request)
     
@@ -1347,3 +1349,10 @@ async def update_client_bonus(phone: str, amount: int):
     conn.close()
     logger.info(f"Админ вручную установил бонусы для {phone}: {amount} ₽")
     return {"status": "updated", "phone": phone, "new_total": amount}
+
+
+# ===== АВТОМАТИЧЕСКАЯ ОБРАБОТКА OPTIONS ДЛЯ ВСЕХ API (СПАСЕНИЕ ОТ 400) =====
+# Это перехватывает ЛЮБОЙ OPTIONS запрос, который начинается с /api/ (даже с ?_t=параметрами)
+@app.api_route("/api/{path:path}", methods=["OPTIONS"])
+async def options_api_handler(path: str):
+    return JSONResponse(status_code=200, content={})
