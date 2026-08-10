@@ -27,9 +27,17 @@ async def disable_quic(request: Request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://vk.com", 
+        "https://m.vk.com", 
+        "https://dev.vk.com",
+        "https://app.vk.com",
+        "https://vk.ru",
+        "https://shooting-course.onrender.com"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 # ===== ОТДАЧА ФАЙЛОВ ИЗ ПАПКИ fronted =====
