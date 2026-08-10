@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
 from pydantic import BaseModel, Field
 import os
 import psycopg2
@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Стрелковый интенсив API")
 
+@app.middleware("http")
+async def handle_options(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return JSONResponse(status_code=200, content={})
+    return await call_next(request)
+    
 @app.middleware("http")
 async def disable_quic(request: Request, call_next):
     response = await call_next(request)
