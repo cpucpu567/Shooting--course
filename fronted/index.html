@@ -6,7 +6,7 @@
     <title>Стрелковый интенсив | Огневая подготовка</title>
     <link rel="icon" type="image/jpeg" href="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
     <meta property="og:image" content="https://32b76580-04bc-45a6-83c4-37b3a03f1877.selstorage.ru/production-timeweb/images/0bfff022-2028-4973-bf77-b4bf99ad4743.jpg" />
-    <script src="https://vk.com/js/api/bridge.js?4"></script>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -667,27 +667,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function apiFetch(url) {
-    try {
-        const res = await fetch(API_BASE + url, {
-            method: 'GET',
-            mode: 'cors',
-            credentials: 'omit',
-            headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-                'Pragma': 'no-cache',
-                'Expires': '0',
-                'X-Requested-With': 'XMLHttpRequest' // Без этого VK блокирует fetch
-            }
-        });
-        if (!res.ok) {
-            const errText = await res.text();
-            throw new Error(`HTTP ${res.status}: ${errText}`);
+    const res = await fetch(API_BASE + url, {
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
         }
-        return res.json();
-    } catch (err) {
-        console.error('Ошибка API:', err);
-        throw err;
-    }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
 }
 
 async function apiPost(url, data) {
