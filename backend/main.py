@@ -51,6 +51,7 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), "fronted")
 
 @app.get("/")
+@app.head("/")
 async def read_root():
     return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
 
